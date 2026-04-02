@@ -24,8 +24,8 @@ build/
 !.env.example
 # Firebase service account private keys (never commit)
 *firebase-adminsdk*.json
-# Stray Local by Flywheel / WordPress installer binaries (do not commit)
-app/
+# Stray Local by Flywheel / WordPress tree at repo root only (do not commit)
+/app/
 
 # =============================================================================
 # VITE / TYPESCRIPT
