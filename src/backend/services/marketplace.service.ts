@@ -76,6 +76,35 @@ function enforceBidExpiry(bid: CareContractBid): boolean {
 // Subscription notification callbacks (simulated)
 const subscriptionListeners: Array<(agencyId: string, packageTitle: string) => void> = [];
 
+/** Map Supabase `jobs` row → `Job` with arrays/strings UI code can assume exist. */
+function mapSupabaseJobRow(d: Record<string, unknown>): Job {
+  const skillsRaw = d.skills;
+  const skills = Array.isArray(skillsRaw)
+    ? (skillsRaw as string[])
+    : typeof skillsRaw === "string"
+      ? [skillsRaw]
+      : [];
+  const agency =
+    d.agency && typeof d.agency === "object"
+      ? (d.agency as Job["agency"])
+      : undefined;
+  return {
+    id: String(d.id ?? ""),
+    title: (d.title as string) ?? "",
+    location: (d.location as string) ?? "",
+    salary: (d.salary as string) ?? undefined,
+    type: d.type as string | undefined,
+    posted: (d.posted as string) ?? (d.created_at as string) ?? "",
+    urgent: d.urgent as boolean | undefined,
+    applicants: d.applicants as number | undefined,
+    status: d.status as string | undefined,
+    description: (d.description as string) ?? undefined,
+    experience: (d.experience as string) ?? "",
+    skills,
+    agency,
+  };
+}
+
 export const marketplaceService = {
   // ─── Legacy (caregiver job board) ───
   async getJobs(): Promise<Job[]> {
@@ -85,11 +114,7 @@ export const marketplaceService = {
           .select("*")
           .order("created_at", { ascending: false });
         if (error) throw error;
-        return (data || []).map((d: any) => ({
-          id: d.id, title: d.title, location: d.location, salary: d.salary,
-          type: d.type, posted: d.posted || d.created_at, urgent: d.urgent,
-          applicants: d.applicants, status: d.status,
-        }));
+        return (data || []).map((d: any) => mapSupabaseJobRow(d));
       });
     }
     await delay();
@@ -105,11 +130,7 @@ export const marketplaceService = {
           .or(`title.ilike.${pattern},location.ilike.${pattern}`)
           .order("created_at", { ascending: false });
         if (error) throw error;
-        return (data || []).map((d: any) => ({
-          id: d.id, title: d.title, location: d.location, salary: d.salary,
-          type: d.type, posted: d.posted || d.created_at, urgent: d.urgent,
-          applicants: d.applicants, status: d.status,
-        }));
+        return (data || []).map((d: any) => mapSupabaseJobRow(d));
       });
     }
     await delay(300);

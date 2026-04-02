@@ -37,11 +37,20 @@ export default defineConfig({
     },
   ],
 
-  // Auto-start the Vite dev server before tests
+  // Auto-start the Vite dev server before tests.
+  // VITE_PLAYWRIGHT_E2E forces mock Supabase + E2E-only UI (see vite.config + supabase.ts).
+  // Windows: `webServer.env` is not always inherited by `npx`; prefix the shell command.
   webServer: {
-    command: "npx vite --host",
+    command:
+      process.platform === "win32"
+        ? "cmd /c \"set VITE_PLAYWRIGHT_E2E=true&& npx vite --host\""
+        : "env VITE_PLAYWRIGHT_E2E=true npx vite --host",
     url: "http://localhost:5173",
     reuseExistingServer: !process.env.CI,
     timeout: 30_000,
+    env: {
+      ...process.env,
+      VITE_PLAYWRIGHT_E2E: "true",
+    },
   },
 });

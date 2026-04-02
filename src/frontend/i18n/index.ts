@@ -5,8 +5,8 @@ import { loadCustomLanguagesIntoI18n, getAllLanguages, setDiscoveredLanguages } 
 /**
  * CareNet i18n configuration — Auto-Discovery Edition
  *
- * Uses Vite's import.meta.glob to auto-discover ALL locale folders at build time.
- * Just run `pnpm translate --lang=hi` and the new language appears automatically —
+ * Uses Vite's import.meta.glob to auto-discover all locale folders at build time.
+ * Just run `npm run translate -- --lang=hi` and the new language appears automatically —
  * no manual imports, no code changes needed.
  *
  * Language detection priority:
@@ -132,7 +132,7 @@ loadCustomLanguagesIntoI18n();
  */
 export function changeLanguage(lang: string) {
   localStorage.setItem(STORAGE_KEY, lang);
-  i18n.changeLanguage(lang);
+  void i18n.changeLanguage(lang);
   document.documentElement.lang = lang;
   // Set text direction for RTL languages
   const rtlLangs = ["ar", "he", "fa", "ur"];

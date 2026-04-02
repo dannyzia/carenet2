@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 import { User, Edit3, Save, ArrowLeft, Camera, Plus, Trash2, Award, FileText, Briefcase, CheckCircle2, ShieldCheck, Layout, Eye, Globe } from "lucide-react";
 import { Button } from "@/frontend/components/ui/button";
-import { useNavigate } from "react-router";
 import { cn } from "@/frontend/theme/tokens";
 import { PageHero } from "@/frontend/components/PageHero";
 import { useAsyncData, useDocumentTitle } from "@/frontend/hooks";
@@ -14,12 +13,11 @@ export default function PortfolioEditorPage() {
   const { t: tDocTitle } = useTranslation("common");
   useDocumentTitle(tDocTitle("pageTitles.portfolioEditor", "Portfolio Editor"));
 
+  const [activeTab, setActiveTab] = useState("profile");
   const { data: portfolio, loading } = useAsyncData(() => caregiverService.getPortfolio());
 
   if (loading || !portfolio) return <PageSkeleton />;
 
-  const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("profile");
   return (
     <div>
       <PageHero gradient="radial-gradient(143.86% 887.35% at -10.97% -22.81%, #7CE577 0%, #5FB865 100%)">

@@ -26,6 +26,15 @@ export default function MFAVerifyPage() {
     if (e.key === "Backspace" && !otp[idx] && idx > 0) (document.getElementById(`verify-otp-${idx - 1}`) as HTMLInputElement)?.focus();
   };
 
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (pasted.length !== 6) return;
+    e.preventDefault();
+    const next = pasted.split("");
+    setOtp(next);
+    setError("");
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (otp.some(v => !v)) { setError("Please enter all 6 digits."); return; }
@@ -48,12 +57,12 @@ export default function MFAVerifyPage() {
           <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ background: "rgba(128,130,237,0.1)" }}>
             <Shield className="w-7 h-7" style={{ color: "#7B5EA7" }} />
           </div>
-          <h1 className="text-2xl text-center mb-2" style={{ color: cn.text }}>Two-Factor Verification</h1>
+          <h1 className="text-2xl text-center mb-2" style={{ color: cn.text }}>Two-Factor Authentication</h1>
           <p className="text-center text-sm mb-6" style={{ color: cn.textSecondary }}>Enter the 6-digit code from your authenticator app (Google Authenticator, Authy, etc.)</p>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="flex gap-2 justify-center">
               {otp.map((val, i) => (
-                <input key={i} id={`verify-otp-${i}`} type="text" inputMode="numeric" maxLength={1} value={val} onChange={(e) => handleOtpChange(e.target.value, i)} onKeyDown={(e) => handleKeyDown(e, i)} className="w-12 text-center border-2 rounded-xl text-xl outline-none transition-all" style={{ height: "3.25rem", borderColor: error ? "#EF4444" : val ? cn.pink : cn.border, color: cn.text, boxShadow: val ? `0 0 0 3px rgba(219,134,154,0.15)` : "none" }} />
+                <input key={i} id={`verify-otp-${i}`} type="text" inputMode="numeric" maxLength={1} value={val} onChange={(e) => handleOtpChange(e.target.value, i)} onKeyDown={(e) => handleKeyDown(e, i)} onPaste={i === 0 ? handlePaste : undefined} className="w-12 text-center border-2 rounded-xl text-xl outline-none transition-all" style={{ height: "3.25rem", borderColor: error ? "#EF4444" : val ? cn.pink : cn.border, color: cn.text, boxShadow: val ? `0 0 0 3px rgba(219,134,154,0.15)` : "none" }} />
               ))}
             </div>
             {error && <p className="text-center text-sm" style={{ color: "#EF4444" }}>{error}</p>}
@@ -66,6 +75,9 @@ export default function MFAVerifyPage() {
           </form>
           <div className="mt-6 text-center">
             <p className="text-sm" style={{ color: cn.textSecondary }}>
+              <Link to="/auth/login" className="hover:underline" style={{ color: cn.pink }}>Back to login</Link>
+            </p>
+            <p className="text-sm mt-2" style={{ color: cn.textSecondary }}>
               Lost access to your authenticator?{" "}
               <Link to="/auth/forgot-password" className="hover:underline" style={{ color: cn.pink }}>Reset account</Link>
             </p>

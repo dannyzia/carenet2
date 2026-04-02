@@ -1,7 +1,6 @@
 import { BookOpen, Play, CheckCircle, Clock, Award, Star, Lock, ChevronRight, BarChart2, Download, Search, PlayCircle } from "lucide-react";
 import React from "react";
 import { Button } from "@/frontend/components/ui/button";
-import { useNavigate } from "react-router";
 import { PageHero } from "@/frontend/components/PageHero";
 import { useAsyncData, useDocumentTitle } from "@/frontend/hooks";
 import { caregiverService } from "@/backend/services/caregiver.service";
@@ -16,7 +15,6 @@ export default function TrainingPortalPage() {
 
   if (loading || !modules) return <PageSkeleton />;
 
-  const navigate = useNavigate();
   return (
     <div>
       <PageHero gradient="radial-gradient(143.86% 887.35% at -10.97% -22.81%, #FEB4C5 0%, #DB869A 100%)">

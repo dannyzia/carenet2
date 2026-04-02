@@ -1,6 +1,5 @@
-import { cn } from "@/frontend/theme/tokens";
 import { Link } from "react-router";
-import { Star, Flag, FileText, Clock, CheckCircle, AlertTriangle, TrendingUp, Shield, ArrowUpRight } from "lucide-react";
+import { Star, Flag, FileText, CheckCircle, TrendingUp, Shield, ArrowUpRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAsyncData, useDocumentTitle } from "@/frontend/hooks";
 import { moderatorService } from "@/backend/services/moderator.service";
@@ -16,16 +15,15 @@ export default function ModeratorDashboardPage() {
   const { t } = useTranslation("common");
   useDocumentTitle(t("pageTitles.moderatorDashboard", "Dashboard"));
 
-  const { data: queue, loading } = useAsyncData(() => moderatorService.getDashboardQueue());
-
-  if (loading || !queue) return <PageSkeleton cards={5} />;
+  const { data: queue, loading, error } = useAsyncData(() => moderatorService.getDashboardQueue());
+  const queueItems = queue ?? [];
 
   return (
     <>
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-semibold" style={{ color: "#535353" }}>Moderator Dashboard</h1>
-          <p className="text-sm" style={{ color: "#848484" }}>Content moderation queue — March 15, 2026</p>
+          <p className="text-sm" style={{ color: "#848484" }}>Reviews, reports, and flags — March 15, 2026</p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -79,8 +77,13 @@ export default function ModeratorDashboardPage() {
             <span className="badge-pill" style={{ background: "#EF444420", color: "#EF4444" }}>31 items</span>
           </div>
           <div className="space-y-3">
-            {queue.map(item => {
-              const pc = priorityColors[item.priority];
+            {loading ? (
+              <PageSkeleton cards={2} />
+            ) : error ? (
+              <p className="text-sm" style={{ color: "#EF4444" }}>Could not load moderation queue.</p>
+            ) : (
+              queueItems.map(item => {
+              const pc = priorityColors[item.priority] ?? priorityColors.medium;
               return (
                 <div key={item.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl" style={{ background: "#F9FAFB" }}>
                   <div className="flex items-start gap-3">
@@ -105,7 +108,8 @@ export default function ModeratorDashboardPage() {
                   </div>
                 </div>
               );
-            })}
+            })
+            )}
           </div>
         </div>
       </div>

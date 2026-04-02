@@ -1,17 +1,35 @@
 import { useState } from "react";
 import { cn } from "@/frontend/theme/tokens";
-import { FileText, Plus, Clock, User, Calendar, Search, Filter, AlertTriangle, Eye, Star, Tag, Camera, Mic, ChevronDown, Heart, Pill, Activity, MessageSquare, Pin } from "lucide-react";
+import { FileText, Plus, Clock, User, Calendar, Search, Filter, AlertTriangle, Eye, Star, Tag, Camera, Mic, ChevronDown, Heart, Pill, Activity, MessageSquare, Pin, Footprints } from "lucide-react";
 import { useAsyncData, useDocumentTitle } from "@/frontend/hooks";
 import { caregiverService } from "@/backend/services";
 import { PageSkeleton } from "@/frontend/components/shared/PageSkeleton";
 import { useTranslation } from "react-i18next";
 
-interface CareNote { id: string; patientName: string; date: string; time: string; category: "observation" | "incident" | "medication" | "progress" | "family" | "general"; title: string; content: string; mood?: string; severity?: "low" | "medium" | "high"; pinned: boolean; tags: string[]; attachments: number; }
+interface CareNote {
+  id: string;
+  patientName: string;
+  date: string;
+  time: string;
+  category: string;
+  title: string;
+  content: string;
+  mood?: string;
+  severity?: "low" | "medium" | "high";
+  pinned: boolean;
+  tags: string[];
+  attachments: number;
+}
 
 const categoryConfig: Record<string, { label: string; icon: React.ElementType; color: string }> = {
-  observation: { label: "Observation", icon: Eye, color: "#0288D1" }, incident: { label: "Incident", icon: AlertTriangle, color: "#EF4444" },
-  medication: { label: "Medication", icon: Pill, color: "#5FB865" }, progress: { label: "Progress", icon: Star, color: "#F59E0B" },
-  family: { label: "Family Update", icon: Heart, color: "#E91E63" }, general: { label: "General", icon: FileText, color: "#6B7280" },
+  observation: { label: "Observation", icon: Eye, color: "#0288D1" },
+  incident: { label: "Incident", icon: AlertTriangle, color: "#EF4444" },
+  medication: { label: "Medication", icon: Pill, color: "#5FB865" },
+  progress: { label: "Progress", icon: Star, color: "#F59E0B" },
+  family: { label: "Family Update", icon: Heart, color: "#E91E63" },
+  general: { label: "General", icon: FileText, color: "#6B7280" },
+  vitals: { label: "Vitals", icon: Activity, color: "#0288D1" },
+  activity: { label: "Activity", icon: Footprints, color: "#8B5CF6" },
 };
 
 export default function CaregiverCareNotesPage() {
@@ -81,7 +99,9 @@ function CareNotesContent({ initialNotes }: { initialNotes: CareNote[] }) {
 
       <div className="space-y-3">
         {sorted.map(note => {
-          const cfg = categoryConfig[note.category]; const Icon = cfg.icon; const isExpanded = expandedNote === note.id;
+          const cfg = categoryConfig[note.category] ?? categoryConfig.general;
+          const Icon = cfg.icon;
+          const isExpanded = expandedNote === note.id;
           return (
             <div key={note.id} className="finance-card p-4 sm:p-5 cursor-pointer" style={{ borderLeft: `3px solid ${cfg.color}` }} onClick={() => setExpandedNote(isExpanded ? null : note.id)}>
               <div className="flex items-start gap-3">

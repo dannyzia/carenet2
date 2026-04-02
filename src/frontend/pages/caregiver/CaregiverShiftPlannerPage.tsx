@@ -5,9 +5,30 @@ import { useAsyncData, useDocumentTitle } from "@/frontend/hooks";
 import { caregiverService } from "@/backend/services";
 import { PageSkeleton } from "@/frontend/components/shared/PageSkeleton";
 import { useTranslation } from "react-i18next";
+import type { ShiftPlan as ApiShiftPlan } from "@/backend/models";
 
 interface ShiftTask { id: string; title: string; category: string; scheduledTime: string; duration: string; priority: "high" | "medium" | "low"; notes: string; completed: boolean; }
 interface ShiftPlan { id: string; patientName: string; date: string; shiftTime: string; tasks: ShiftTask[]; status: "draft" | "active" | "completed"; }
+
+function adaptShiftPlans(api: ApiShiftPlan[]): ShiftPlan[] {
+  return api.map((p) => ({
+    id: p.id,
+    patientName: p.patientName,
+    date: p.date,
+    shiftTime: p.shiftTime,
+    status: p.status === "upcoming" ? "draft" : p.status === "completed" ? "completed" : "active",
+    tasks: p.tasks.map((t, i) => ({
+      id: `${p.id}-task-${i}`,
+      title: t.label,
+      category: "general",
+      scheduledTime: "—",
+      duration: "—",
+      priority: "medium" as const,
+      notes: "",
+      completed: t.done,
+    })),
+  }));
+}
 
 const categoryIcons: Record<string, React.ElementType> = { medication: Pill, vitals: Activity, meal: UtensilsCrossed, exercise: Dumbbell, general: ClipboardList };
 const categoryColors: Record<string, string> = { medication: "#5FB865", vitals: "#0288D1", meal: "#E64A19", exercise: "#7B5EA7", general: "#6B7280" };
@@ -21,7 +42,7 @@ export default function CaregiverShiftPlannerPage() {
 
   if (loading || !shiftPlans) return <PageSkeleton cards={3} />;
 
-  return <ShiftPlannerContent initialPlans={shiftPlans as ShiftPlan[]} />;
+  return <ShiftPlannerContent initialPlans={adaptShiftPlans(shiftPlans)} />;
 }
 
 function ShiftPlannerContent({ initialPlans }: { initialPlans: ShiftPlan[] }) {

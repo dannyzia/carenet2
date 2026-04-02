@@ -80,8 +80,7 @@ const config: CapacitorConfig = {
     allowMixedContent: true,
     // Use WebView hardware acceleration
     webContentsDebuggingEnabled: false, // Set true for debug builds
-    // Minimum SDK 24 (Android 7.0) per D008 §12.1
-    // Set in android/app/build.gradle: minSdkVersion 24
+    // Minimum SDK 23 (Android 6.0) per D008 §12.1 — see android/variables.gradle
   },
 
   // ─── iOS-specific ───

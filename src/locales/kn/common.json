@@ -342,6 +342,15 @@
     "notFoundTitle": "404",
     "unauthorized": "Please log in to continue"
   },
+  "experience": {
+    "disclaimerLead": "You’re in a browser-only preview. Nothing here is saved to the real CareNet production database.",
+    "disclaimerRetention": "Demo data stays on this device and expires over time (form drafts about {{days}} days). Other cached bits may clear sooner. Clearing browser/site data removes it right away.",
+    "infoTitle": "Good to know",
+    "replacesSession": "Choosing a role below signs you into a demo account and replaces any current session on this device.",
+    "selectPrompt": "Pick a role to explore the app:",
+    "subtitle": "Try dashboards and flows with sample data — no real account required.",
+    "title": "Experience the App"
+  },
   "footer": {
     "madeWith": "Made with care in Bangladesh",
     "privacy": "Privacy Policy",
@@ -379,8 +388,10 @@
     "hero": {
       "brand": "CareNet",
       "careShop": "Care Shop",
+      "experienceApp": "Experience the App",
       "jobPortal": "Job Portal",
       "register": "Register",
+      "signInRegister": "Sign in / Register",
       "subtitle": "Bangladesh's trusted platform for connecting families with verified caregivers and professional agencies",
       "tagline": "Quality care, connected"
     }
@@ -398,6 +409,7 @@
     "home": "Home",
     "login": "Log In",
     "logout": "Log Out",
+    "marketplace": "Marketplace",
     "messages": "Messages",
     "notifications": "Notifications",
     "pricing": "Pricing",
@@ -485,6 +497,7 @@
     "disputeAdjudication": "Dispute Adjudication",
     "documentVerification": "Document Verification",
     "emergencyHub": "Emergency Hub",
+    "experienceApp": "Experience the App",
     "familyHub": "Family Hub",
     "features": "Features",
     "financialAudit": "Financial Audit",
@@ -589,6 +602,15 @@
     "wallet": "Wallet",
     "wishlist": "Wishlist"
   },
+  "roles": {
+    "admin": "Administrator",
+    "agency": "Agency",
+    "caregiver": "Caregiver",
+    "guardian": "Guardian",
+    "moderator": "Moderator",
+    "patient": "Patient",
+    "shop": "Shop Owner"
+  },
   "sidebar": {
     "about": "About",
     "agencies": "Agencies",
@@ -671,6 +693,7 @@
     "schedule": "Schedule",
     "searchPlaceholder": "Search...",
     "section": {
+      "appControls": "App & account",
       "browse": "Browse",
       "contentConfig": "Content & Config",
       "finance": "Finance",
@@ -728,6 +751,10 @@
     "pending": "Pending",
     "rejected": "Rejected",
     "submitted": "Submitted"
+  },
+  "theme": {
+    "darkMode": "Dark mode",
+    "lightMode": "Light mode"
   },
   "time": {
     "daysAgo": "{{count}}d ago",

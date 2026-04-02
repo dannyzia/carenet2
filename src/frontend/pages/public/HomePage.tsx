@@ -7,7 +7,6 @@ import {
   Clock,
   Users,
   Star,
-  ArrowRight,
   Phone,
   Mail,
 } from "lucide-react";
@@ -15,7 +14,7 @@ import { Button } from "@/frontend/components/ui/button";
 import { cn } from "@/frontend/theme/tokens";
 
 export default function HomePage() {
-  const { t } = useTranslation("common");
+  const { t, i18n } = useTranslation("common");
   useDocumentTitle(t("pageTitles.home", "Home"));
 
   /** Stats labels — keys under `home.stats.*` (run `npm run i18n:refresh` then `translate`) */
@@ -86,7 +85,7 @@ export default function HomePage() {
         ),
       },
     ],
-    [t]
+    [t, i18n.language]
   );
 
   return (
@@ -136,8 +135,23 @@ export default function HomePage() {
                 )}
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link to="/auth/role-selection">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center flex-wrap">
+                <Link to="/experience" className="no-underline w-full sm:w-auto">
+                  <Button
+                    size="lg"
+                    className="px-8 h-12 w-full sm:w-auto dark:shadow-[0px_4px_24px_rgba(2,136,209,0.28)]"
+                    style={{
+                      background: "var(--cn-gradient-patient)",
+                      color: "white",
+                      boxShadow: "0px 4px 18px rgba(2, 136, 209, 0.38)",
+                      fontWeight: "500",
+                      border: "none",
+                    }}
+                  >
+                    {t("home.hero.experienceApp", "Experience the App")}
+                  </Button>
+                </Link>
+                <Link to="/auth/login" className="no-underline w-full sm:w-auto">
                   <Button
                     size="lg"
                     className="px-8 h-12 w-full sm:w-auto dark:shadow-[0px_4px_24px_rgba(233,154,175,0.3)]"
@@ -148,8 +162,7 @@ export default function HomePage() {
                       fontWeight: "500",
                     }}
                   >
-                    {t("home.hero.register", "Register")}
-                    <ArrowRight className="w-5 h-5 ml-2" />
+                    {t("home.hero.signInRegister", "Sign in / Register")}
                   </Button>
                 </Link>
                 <Link to="/marketplace">

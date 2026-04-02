@@ -28,6 +28,7 @@ export const MOCK_MARKETPLACE_JOBS: Job[] = [
     description: "Companion care for 80-year-old gentleman. Light mobility assistance, medication reminders, companionship.",
     salary: "৳20,000 - ৳28,000/month", experience: "1+ year",
     skills: ["Companionship", "Medication Reminders", "Light Mobility"],
+    agency: { name: "Harmony Home Care", rating: 4.6, verified: true },
     posted: "3 days ago",
   },
 ];

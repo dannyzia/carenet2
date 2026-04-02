@@ -29,10 +29,34 @@ import { USE_SUPABASE, sbRead, sbWrite, sb, currentUserId } from "./_sb";
 
 const delay = (ms = 200) => new Promise((r) => setTimeout(r, ms));
 
+function isDemoAuthMode(): boolean {
+  if (typeof window === "undefined") return false;
+
+  try {
+    const mode = window.localStorage.getItem("carenet-auth-mode");
+    if (mode === "demo") return true;
+
+    const rawUser = window.localStorage.getItem("carenet-auth");
+    if (!rawUser) return false;
+    const parsed = JSON.parse(rawUser) as { id?: string; email?: string };
+    return (
+      typeof parsed.id === "string" && parsed.id.startsWith("demo-")
+    ) || (
+      typeof parsed.email === "string" && parsed.email.endsWith("@carenet.demo")
+    );
+  } catch {
+    return false;
+  }
+}
+
+function shouldUseSupabase(): boolean {
+  return USE_SUPABASE && !isDemoAuthMode();
+}
+
 export const patientService = {
   /** Get vitals time-series for charts */
   async getVitalsData(patientId?: string): Promise<VitalsReading[]> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       const pid = patientId || "me";
       return sbRead(`vitals:${pid}`, async () => {
         const userId = patientId || await currentUserId();
@@ -56,7 +80,7 @@ export const patientService = {
 
   /** Get medication reminders for today */
   async getMedicationReminders(): Promise<MedicationReminder[]> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead("med-reminders", async () => {
         const userId = await currentUserId();
         const { data, error } = await sb().from("prescriptions")
@@ -80,7 +104,7 @@ export const patientService = {
   },
 
   async getHealthReportData(): Promise<HealthReportDataPoint[]> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead("health-report", async () => {
         const userId = await currentUserId();
         const { data, error } = await sb().from("patient_vitals")
@@ -101,7 +125,7 @@ export const patientService = {
   },
 
   async getTodayEvents(): Promise<ScheduleEvent[]> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead("today-events", async () => {
         const userId = await currentUserId();
         const today = new Date().toISOString().split("T")[0];
@@ -127,7 +151,7 @@ export const patientService = {
   },
 
   async getUpcomingEvents(): Promise<UpcomingEvent[]> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead("upcoming-events", async () => {
         const userId = await currentUserId();
         const today = new Date().toISOString().split("T")[0];
@@ -153,7 +177,7 @@ export const patientService = {
 
   /** Mark a medication as taken */
   async markMedicationTaken(medId: number): Promise<void> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbWrite(async () => {
         // Would update a medication_tracking table — not yet created
         console.log(`[patient.service] Medication ${medId} marked as taken (Supabase)`);
@@ -164,7 +188,7 @@ export const patientService = {
   },
 
   async getDashboardVitals(): Promise<PatientDashboardVital[]> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead("dashboard-vitals", async () => {
         const userId = await currentUserId();
         const { data, error } = await sb().from("patient_vitals")
@@ -188,7 +212,7 @@ export const patientService = {
   },
 
   async getDashboardMedications(): Promise<PatientDashboardMedication[]> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead("dashboard-meds", async () => {
         const userId = await currentUserId();
         const { data, error } = await sb().from("prescriptions")
@@ -221,7 +245,7 @@ export const patientService = {
   },
 
   async getConditions(): Promise<PatientCondition[]> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead("conditions", async () => {
         const userId = await currentUserId();
         const { data, error } = await sb().from("patients")
@@ -248,7 +272,7 @@ export const patientService = {
   },
 
   async getCareHistory(): Promise<CareHistoryEntry[]> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead("care-history", async () => {
         const userId = await currentUserId();
         const { data, error } = await sb().from("shifts")
@@ -275,7 +299,7 @@ export const patientService = {
   },
 
   async getProfile(): Promise<PatientProfile> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead("patient-profile", async () => {
         const userId = await currentUserId();
         const { data, error } = await sb().from("patients")
@@ -306,3 +330,4 @@ export const patientService = {
     return MOCK_PRIVACY_DATA;
   },
 };
+

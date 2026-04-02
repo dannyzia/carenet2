@@ -43,7 +43,7 @@ export default function ModeratorReviewsPage() {
 
         <div className="space-y-4">
           {filtered.map(r => {
-            const sc = statusConfig[r.status];
+            const sc = statusConfig[r.status] ?? statusConfig.pending;
             return (
               <div key={r.id} className="finance-card p-5">
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">

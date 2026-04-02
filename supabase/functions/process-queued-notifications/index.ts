@@ -240,55 +240,55 @@ async function sendNativePush(
   const fcmTokens = tokens.filter((t) => t.platform === "fcm");
   const apnsTokens = tokens.filter((t) => t.platform === "apns");
 
-  // ── FCM ──
-  const fcmKey = Deno.env.get("FCM_SERVER_KEY");
-  if (fcmKey && fcmTokens.length > 0) {
+  // ── FCM HTTP v1 ──
+  const fcmSaJson = Deno.env.get("FCM_SERVICE_ACCOUNT_JSON");
+  if (fcmSaJson && fcmTokens.length > 0) {
     try {
-      const fcmResponse = await fetch("https://fcm.googleapis.com/fcm/send", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `key=${fcmKey}`,
-        },
-        body: JSON.stringify({
-          registration_ids: fcmTokens.map((t) => t.token),
-          notification: {
-            title: payload.title,
-            body: payload.body,
-            click_action: payload.action_url || undefined,
-            sound: "default",
-          },
-          data: {
-            notification_id: notificationId,
-            type: payload.type,
-            action_url: payload.action_url || "",
-            metadata: JSON.stringify(payload.metadata || {}),
-          },
-          priority: "high",
-        }),
-      });
+      const { token: accessToken, projectId } = await getFcmAccessToken(fcmSaJson);
+      const fcmEndpoint = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
 
-      if (fcmResponse.ok) {
-        const fcmResult = await fcmResponse.json();
-        result.fcm = fcmResult.success || 0;
+      for (const devToken of fcmTokens) {
+        try {
+          const fcmRes = await fetch(fcmEndpoint, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({
+              message: {
+                token: devToken.token,
+                notification: { title: payload.title, body: payload.body },
+                data: {
+                  notification_id: notificationId,
+                  type: payload.type,
+                  action_url: payload.action_url || "",
+                  metadata: JSON.stringify(payload.metadata || {}),
+                },
+                android: {
+                  priority: "HIGH",
+                  notification: { sound: "default" },
+                },
+              },
+            }),
+          });
 
-        // Deactivate invalid tokens
-        if (fcmResult.results) {
-          for (let i = 0; i < fcmResult.results.length; i++) {
-            const r = fcmResult.results[i];
-            if (
-              r.error === "NotRegistered" ||
-              r.error === "InvalidRegistration"
-            ) {
+          if (fcmRes.ok) {
+            result.fcm++;
+          } else {
+            const errBody = await fcmRes.json();
+            const errCode = errBody?.error?.details?.[0]?.errorCode as string | undefined;
+            if (errCode === "UNREGISTERED" || errCode === "INVALID_ARGUMENT") {
               await adminClient
                 .from("device_tokens")
                 .update({ active: false })
-                .eq("id", fcmTokens[i].id);
+                .eq("id", devToken.id);
             }
+            result.errors.push(`FCM ${fcmRes.status}: ${errCode ?? JSON.stringify(errBody).substring(0, 120)}`);
           }
+        } catch (e) {
+          result.errors.push(`FCM token error: ${(e as Error).message}`);
         }
-      } else {
-        result.errors.push(`FCM HTTP ${fcmResponse.status}`);
       }
     } catch (e) {
       result.errors.push(`FCM error: ${(e as Error).message}`);
@@ -365,6 +365,71 @@ async function sendNativePush(
   }
 
   return result;
+}
+
+// ─── FCM HTTP v1 — OAuth2 via Service Account ───
+
+interface ServiceAccount {
+  project_id: string;
+  client_email: string;
+  private_key: string;
+}
+
+async function getFcmAccessToken(
+  saJsonBase64: string
+): Promise<{ token: string; projectId: string }> {
+  const sa: ServiceAccount = JSON.parse(atob(saJsonBase64));
+  const now = Math.floor(Date.now() / 1000);
+
+  const header = base64url(JSON.stringify({ alg: "RS256", typ: "JWT" }));
+  const claims = base64url(
+    JSON.stringify({
+      iss: sa.client_email,
+      scope: "https://www.googleapis.com/auth/firebase.messaging",
+      aud: "https://oauth2.googleapis.com/token",
+      exp: now + 3600,
+      iat: now,
+    })
+  );
+  const signingInput = `${header}.${claims}`;
+
+  const pemBody = sa.private_key
+    .replace(/-----BEGIN PRIVATE KEY-----/g, "")
+    .replace(/-----END PRIVATE KEY-----/g, "")
+    .replace(/\n/g, "")
+    .trim();
+  const keyBytes = Uint8Array.from(atob(pemBody), (c) => c.charCodeAt(0));
+
+  const key = await crypto.subtle.importKey(
+    "pkcs8",
+    keyBytes.buffer,
+    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+
+  const sig = await crypto.subtle.sign(
+    { name: "RSASSA-PKCS1-v1_5" },
+    key,
+    new TextEncoder().encode(signingInput)
+  );
+
+  const jwt = `${signingInput}.${base64url(new Uint8Array(sig))}`;
+
+  const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+      assertion: jwt,
+    }),
+  });
+
+  const tokenData = await tokenRes.json();
+  if (!tokenData.access_token) {
+    throw new Error(`FCM OAuth2 failed: ${JSON.stringify(tokenData)}`);
+  }
+  return { token: tokenData.access_token, projectId: sa.project_id };
 }
 
 // ─── APNs JWT Generation (ES256) ───

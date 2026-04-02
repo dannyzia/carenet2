@@ -43,10 +43,34 @@ import { USE_SUPABASE, sbRead, sbWrite, sb, currentUserId } from "./_sb";
 
 const delay = (ms = 200) => new Promise((r) => setTimeout(r, ms));
 
+function isDemoAuthMode(): boolean {
+  if (typeof window === "undefined") return false;
+
+  try {
+    const mode = window.localStorage.getItem("carenet-auth-mode");
+    if (mode === "demo") return true;
+
+    const rawUser = window.localStorage.getItem("carenet-auth");
+    if (!rawUser) return false;
+    const parsed = JSON.parse(rawUser) as { id?: string; email?: string };
+    return (
+      typeof parsed.id === "string" && parsed.id.startsWith("demo-")
+    ) || (
+      typeof parsed.email === "string" && parsed.email.endsWith("@carenet.demo")
+    );
+  } catch {
+    return false;
+  }
+}
+
+function shouldUseSupabase(): boolean {
+  return USE_SUPABASE && !isDemoAuthMode();
+}
+
 export const agencyService = {
   /** Search agencies by keyword */
   async searchAgencies(query?: string): Promise<Agency[]> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead(`ag:search:${query || "all"}`, async () => {
         let q = sb().from("agencies").select("*");
         if (query) q = q.ilike("name", `%${query}%`);
@@ -68,7 +92,7 @@ export const agencyService = {
 
   /** Get agency by ID */
   async getAgencyById(id: string): Promise<Agency | undefined> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead(`ag:${id}`, async () => {
         const { data, error } = await sb().from("agencies").select("*").eq("id", id).single();
         if (error) return undefined;
@@ -81,7 +105,7 @@ export const agencyService = {
 
   /** Get caregivers in the agency roster */
   async getCaregivers(): Promise<AgencyCaregiver[]> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead("ag:caregivers", async () => {
         const userId = await currentUserId();
         const { data, error } = await sb().from("caregiver_profiles")
@@ -103,7 +127,7 @@ export const agencyService = {
 
   /** Get jobs managed by the agency */
   async getJobs(): Promise<AgencyJob[]> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead("ag:jobs", async () => {
         const userId = await currentUserId();
         const { data, error } = await sb().from("jobs")
@@ -124,7 +148,7 @@ export const agencyService = {
 
   /** Get placements managed by the agency */
   async getPlacements(): Promise<AgencyPlacement[]> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead("ag:placements", async () => {
         const userId = await currentUserId();
         const { data, error } = await sb().from("placements")
@@ -145,7 +169,7 @@ export const agencyService = {
 
   /** Get agency directory listings for public page */
   async getDirectoryAgencies(): Promise<DirectoryAgency[]> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead("ag:directory", async () => {
         const { data, error } = await sb().from("agencies")
           .select("*")
@@ -184,7 +208,7 @@ export const agencyService = {
   },
 
   async getReportsData(): Promise<{ monthly: AgencyMonthlyData[]; performance: AgencyPerformanceData[] }> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead("ag:reports", async () => {
         const userId = await currentUserId();
         const { data, error } = await sb().from("agency_monthly_overview")
@@ -205,7 +229,7 @@ export const agencyService = {
   },
 
   async getShiftMonitoringData(): Promise<{ shifts: ActiveShift[]; alerts: ShiftAlert[] }> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead("ag:monitoring", async () => {
         const userId = await currentUserId();
         const { data, error } = await sb().from("shift_monitoring_live")
@@ -234,7 +258,7 @@ export const agencyService = {
   },
 
   async getRevenueChartData(): Promise<AgencyRevenuePoint[]> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead("ag:revenue", async () => {
         const userId = await currentUserId();
         const { data, error } = await sb().from("agency_revenue_monthly")
@@ -320,7 +344,7 @@ export const agencyService = {
   },
 
   async verifyDocument(docId: string, note: string): Promise<void> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbWrite(async () => {
         const { error } = await sb().from("caregiver_documents").update({
           status: "approved", review_note: note, reviewed_at: new Date().toISOString(),
@@ -332,7 +356,7 @@ export const agencyService = {
   },
 
   async rejectDocument(docId: string, note: string): Promise<void> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbWrite(async () => {
         const { error } = await sb().from("caregiver_documents").update({
           status: "rejected", review_note: note, reviewed_at: new Date().toISOString(),
@@ -358,7 +382,7 @@ export const agencyService = {
   // ─── Incidents (W09 — Agency Incidents Management) ───
 
   async getIncidents(): Promise<AgencyIncident[]> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead("ag:incidents", async () => {
         const userId = await currentUserId();
         const { data, error } = await sb().from("incident_reports")
@@ -386,7 +410,7 @@ export const agencyService = {
   },
 
   async resolveIncident(id: string, note: string): Promise<void> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbWrite(async () => {
         const { error } = await sb().from("incident_reports").update({
           status: "resolved",
@@ -400,7 +424,7 @@ export const agencyService = {
   },
 
   async escalateIncident(id: string): Promise<void> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbWrite(async () => {
         const { error } = await sb().from("incident_reports")
           .update({ status: "escalated" })
@@ -419,3 +443,4 @@ function mapAgency(d: any): Agency {
     caregiverCount: d.caregiver_count, verified: d.verified, responseTime: d.response_time, image: d.image,
   };
 }
+

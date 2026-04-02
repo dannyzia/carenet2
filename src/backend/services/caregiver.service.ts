@@ -57,10 +57,34 @@ import { USE_SUPABASE, sbRead, sbWrite, sb, currentUserId } from "./_sb";
 /** Simulates async API latency for realistic dev experience */
 const delay = (ms = 200) => new Promise((r) => setTimeout(r, ms));
 
+function isDemoAuthMode(): boolean {
+  if (typeof window === "undefined") return false;
+
+  try {
+    const mode = window.localStorage.getItem("carenet-auth-mode");
+    if (mode === "demo") return true;
+
+    const rawUser = window.localStorage.getItem("carenet-auth");
+    if (!rawUser) return false;
+    const parsed = JSON.parse(rawUser) as { id?: string; email?: string };
+    return (
+      typeof parsed.id === "string" && parsed.id.startsWith("demo-")
+    ) || (
+      typeof parsed.email === "string" && parsed.email.endsWith("@carenet.demo")
+    );
+  } catch {
+    return false;
+  }
+}
+
+function shouldUseSupabase(): boolean {
+  return USE_SUPABASE && !isDemoAuthMode();
+}
+
 export const caregiverService = {
   /** Search caregiver profiles by keyword */
   async searchCaregivers(query: string): Promise<CaregiverProfile[]> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead(`cg:search:${query}`, async () => {
         let q = sb().from("caregiver_profiles").select("*");
         if (query) q = q.ilike("name", `%${query}%`);
@@ -82,7 +106,7 @@ export const caregiverService = {
 
   /** Get a single caregiver by ID */
   async getCaregiverById(id: string): Promise<CaregiverProfile | undefined> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead(`cg:${id}`, async () => {
         const { data, error } = await sb().from("caregiver_profiles").select("*").eq("id", id).single();
         if (error) return undefined;
@@ -95,7 +119,7 @@ export const caregiverService = {
 
   /** Get patients assigned to the current caregiver */
   async getAssignedPatients(): Promise<AssignedPatient[]> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead("cg:patients", async () => {
         const userId = await currentUserId();
         const { data, error } = await sb().from("placements")
@@ -124,7 +148,7 @@ export const caregiverService = {
 
   /** Get jobs visible to the current caregiver */
   async getAvailableJobs(): Promise<Job[]> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead("cg:jobs", async () => {
         const { data, error } = await sb().from("jobs")
           .select("*")
@@ -144,7 +168,7 @@ export const caregiverService = {
 
   /** Get care notes for the current caregiver */
   async getCareNotes(): Promise<CareNote[]> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead("cg:notes", async () => {
         const userId = await currentUserId();
         const { data, error } = await sb().from("care_notes")
@@ -166,7 +190,7 @@ export const caregiverService = {
 
   /** Get shift plans for the current caregiver */
   async getShiftPlans(): Promise<ShiftPlan[]> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead("cg:shifts", async () => {
         const userId = await currentUserId();
         const { data, error } = await sb().from("shifts")
@@ -187,7 +211,7 @@ export const caregiverService = {
 
   /** Get prescriptions managed by the current caregiver */
   async getPrescriptions(): Promise<Prescription[]> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead("cg:prescriptions", async () => {
         const userId = await currentUserId();
         // Get patients assigned to this caregiver
@@ -223,7 +247,7 @@ export const caregiverService = {
 
   /** Get reviews for the current caregiver */
   async getReviews(): Promise<CaregiverReview[]> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead("cg:reviews", async () => {
         const userId = await currentUserId();
         const { data, error } = await sb().from("caregiver_reviews")
@@ -242,7 +266,7 @@ export const caregiverService = {
   },
 
   async getTaxReportData(): Promise<TaxChartDataPoint[]> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead("cg:tax", async () => {
         const userId = await currentUserId();
         const { data, error } = await sb().rpc("get_caregiver_earnings", { p_caregiver_id: userId });
@@ -262,7 +286,7 @@ export const caregiverService = {
   },
 
   async getProfileData(): Promise<CaregiverProfileData> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead("cg:profile", async () => {
         const userId = await currentUserId();
         const { data, error } = await sb().from("caregiver_profiles")
@@ -336,7 +360,7 @@ export const caregiverService = {
 
   // ─── Missing methods used by pages ───
   async getDashboardEarnings(): Promise<DashboardEarningsPoint[]> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead("cg:earnings-chart", async () => {
         const userId = await currentUserId();
         const { data, error } = await sb().rpc("get_caregiver_earnings", { p_caregiver_id: userId });
@@ -351,7 +375,7 @@ export const caregiverService = {
   },
 
   async getDocuments(): Promise<CaregiverDocument[]> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead("cg:documents", async () => {
         const userId = await currentUserId();
         const { data, error } = await sb().from("caregiver_documents")
@@ -371,7 +395,7 @@ export const caregiverService = {
   },
 
   async getMonthlyEarnings(): Promise<MonthlyEarningsPoint[]> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead("cg:monthly-earnings", async () => {
         const userId = await currentUserId();
         const { data, error } = await sb().rpc("get_caregiver_earnings", { p_caregiver_id: userId });
@@ -456,7 +480,7 @@ export const caregiverService = {
     type: string; severity: string; patientId: string; shiftId?: string;
     description: string; immediateAction: string; photos: string[];
   }): Promise<{ id: string }> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbWrite(async () => {
         const userId = await currentUserId();
         const { data: row, error } = await sb().from("incident_reports").insert({
@@ -482,7 +506,7 @@ export const caregiverService = {
   async getIncidentHistory(): Promise<Array<{
     id: string; type: string; severity: string; date: string; status: string; patient: string;
   }>> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead("cg:incidents", async () => {
         const userId = await currentUserId();
         const { data, error } = await sb().from("incident_reports")
@@ -504,7 +528,7 @@ export const caregiverService = {
   // ─── Shift check-in methods (Phase 5) ───
 
   async startShift(id: string, _selfieUrl: string, _gps: { lat: number; lng: number }): Promise<void> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbWrite(async () => {
         const { error } = await sb().from("shifts").update({
           status: "checked-in",
@@ -520,7 +544,7 @@ export const caregiverService = {
   },
 
   async endShift(id: string, _selfieUrl: string, _gps: { lat: number; lng: number }): Promise<void> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbWrite(async () => {
         const { error } = await sb().from("shifts").update({
           status: "completed",
@@ -554,7 +578,7 @@ export const caregiverService = {
   },
 
   async rateShift(_shiftId: string, _rating: number, _comment: string): Promise<void> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbWrite(async () => {
         const userId = await currentUserId();
         const { error } = await sb().from("shift_ratings").insert({
@@ -573,7 +597,7 @@ export const caregiverService = {
   // ─── Document expiry (Phase 10) ───
 
   async getExpiringDocuments(daysAhead: number = 90): Promise<import("@/backend/models").DocumentExpiryAlert[]> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead(`cg:expiring:${daysAhead}`, async () => {
         const userId = await currentUserId();
         const { data, error } = await sb().from("caregiver_documents")
@@ -607,3 +631,4 @@ function mapCgProfile(d: any): CaregiverProfile {
     specialties: d.specialties || [], agency: d.agency_id, image: d.image,
   };
 }
+

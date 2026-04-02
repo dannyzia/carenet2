@@ -13,12 +13,12 @@ export default function SkillsAssessmentPage() {
   const { t: tDocTitle } = useTranslation("common");
   useDocumentTitle(tDocTitle("pageTitles.skillsAssessment", "Skills Assessment"));
 
+  const navigate = useNavigate();
+  const [step, setStep] = useState(1);
   const { data: assessment, loading } = useAsyncData(() => caregiverService.getSkillsAssessment());
 
   if (loading || !assessment) return <PageSkeleton />;
 
-  const navigate = useNavigate();
-  const [step, setStep] = useState(1);
   return (
     <div>
       <PageHero gradient="radial-gradient(143.86% 887.35% at -10.97% -22.81%, #7CE577 0%, #5FB865 100%)">

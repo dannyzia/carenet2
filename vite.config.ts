@@ -1,16 +1,69 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import path from 'path'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
+import { VitePWA } from 'vite-plugin-pwa'
 import i18nSyncPlugin from './plugins/vite-i18n-sync'
 
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  const fileEnv = loadEnv(mode, process.cwd(), '')
+  const playwrightE2E =
+    process.env.VITE_PLAYWRIGHT_E2E === 'true' ||
+    fileEnv.VITE_PLAYWRIGHT_E2E === 'true'
+  const vitest = process.env.VITEST === 'true'
+
+  /** PWA: cache app shell only; avoid caching Supabase/API (D016 offline uses Dexie). */
+  const pwaPlugin = VitePWA({
+    registerType: 'prompt',
+    injectRegister: 'auto',
+    includeAssets: ['pwa-192.png', 'pwa-512.png'],
+    manifest: {
+      name: 'CareNet',
+      short_name: 'CareNet',
+      description: 'Care marketplace platform for Bangladesh',
+      theme_color: '#ffffff',
+      background_color: '#ffffff',
+      display: 'standalone',
+      scope: '/',
+      start_url: '/',
+      icons: [
+        {
+          src: 'pwa-192.png',
+          sizes: '192x192',
+          type: 'image/png',
+          purpose: 'any',
+        },
+        {
+          src: 'pwa-512.png',
+          sizes: '512x512',
+          type: 'image/png',
+          purpose: 'any maskable',
+        },
+      ],
+    },
+    workbox: {
+      globPatterns: ['**/*.{css,js,html,ico,png,svg,woff2,webmanifest}'],
+      navigateFallback: '/index.html',
+      runtimeCaching: [],
+      // Main bundle exceeds Workbox default 2 MiB precache limit until code-splitting improves (D008 §9).
+      maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+    },
+    devOptions: {
+      enabled: false,
+    },
+  })
+
+  return {
+  define: {
+    __CARENET_PLAYWRIGHT_E2E__: JSON.stringify(playwrightE2E),
+  },
   plugins: [
     // The React and Tailwind plugins are both required for Make, even if
     // Tailwind is not being actively used – do not remove them
     react(),
     tailwindcss(),
     i18nSyncPlugin(),
+    ...(vitest ? [] : [pwaPlugin]),
   ],
   resolve: {
     alias: {
@@ -25,4 +78,5 @@ export default defineConfig({
 
   // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
   assetsInclude: ['**/*.svg', '**/*.csv'],
+  }
 })

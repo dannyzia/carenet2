@@ -5,7 +5,7 @@ import { Button } from "@/frontend/components/ui/button";
 import { useNavigate, useSearchParams } from "react-router";
 import { PageHero } from "@/frontend/components/PageHero";
 import { motion, AnimatePresence } from "motion/react";
-import { useAsyncData, useDocumentTitle } from "@/frontend/hooks";
+import { useAsyncData, useDocumentTitle, useCareSeekerBasePath } from "@/frontend/hooks";
 import { guardianService } from "@/backend/services/guardian.service";
 import { marketplaceService } from "@/backend/services/marketplace.service";
 import { PageSkeleton } from "@/frontend/components/PageSkeleton";
@@ -37,6 +37,8 @@ export default function BookingWizardPage() {
 
   const toast = useAriaToast();
   const navigate = useNavigate();
+  const base = useCareSeekerBasePath();
+  const subscriberId = base === "/patient" ? "patient-current" : "guardian-current";
   const [searchParams] = useSearchParams();
   const packageId = searchParams.get("package");
   const [currentStep, setCurrentStep] = useState(1);
@@ -74,7 +76,7 @@ export default function BookingWizardPage() {
     if (packageId) {
       setSubscribing(true);
       try {
-        await marketplaceService.subscribeToPackage(packageId, "guardian-current");
+        await marketplaceService.subscribeToPackage(packageId, subscriberId);
         toast.success("Successfully subscribed to package!");
         setCompleted(true);
       } catch {
@@ -90,7 +92,32 @@ export default function BookingWizardPage() {
   if (pkgLoading && packageId) return <PageSkeleton />;
 
   if (completed) {
-    return (<div className="min-h-screen flex items-center justify-center bg-[#F5F7FA] px-6"><motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="finance-card p-12 text-center max-w-md w-full"><div className="w-24 h-24 bg-[#E8F9E7] rounded-full flex items-center justify-center mx-auto mb-6"><CheckCircle2 className="w-12 h-12 text-[#5FB865]" /></div><h2 className="text-3xl font-bold text-gray-800 mb-2">{packageId ? "Subscribed!" : "Booking Requested!"}</h2><p className="text-gray-500 mb-8">{packageId ? `You've successfully subscribed to "${packageData?.meta.title || 'the package'}". The agency will begin onboarding shortly.` : "Dr. Rahat Khan has been notified and will respond within 30 minutes."}</p><Button onClick={() => navigate("/guardian/marketplace-hub")} className="w-full h-14 rounded-2xl font-bold text-lg" style={{ background: "radial-gradient(143.86% 887.35% at -10.97% -22.81%, #FEB4C5 0%, #DB869A 100%)" }}>{packageId ? "Back to Marketplace" : "Go to Dashboard"}</Button></motion.div></div>);
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F5F7FA] px-6">
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="finance-card p-12 text-center max-w-md w-full"
+        >
+          <div className="w-24 h-24 bg-[#E8F9E7] rounded-full flex items-center justify-center mx-auto mb-6">
+            <CheckCircle2 className="w-12 h-12 text-[#5FB865]" />
+          </div>
+          <h2 className="text-3xl font-bold text-gray-800 mb-2">{packageId ? "Subscribed!" : "Booking Requested!"}</h2>
+          <p className="text-gray-500 mb-8">
+            {packageId
+              ? `You've successfully subscribed to "${packageData?.meta.title || "the package"}". The agency will begin onboarding shortly.`
+              : "Dr. Rahat Khan has been notified and will respond within 30 minutes."}
+          </p>
+          <Button
+            onClick={() => navigate(packageId ? `${base}/marketplace-hub` : `${base}/dashboard`)}
+            className="w-full h-14 rounded-2xl font-bold text-lg"
+            style={{ background: "radial-gradient(143.86% 887.35% at -10.97% -22.81%, #FEB4C5 0%, #DB869A 100%)" }}
+          >
+            {packageId ? "Back to Marketplace" : "Go to Dashboard"}
+          </Button>
+        </motion.div>
+      </div>
+    );
   }
 
   return (

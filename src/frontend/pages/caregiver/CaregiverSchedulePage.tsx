@@ -1,6 +1,6 @@
 import { cn } from "@/frontend/theme/tokens";
 import { ChevronLeft, ChevronRight, Plus, Clock, User } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAsyncData, useDocumentTitle } from "@/frontend/hooks";
 import { caregiverService } from "@/backend/services";
 import { PageSkeleton } from "@/frontend/components/shared/PageSkeleton";
@@ -16,6 +16,18 @@ export default function CaregiverSchedulePage() {
   const [view, setView] = useState<"week" | "list">("week");
   const { data: scheduleData, loading: lS } = useAsyncData(() => caregiverService.getScheduleData());
   const { data: upcomingBookings, loading: lB } = useAsyncData(() => caregiverService.getUpcomingBookings());
+
+  const [availability, setAvailability] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (!scheduleData) return;
+    setAvailability((prev) => {
+      if (days.every((d) => Object.prototype.hasOwnProperty.call(prev, d))) return prev;
+      return Object.fromEntries(
+        days.map((d) => [d, d in prev ? prev[d]! : Boolean(scheduleData[d]?.length)]),
+      ) as Record<string, boolean>;
+    });
+  }, [scheduleData]);
 
   if (lS || lB || !scheduleData || !upcomingBookings) return <PageSkeleton cards={3} />;
 

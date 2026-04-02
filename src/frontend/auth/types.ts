@@ -67,8 +67,8 @@ export interface AuthContextType {
   switchRole: (role: Role) => void;
   /** Log out and clear state */
   logout: () => void;
-  /** Quick demo login — bypasses email/password/MFA */
-  demoLogin: (role: Role) => void;
+  /** Quick demo login — bypasses email/password/MFA; clears Supabase session when configured so Dexie keys stay stable */
+  demoLogin: (role: Role) => Promise<void>;
 
   // Legacy aliases for backward compatibility with pages that haven't migrated
   /** @deprecated Use login() instead */

@@ -48,12 +48,24 @@ function _emitRetryActivity() {
   });
 }
 
+function formatRetryError(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (error && typeof error === "object") {
+    try {
+      return JSON.stringify(error);
+    } catch {
+      return String(error);
+    }
+  }
+  return String(error);
+}
+
 function _retryStarted(attempt: number, delayMs: number, error: unknown) {
   _activeRetries++;
   _lastRetryInfo = {
     attempt,
     delayMs,
-    error: (error instanceof Error ? error.message : String(error)).slice(0, 120),
+    error: formatRetryError(error).slice(0, 120),
   };
   _emitRetryActivity();
 }

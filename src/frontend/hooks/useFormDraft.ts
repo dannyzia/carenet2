@@ -11,7 +11,8 @@ import { saveFormDraft, getFormDraft, deleteFormDraft } from "@/backend/offline/
  *   - 3-day TTL auto-enforced by db layer
  *
  * Usage:
- *   const { draft, updateDraft, clearDraft, isRestored } = useFormDraft("care-requirement", userId);
+ *   const { draft, updateDraft, clearDraft, isRestored } = useFormDraft("care-requirement", user?.id ?? "");
+ *   // Pass auth `user.id` so Dexie keys drafts per account (demo users use stable ids like `demo-patient-1`).
  *   // On mount, draft contains any saved data
  *   // Call updateDraft(partialData) on form changes
  *   // Call clearDraft() after successful submission

@@ -1,9 +1,9 @@
-import { Link, Outlet, useLocation } from "react-router";
+import { Link, Navigate, Outlet, useLocation } from "react-router";
 import React, { useState, useEffect, Suspense } from "react";
 import {
   LayoutDashboard, Calendar, MessageSquare, DollarSign, Star, FileText, User,
   Briefcase, Heart, CreditCard, Users, CheckCircle, BarChart2, Settings,
-  Bell, Search, LogOut, Menu, X, ChevronRight, ShoppingBag, Package,
+  Bell, Search, LogOut, X, ChevronRight, ShoppingBag, Package,
   ClipboardList, Flag, Home, ChevronDown, Sun, Moon,
   Inbox, Shield, Radio, Wallet,
   Building2,
@@ -29,6 +29,7 @@ import { usePendingProofCount } from "@/frontend/hooks/usePendingProofCount";
 import { useTransitionNavigate } from "@/frontend/hooks/useTransitionNavigate";
 import { useUnreadCounts } from "@/frontend/hooks/useUnreadCounts";
 import { UnreadCountsContext } from "@/frontend/hooks/UnreadCountsContext";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/frontend/components/ui/collapsible";
 
 /* ─── Focus main content on route change (a11y) ─── */
 function useFocusOnNavigate() {
@@ -80,25 +81,28 @@ function getRoleNavSections(t: TFunction): Record<Role, NavSection[]> {
           { i18nKey: "familyHub", path: "/guardian/family-hub", icon: Home },
         ],
       },
-      {
-        sectionKey: "browse",
-        links: [
-          { i18nKey: "marketplace", path: "/marketplace", icon: Search },
-          { i18nKey: "agencies", path: "/agencies", icon: Building2 },
-          { i18nKey: "shop", path: "/shop", icon: ShoppingBag },
-        ],
-      },
     ],
     patient: [
       {
         sectionKey: "main",
         links: [
           { i18nKey: "dashboard", path: "/patient/dashboard", icon: LayoutDashboard },
+          { i18nKey: "careRequirements", path: "/patient/care-requirements", icon: ClipboardList },
+          { i18nKey: "marketplaceHub", path: "/patient/marketplace-hub", icon: Megaphone },
+          { i18nKey: "placements", path: "/patient/placements", icon: Shield },
           { i18nKey: "careHistory", path: "/patient/care-history", icon: Heart },
           { i18nKey: "medicalRecords", path: "/patient/medical-records", icon: FileText },
           { i18nKey: "schedule", path: "/patient/schedule", icon: Calendar },
           { i18nKey: "messages", path: "/patient/messages", icon: MessageSquare },
           { i18nKey: "profile", path: "/patient/profile", icon: User },
+        ],
+      },
+      {
+        sectionKey: "tools",
+        links: [
+          { i18nKey: "findCaregivers", path: "/patient/search", icon: Search },
+          { i18nKey: "postRequirement", path: "/patient/care-requirement-wizard", icon: FileText },
+          { i18nKey: "newBooking", path: "/patient/booking", icon: Calendar },
         ],
       },
       {
@@ -114,8 +118,6 @@ function getRoleNavSections(t: TFunction): Record<Role, NavSection[]> {
         sectionKey: "privacyBrowse",
         links: [
           { i18nKey: "dataPrivacy", path: "/patient/data-privacy", icon: Shield },
-          { i18nKey: "shop", path: "/shop", icon: ShoppingBag },
-          { i18nKey: "helpCenter", path: "/support/help", icon: FileText },
         ],
       },
     ],
@@ -306,13 +308,17 @@ const roleUserNames: Record<Role, string> = {
  * AuthenticatedLayout — shell for all role-based (logged-in) pages.
  * Provides:
  *   - Desktop: persistent sidebar + header
- *   - Mobile: hamburger-triggered sidebar + mobile header + BottomNav
+ *   - Mobile: BottomNav “Menu” toggles sidebar + compact header (no duplicate hamburger)
  * Pages rendered via <Outlet /> should NOT wrap themselves in <Layout>.
  */
 export function AuthenticatedLayout() {
   const location = useLocation();
   const navigate = useTransitionNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  /** Secondary blocks default collapsed so role nav keeps vertical space (all roles). */
+  const [sidebarBrowseOpen, setSidebarBrowseOpen] = useState(false);
+  const [sidebarSupportOpen, setSidebarSupportOpen] = useState(false);
+  const [sidebarAppOpen, setSidebarAppOpen] = useState(false);
   const { resolvedTheme, toggleTheme } = useTheme();
   const { t } = useTranslation("common");
   const { user, logout } = useAuth();
@@ -337,6 +343,15 @@ export function AuthenticatedLayout() {
   const rolePrimary = `var(--${rCfg.cssVar})`;
   const userName = user?.name || roleUserNames[currentRole];
 
+  // Enforce role-based route ownership for role-prefixed pages.
+  // Shared routes (e.g., /settings, /wallet, /billing) are intentionally allowed.
+  const requestedRole = (segment && segment in roleNavLinks) ? (segment as Role) : null;
+  const shouldRedirectToOwnDashboard =
+    !!user &&
+    !!requestedRole &&
+    requestedRole !== user.activeRole &&
+    !user.roles.includes(requestedRole);
+
   // Update native status bar color when role changes
   useEffect(() => {
     setStatusBarForRole(currentRole);
@@ -346,6 +361,10 @@ export function AuthenticatedLayout() {
     logout();
     navigate("/auth/login", { replace: true });
   };
+
+  if (shouldRedirectToOwnDashboard && user) {
+    return <Navigate to={`/${user.activeRole}/dashboard`} replace />;
+  }
 
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: cn.bgPage }}>
@@ -376,15 +395,14 @@ export function AuthenticatedLayout() {
       {/* ─── Sidebar (hidden on mobile, always visible on desktop) ─── */}
       <aside
         aria-label={t("a11y.sidebarNav", "Sidebar navigation")}
-        className={`fixed top-0 left-0 h-full w-64 z-50 flex flex-col ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 md:static md:flex`}
+        className={`fixed top-0 left-0 z-50 flex h-[100dvh] max-h-[100dvh] w-64 min-h-0 flex-col overflow-hidden ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:static md:h-auto md:max-h-screen md:min-h-0 md:self-stretch md:translate-x-0`}
         style={{
           background: cn.bgSidebar,
           boxShadow: cn.shadowSidebar,
-          minHeight: "100vh",
           transition: "translate 300ms ease-in-out, transform 300ms ease-in-out",
         }}
       >
-        <div className="p-5 flex items-center justify-between" style={{ borderBottom: `1px solid ${cn.borderLight}` }}>
+        <div className="shrink-0 p-5 flex items-center justify-between" style={{ borderBottom: `1px solid ${cn.borderLight}` }}>
           <Link to="/" className="flex items-center gap-2 no-underline">
             <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: rCfg.gradient }}>
               <Heart className="w-5 h-5 text-white" />
@@ -396,12 +414,32 @@ export function AuthenticatedLayout() {
           </button>
         </div>
 
-        <div className="mx-4 mt-3 mb-1 px-3 py-1.5 rounded-lg text-center text-xs"
-          style={{ background: rCfg.lightBg, color: rolePrimary }}>
-          {t("sidebar.portal", { role: rCfg.label })}
+        {/* Mobile: logout must not depend on nested scroll (fixed aside + flex height quirks). */}
+        <div className="shrink-0 border-b px-3 py-2 md:hidden" style={{ borderColor: cn.borderLight }}>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium"
+            style={{ color: cn.red, background: "rgba(239,68,68,0.08)" }}
+          >
+            <LogOut className="h-4 w-4 shrink-0" />
+            {t("nav.logout")}
+          </button>
         </div>
 
-        <nav className="flex-1 px-3 py-3 overflow-y-auto" aria-label={t("a11y.roleNav", "Role navigation")}>
+        <div className="shrink-0 mx-4 mt-3 mb-1 px-3 py-1.5 rounded-lg text-center text-xs"
+          style={{ background: rCfg.lightBg, color: rolePrimary }}>
+          {t("sidebar.portal", { role: t(`roles.${currentRole}`, rCfg.label) })}
+        </div>
+
+        {/* One scroll region so Browse / Support / Logout stay reachable on short viewports (mobile). */}
+        <div
+          className="cn-scroll-mobile cn-safe-bottom flex min-h-0 flex-1 flex-col overflow-x-hidden overscroll-contain"
+        >
+        <nav
+          className="px-3 py-3 shrink-0"
+          aria-label={t("a11y.roleNav", "Role navigation")}
+        >
           {navSections.map((section, sIdx) => (
             <div key={sIdx} className={sIdx > 0 ? "mt-3" : ""}>
               {section.sectionKey && sIdx > 0 && (
@@ -451,143 +489,159 @@ export function AuthenticatedLayout() {
           ))}
         </nav>
 
-        {/* ─── Shared links — accessible to all signed-in users ─── */}
-        <div className="px-3 pt-2 pb-1" style={{ borderTop: `1px solid ${cn.borderLight}` }}>
-          <p
-            className="px-3 pt-1 pb-1 text-[10px] uppercase tracking-wider"
-            style={{ color: cn.textSecondary, opacity: 0.6 }}
-          >
-            {t("sidebar.section.general")}
-          </p>
-          <div className="space-y-0.5">
-            {[
-              { i18nKey: "nav.home", path: "/", icon: Home },
-              { i18nKey: "sidebar.notifications", path: "/notifications", icon: Bell },
-              { i18nKey: "sidebar.messages", path: "/messages", icon: MessageSquare },
-              { i18nKey: "sidebar.marketplace", path: "/marketplace", icon: Search },
-              { i18nKey: "sidebar.agencies", path: "/agencies", icon: Building2 },
-              { i18nKey: "sidebar.shop", path: "/shop", icon: ShoppingBag },
-            ].map((link) => {
-              const Icon = link.icon;
-              const isActive = location.pathname === link.path;
-              const badgeCount =
-                link.i18nKey === "sidebar.notifications" ? unreadCounts.notifications :
-                link.i18nKey === "sidebar.messages" ? unreadCounts.messages : 0;
-              const badgeColor =
-                link.i18nKey === "sidebar.notifications" ? cn.pink : cn.green;
-              return (
-                <Link key={link.path} to={link.path} onClick={() => setSidebarOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-sm no-underline"
-                  style={{
-                    color: isActive ? rolePrimary : cn.textSecondary,
-                    background: isActive ? rCfg.lightBg : "transparent",
-                  }}>
-                  <Icon className="w-4 h-4 shrink-0" />
-                  <span className="flex-1">{t(link.i18nKey)}</span>
-                  {badgeCount > 0 && (
-                    <span
-                      className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] text-white shrink-0"
-                      style={{ background: badgeColor }}
-                    >
-                      {badgeCount > 9 ? "9+" : badgeCount}
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
-          </div>
-          <p
-            className="px-3 pt-3 pb-1 text-[10px] uppercase tracking-wider"
-            style={{ color: cn.textSecondary, opacity: 0.6 }}
-          >
-            {t("sidebar.section.supportInfo")}
-          </p>
-          <div className="space-y-0.5">
-            {[
-              { i18nKey: "sidebar.helpCenter", path: "/support/help", icon: Shield },
-              { i18nKey: "sidebar.submitTicket", path: "/support/ticket", icon: ClipboardList },
-              { i18nKey: "sidebar.refundRequest", path: "/support/refund", icon: CreditCard },
-              { i18nKey: "sidebar.contactUs", path: "/support/contact", icon: MessageSquare },
-              { i18nKey: "sidebar.blog", path: "/community/blog", icon: FileText },
-              { i18nKey: "sidebar.careers", path: "/community/careers", icon: Briefcase },
-              { i18nKey: "sidebar.about", path: "/about", icon: Heart },
-              { i18nKey: "sidebar.features", path: "/features", icon: Star },
-              { i18nKey: "sidebar.pricing", path: "/pricing", icon: DollarSign },
-              { i18nKey: "sidebar.privacyPolicy", path: "/privacy", icon: Shield },
-              { i18nKey: "sidebar.termsOfService", path: "/terms", icon: FileText },
-            ].map((link) => {
-              const Icon = link.icon;
-              const isActive = location.pathname === link.path;
-              return (
-                <Link key={link.path} to={link.path} onClick={() => setSidebarOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-sm no-underline"
-                  style={{
-                    color: isActive ? rolePrimary : cn.textSecondary,
-                    background: isActive ? rCfg.lightBg : "transparent",
-                  }}>
-                  <Icon className="w-4 h-4 shrink-0" />
-                  <span>{t(link.i18nKey)}</span>
-                </Link>
-              );
-            })}
-          </div>
+        {/* ─── Browse (no repeat: home/notifications/messages live in header + logo) ─── */}
+        <div className="shrink-0 border-t flex flex-col min-h-0" style={{ borderColor: cn.borderLight }}>
+          <Collapsible className="group" open={sidebarBrowseOpen} onOpenChange={setSidebarBrowseOpen}>
+            <CollapsibleTrigger
+              className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left rounded-lg cn-touch-target hover:opacity-90"
+              style={{ color: cn.textSecondary }}
+            >
+              <span className="text-[10px] uppercase tracking-wider px-1" style={{ opacity: 0.85 }}>
+                {t("sidebar.section.browse")}
+              </span>
+              <ChevronDown className="w-4 h-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" aria-hidden />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-none">
+              <div className="space-y-0.5 px-1 pb-2">
+                {[
+                  { i18nKey: "sidebar.marketplace", path: "/marketplace", icon: Search },
+                  { i18nKey: "sidebar.agencies", path: "/agencies", icon: Building2 },
+                  { i18nKey: "sidebar.shop", path: "/shop", icon: ShoppingBag },
+                ].map((link) => {
+                  const Icon = link.icon;
+                  const isActive = location.pathname === link.path;
+                  return (
+                    <Link key={link.path} to={link.path} onClick={() => setSidebarOpen(false)}
+                      className="flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-sm no-underline"
+                      style={{
+                        color: isActive ? rolePrimary : cn.textSecondary,
+                        background: isActive ? rCfg.lightBg : "transparent",
+                      }}>
+                      <Icon className="w-4 h-4 shrink-0" />
+                      <span className="flex-1">{t(link.i18nKey)}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+
+          <Collapsible className="group border-t" style={{ borderColor: cn.borderLight }} open={sidebarSupportOpen} onOpenChange={setSidebarSupportOpen}>
+            <CollapsibleTrigger
+              className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left rounded-lg cn-touch-target hover:opacity-90"
+              style={{ color: cn.textSecondary }}
+            >
+              <span className="text-[10px] uppercase tracking-wider px-1" style={{ opacity: 0.85 }}>
+                {t("sidebar.section.supportInfo")}
+              </span>
+              <ChevronDown className="w-4 h-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" aria-hidden />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-none">
+              <div className="space-y-0.5 px-1 pb-2 max-h-[40vh] overflow-y-auto overscroll-contain">
+                {[
+                  { i18nKey: "sidebar.helpCenter", path: "/support/help", icon: Shield },
+                  { i18nKey: "sidebar.submitTicket", path: "/support/ticket", icon: ClipboardList },
+                  { i18nKey: "sidebar.refundRequest", path: "/support/refund", icon: CreditCard },
+                  { i18nKey: "sidebar.contactUs", path: "/support/contact", icon: MessageSquare },
+                  { i18nKey: "sidebar.blog", path: "/community/blog", icon: FileText },
+                  { i18nKey: "sidebar.careers", path: "/community/careers", icon: Briefcase },
+                  { i18nKey: "sidebar.about", path: "/about", icon: Heart },
+                  { i18nKey: "sidebar.features", path: "/features", icon: Star },
+                  { i18nKey: "sidebar.pricing", path: "/pricing", icon: DollarSign },
+                  { i18nKey: "sidebar.privacyPolicy", path: "/privacy", icon: Shield },
+                  { i18nKey: "sidebar.termsOfService", path: "/terms", icon: FileText },
+                ].map((link) => {
+                  const Icon = link.icon;
+                  const isActive = location.pathname === link.path;
+                  return (
+                    <Link key={link.path} to={link.path} onClick={() => setSidebarOpen(false)}
+                      className="flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-sm no-underline"
+                      style={{
+                        color: isActive ? rolePrimary : cn.textSecondary,
+                        background: isActive ? rCfg.lightBg : "transparent",
+                      }}>
+                      <Icon className="w-4 h-4 shrink-0" />
+                      <span>{t(link.i18nKey)}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
         </div>
 
-        {/* ─── Settings & Logout ─── */}
-        <div className="p-3 space-y-0.5" style={{ borderTop: `1px solid ${cn.borderLight}` }}>
-          {/* Realtime connection health */}
-          <div className="mb-2">
-            <RealtimeStatusIndicator variant="full" />
-          </div>
-
-          {/* Language & Theme controls */}
-          <div className="flex items-center gap-2 px-3 py-2">
-            <LanguageSwitcher />
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-lg hover:opacity-80 transition-all"
+        {/* ─── App controls (collapsible: compact vs header; logout stays one tap) ─── */}
+        <div className="shrink-0 border-t flex flex-col min-h-0" style={{ borderColor: cn.borderLight }}>
+          <Collapsible className="group" open={sidebarAppOpen} onOpenChange={setSidebarAppOpen}>
+            <CollapsibleTrigger
+              className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left rounded-lg cn-touch-target hover:opacity-90"
               style={{ color: cn.textSecondary }}
-              aria-label={resolvedTheme === "dark" ? t("a11y.switchToLight", "Switch to light mode") : t("a11y.switchToDark", "Switch to dark mode")}
-              title={resolvedTheme === "dark" ? "Switch to light" : "Switch to dark"}
             >
-              {resolvedTheme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              <span className="text-[10px] uppercase tracking-wider px-1" style={{ opacity: 0.85 }}>
+                {t("sidebar.section.appControls")}
+              </span>
+              <ChevronDown className="w-4 h-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" aria-hidden />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-none">
+              <div className="space-y-2 px-3 pb-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <RealtimeStatusIndicator variant="badge" />
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <LanguageSwitcher variant="compact" className="flex-1 min-w-0" />
+                  <button
+                    type="button"
+                    onClick={toggleTheme}
+                    className="p-2 rounded-lg hover:opacity-80 transition-all shrink-0"
+                    style={{ color: cn.textSecondary }}
+                    aria-label={resolvedTheme === "dark" ? t("a11y.switchToLight", "Switch to light mode") : t("a11y.switchToDark", "Switch to dark mode")}
+                    title={resolvedTheme === "dark" ? "Switch to light" : "Switch to dark"}
+                  >
+                    {resolvedTheme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                  </button>
+                </div>
+                <Link
+                  to="/settings"
+                  onClick={() => setSidebarOpen(false)}
+                  className="flex items-center gap-3 px-2 py-2 rounded-lg hover:opacity-80 transition-all text-sm no-underline"
+                  style={{ color: cn.textSecondary }}
+                >
+                  <Settings className="w-4 h-4 shrink-0" />
+                  <span>{t("nav.settings")}</span>
+                </Link>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+          <div className="hidden px-3 py-2 md:block" style={{ borderTop: `1px solid ${cn.borderLight}` }}>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-sm transition-all hover:opacity-80"
+              style={{ color: cn.red }}
+            >
+              <LogOut className="h-4 w-4 shrink-0" />
+              <span>{t("nav.logout")}</span>
             </button>
           </div>
-
-          <Link to="/settings" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:opacity-80 transition-all text-sm no-underline" style={{ color: cn.textSecondary }}>
-            <Settings className="w-4 h-4" />
-            <span>{t("nav.settings")}</span>
-          </Link>
-          <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:opacity-80 transition-all text-sm" style={{ color: cn.red }}>
-            <LogOut className="w-4 h-4" />
-            <span>{t("nav.logout")}</span>
-          </button>
+        </div>
         </div>
       </aside>
 
       {/* ─── Main content area ─── */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Desktop header + Mobile header */}
-        <header className="sticky top-0 z-30 px-4 md:px-6 py-3 flex items-center gap-4"
-          style={{ background: cn.bgHeader, boxShadow: cn.shadowHeader }}>
-          {/* Hamburger — mobile only */}
-          <button
-            className="md:hidden p-2 -ml-2 rounded-lg hover:opacity-80 transition-all"
-            style={{ color: cn.textSecondary }}
-            onClick={() => setSidebarOpen((o) => !o)}
-            aria-label={sidebarOpen ? t("a11y.closeMenu", "Close menu") : t("a11y.openMenu", "Open menu")}
-            aria-expanded={sidebarOpen}
-          >
-            <Menu className="w-5 h-5" />
-          </button>
-
-          {/* Search — hidden on mobile */}
+        {/* Header — same max-width / height rhythm as PublicNavBar; BottomNav opens sidebar on mobile */}
+        <header
+          className="sticky top-0 z-30 border-b"
+          style={{ background: cn.bgHeader, boxShadow: cn.shadowHeader, borderColor: cn.borderLight }}
+        >
+          <div className="max-w-6xl mx-auto w-full h-14 px-4 sm:px-6 flex items-center gap-3">
+          {/* Search — hidden on small screens */}
           <div role="search" className="flex-1 max-w-xs hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: cn.bgInput }}>
             <Search className="w-4 h-4 shrink-0" style={{ color: cn.textSecondary }} aria-hidden="true" />
             <input placeholder={t("sidebar.searchPlaceholder")} className="bg-transparent outline-none text-sm flex-1" style={{ color: cn.text }} aria-label={t("sidebar.searchPlaceholder")} />
           </div>
 
-          <div className="flex items-center gap-2 ml-auto">
+          <div className="flex items-center gap-2 ml-auto shrink-0">
             <Link to="/notifications" className="relative p-2 rounded-lg hover:opacity-80 transition-all no-underline" aria-label={t("a11y.notifications", "Notifications")}>
               <Bell className="w-5 h-5" style={{ color: cn.textSecondary }} aria-hidden="true" />
               {unreadCounts.notifications > 0 && (
@@ -608,7 +662,12 @@ export function AuthenticatedLayout() {
                 )
               )}
             </Link>
-            <Link to={`/${currentRole}/messages`} className="relative p-2 rounded-lg hover:opacity-80 transition-all no-underline" aria-label={t("a11y.messages", "Messages")}>
+            {/* Messages: BottomNav already provides tab + badge on mobile (md:hidden). */}
+            <Link
+              to={`/${currentRole}/messages`}
+              className="relative hidden p-2 rounded-lg hover:opacity-80 transition-all no-underline md:flex"
+              aria-label={t("a11y.messages", "Messages")}
+            >
               <MessageSquare className="w-5 h-5" style={{ color: cn.textSecondary }} aria-hidden="true" />
               {unreadCounts.messages > 0 && (
                 unreadCounts.messages <= 9 ? (
@@ -635,10 +694,11 @@ export function AuthenticatedLayout() {
               </div>
               <div className="hidden md:block">
                 <p className="text-sm leading-tight" style={{ color: cn.text }}>{userName}</p>
-                <p className="text-xs leading-tight" style={{ color: cn.textSecondary }}>{rCfg.label}</p>
+                <p className="text-xs leading-tight" style={{ color: cn.textSecondary }}>{t(`roles.${currentRole}`, rCfg.label)}</p>
               </div>
               <ChevronDown className="w-4 h-4 hidden md:block" style={{ color: cn.textSecondary }} />
             </div>
+          </div>
           </div>
         </header>
 

@@ -76,7 +76,7 @@ export default function MFASetupPage() {
               <p className="text-xs text-center mb-2" style={{ color: cn.textSecondary }}>Or enter this key manually:</p>
               <div className="p-3 rounded-xl flex items-center justify-between mb-6" style={{ background: cn.bgInput }}>
                 <code className="text-sm tracking-wider" style={{ color: cn.text }}>{demoSecret}</code>
-                <button onClick={handleCopy} className="p-1.5 rounded-lg hover:bg-black/5 transition-colors">
+                <button type="button" onClick={handleCopy} aria-label="Copy secret key" className="p-1.5 rounded-lg hover:bg-black/5 transition-colors">
                   <Copy className="w-4 h-4" style={{ color: copied ? cn.green : cn.textSecondary }} />
                 </button>
               </div>

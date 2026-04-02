@@ -14,6 +14,30 @@ import { USE_SUPABASE, sbRead, sbWrite, sb, currentUserId } from "./_sb";
 
 const delay = (ms = 200) => new Promise((r) => setTimeout(r, ms));
 
+function isDemoAuthMode(): boolean {
+  if (typeof window === "undefined") return false;
+
+  try {
+    const mode = window.localStorage.getItem("carenet-auth-mode");
+    if (mode === "demo") return true;
+
+    const rawUser = window.localStorage.getItem("carenet-auth");
+    if (!rawUser) return false;
+    const parsed = JSON.parse(rawUser) as { id?: string; email?: string };
+    return (
+      typeof parsed.id === "string" && parsed.id.startsWith("demo-")
+    ) || (
+      typeof parsed.email === "string" && parsed.email.endsWith("@carenet.demo")
+    );
+  } catch {
+    return false;
+  }
+}
+
+function shouldUseSupabase(): boolean {
+  return USE_SUPABASE && !isDemoAuthMode();
+}
+
 function mapProof(d: any): PaymentProof {
   return {
     id: d.id,
@@ -56,7 +80,7 @@ function mapInvoice(d: any, lineItems: any[], proofs: PaymentProof[]): BillingIn
 
 export const billingService = {
   async getOverview(): Promise<BillingOverviewData> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead("billing:overview", async () => {
         const userId = await currentUserId();
         // Fetch invoices for this user (as sender or receiver)
@@ -98,7 +122,7 @@ export const billingService = {
   },
 
   async getInvoices(): Promise<BillingInvoice[]> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       const overview = await this.getOverview();
       return overview.invoices;
     }
@@ -107,7 +131,7 @@ export const billingService = {
   },
 
   async getInvoiceById(id: string): Promise<BillingInvoice | undefined> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead(`invoice:${id}`, async () => {
         const { data, error } = await sb().from("invoices").select("*").eq("id", id).single();
         if (error) return undefined;
@@ -124,7 +148,7 @@ export const billingService = {
   },
 
   async getPaymentProofs(): Promise<PaymentProof[]> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead("proofs:mine", async () => {
         const userId = await currentUserId();
         const { data, error } = await sb().from("payment_proofs")
@@ -140,7 +164,7 @@ export const billingService = {
   },
 
   async getProofById(id: string): Promise<PaymentProof | undefined> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead(`proof:${id}`, async () => {
         const { data, error } = await sb().from("payment_proofs").select("*").eq("id", id).single();
         if (error) return undefined;
@@ -152,7 +176,7 @@ export const billingService = {
   },
 
   async getProofsForInvoice(invoiceId: string): Promise<PaymentProof[]> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead(`proofs:inv:${invoiceId}`, async () => {
         const { data, error } = await sb().from("payment_proofs")
           .select("*")
@@ -174,7 +198,7 @@ export const billingService = {
     notes: string;
     screenshotFile?: File | null;
   }): Promise<{ success: boolean; proofId: string }> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbWrite(async () => {
         const userId = await currentUserId();
         // Get invoice info
@@ -236,7 +260,7 @@ export const billingService = {
   },
 
   async verifyPaymentProof(proofId: string): Promise<{ success: boolean }> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbWrite(async () => {
         const userId = await currentUserId();
         const { data: profile } = await sb().from("profiles").select("name").eq("id", userId).single();
@@ -279,7 +303,7 @@ export const billingService = {
   },
 
   async rejectPaymentProof(proofId: string, reason: string): Promise<{ success: boolean }> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbWrite(async () => {
         const userId = await currentUserId();
         const { data: profile } = await sb().from("profiles").select("name").eq("id", userId).single();
@@ -324,3 +348,4 @@ export const billingService = {
     return { success: true };
   },
 };
+

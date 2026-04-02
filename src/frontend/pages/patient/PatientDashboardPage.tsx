@@ -1,6 +1,6 @@
 import { cn } from "@/frontend/theme/tokens";
 import { Link } from "react-router";
-import { Heart, Calendar, FileText, Activity, Clock, User, Pill } from "lucide-react";
+import { Heart, Calendar, FileText, Activity, User, Pill, ClipboardList, Megaphone, Shield } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAsyncData, useDocumentTitle } from "@/frontend/hooks";
 import { patientService } from "@/backend/services/patient.service";
@@ -18,7 +18,40 @@ export default function PatientDashboardPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-20">
-      <div><h1 className="text-2xl" style={{ color: cn.text }}>My Health Dashboard</h1><p className="text-sm" style={{ color: cn.textSecondary }}>Welcome back! Here's your health overview.</p></div>
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+        <div>
+          <h1 className="text-2xl" style={{ color: cn.text }}>My Health Dashboard</h1>
+          <p className="text-sm" style={{ color: cn.textSecondary }}>Welcome back! Here's your health overview.</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            to="/patient/care-requirement-wizard"
+            className="px-4 py-2 rounded-lg text-sm text-white no-underline"
+            style={{ background: "var(--cn-gradient-patient)" }}
+          >
+            Post care requirement
+          </Link>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        {[
+          { label: "My requirements", icon: ClipboardList, to: "/patient/care-requirements", color: cn.green },
+          { label: "Marketplace hub", icon: Megaphone, to: "/patient/marketplace-hub", color: cn.pink },
+          { label: "Placements", icon: Shield, to: "/patient/placements", color: "#7B5EA7" },
+          { label: "Find care", icon: Heart, to: "/patient/search", color: "#0288D1" },
+        ].map((item) => {
+          const Icon = item.icon;
+          return (
+            <Link key={item.to} to={item.to} className="finance-card p-4 flex items-center gap-3 no-underline hover:shadow-md transition-shadow">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${item.color}18` }}>
+                <Icon className="w-5 h-5" style={{ color: item.color }} />
+              </div>
+              <span className="text-sm font-medium" style={{ color: cn.text }}>{item.label}</span>
+            </Link>
+          );
+        })}
+      </div>
 
       {/* Vitals */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

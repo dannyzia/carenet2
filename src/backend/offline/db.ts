@@ -1,4 +1,5 @@
 import Dexie, { type EntityTable } from "dexie";
+import { EXPERIENCE_LOCAL_DRAFT_RETENTION_DAYS } from "@/lib/experienceSandbox";
 
 /**
  * CareNet Offline Database — per D016 §4.2
@@ -7,6 +8,9 @@ import Dexie, { type EntityTable } from "dexie";
  *   1. offline_actions — queued mutations to sync when online
  *   2. cached_entities — read-cache for key entities (profiles, schedules, care plans)
  *   3. attachment_refs — metadata for offline-captured media (photos, audio)
+ *
+ * Drafts and queue entries are keyed by `userId` from auth — demo users use stable ids
+ * (e.g. `demo-patient-1`) so Dexie data survives demo sessions when auth mode is `demo`.
  */
 
 /* ── Types ── */
@@ -49,7 +53,7 @@ export interface AttachmentRef {
   userId: string;
 }
 
-/** Persisted form draft — auto-deleted after 3 days */
+/** Persisted form draft — auto-deleted after EXPERIENCE_LOCAL_DRAFT_RETENTION_DAYS (see `@/lib/experienceSandbox`) */
 export interface FormDraft {
   id?: number;
   formKey: string;
@@ -60,7 +64,7 @@ export interface FormDraft {
   expiresAt: string;
 }
 
-const FORM_DRAFT_TTL_MS = 3 * 24 * 60 * 60 * 1000; // 3 days
+const FORM_DRAFT_TTL_MS = EXPERIENCE_LOCAL_DRAFT_RETENTION_DAYS * 24 * 60 * 60 * 1000;
 
 /* ── Database ── */
 

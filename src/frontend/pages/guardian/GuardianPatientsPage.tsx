@@ -22,7 +22,7 @@ export default function GuardianPatientsPage() {
 }
 
 function GuardianPatientsContent({ patients }: { patients: any[] }) {
-  const [expanded, setExpanded] = useState<number | null>(patients[0]?.id ?? null);
+  const [expanded, setExpanded] = useState<number | null>(null);
   const [showAdd, setShowAdd] = useState(false);
 
   return (

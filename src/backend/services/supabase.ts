@@ -13,8 +13,15 @@ import { createClient, SupabaseClient } from "@supabase/supabase-js";
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "";
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
 
+/**
+ * Playwright sets `VITE_PLAYWRIGHT_E2E` on the dev server; vite.config `define` injects this
+ * so mock mode works even when `import.meta.env` omits ad-hoc VITE_* keys.
+ */
+declare const __CARENET_PLAYWRIGHT_E2E__: boolean;
+const E2E_FORCE_MOCK = typeof __CARENET_PLAYWRIGHT_E2E__ !== "undefined" && __CARENET_PLAYWRIGHT_E2E__;
+
 /** Set to true to use real Supabase. Auto-disables if env vars are missing. */
-export const USE_SUPABASE = !!(SUPABASE_URL && SUPABASE_ANON_KEY);
+export const USE_SUPABASE = !E2E_FORCE_MOCK && !!(SUPABASE_URL && SUPABASE_ANON_KEY);
 
 // ─── Singleton client ───
 let _client: SupabaseClient | null = null;

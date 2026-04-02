@@ -28,20 +28,22 @@ export default function NotificationsPage() {
   useDocumentTitle(t("pageTitles.notifications", "Notifications"));
   const isBangla = i18n.language === "bn";
   const { data: initialNotifications, loading } = useAsyncData(() => notificationService.getNotifications());
+  const { decrementNotifications } = useUnreadCountsCtx();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [initialized, setInitialized] = useState(false);
   const [filter, setFilter] = useState<FilterMode>("all");
 
-  // Sync async data into local state for optimistic updates
-  if (initialNotifications && !initialized) {
-    setNotifications(initialNotifications);
-    setInitialized(true);
-  }
+  // Sync async data into local state for optimistic updates without mutating during render.
+  useEffect(() => {
+    if (!initialized && initialNotifications) {
+      setNotifications(initialNotifications);
+      setInitialized(true);
+    }
+  }, [initialNotifications, initialized]);
 
   if (loading && !initialized) return <PageSkeleton cards={4} />;
 
   const unreadCount = notifications.filter((n) => !n.read).length;
-  const { decrementNotifications } = useUnreadCountsCtx();
 
   const markAllRead = () => {
     const count = notifications.filter((n) => !n.read).length;

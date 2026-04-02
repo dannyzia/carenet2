@@ -1,0 +1,30 @@
+  % Total    % Received % Xferd  Average Speed  Time    Time    Time   Current
+                                 Dload  Upload  Total   Spent   Left   Speed
+
+  0      0   0      0   0      0      0      0                              0
+100    116   0    116   0      0    206      0                              0
+100    116   0    116   0      0    206      0                              0
+100    116   0    116   0      0    205      0                              0
+HTTP/1.1 200 OK
+Date: Mon, 23 Mar 2026 06:54:12 GMT
+Content-Type: application/json; charset=utf-8
+Transfer-Encoding: chunked
+Connection: keep-alive
+Server: cloudflare
+Content-Range: 0-0/*
+CF-Ray: 9e0b85fb3918814e-DAC
+CF-Cache-Status: DYNAMIC
+Content-Location: /medicines?limit=1
+Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+Vary: Accept-Encoding
+X-Content-Type-Options: nosniff
+content-profile: public
+sb-gateway-version: 1
+sb-project-ref: gnxqgtuxupuitrjjlrgc
+sb-request-id: 019d1978-f914-7a8c-b22c-93b2d3eb9805
+x-envoy-attempt-count: 1
+x-envoy-upstream-service-time: 207
+Set-Cookie: __cf_bm=jthttlL8NddkZ0f7pQkRi7IcXcoc6rPyjOoi_VdYqAo-1774248852-1.0.1.1-SZxUIYcVeHrdGJJyrjQIDD6wo_ElKnfSJBAZdEk5kPnoBXFYu9wPyhVMe9JPTbGvZ_VHWZr6_X4o0n5ix3aTKY7IS8ZzB0EFncn4okd2rDQ; path=/; expires=Mon, 23-Mar-26 07:24:12 GMT; domain=.supabase.co; HttpOnly; Secure; SameSite=None
+alt-svc: h3=":443"; ma=86400
+
+[{"id":1,"brand_name":"1stCef","generic_name":"Cefadroxil Monohydrate","strength":"500 mg","dosage_form":"Capsule"}]

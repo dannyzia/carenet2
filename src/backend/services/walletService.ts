@@ -16,9 +16,33 @@ const READ_RETRY = { maxRetries: 3, baseDelayMs: 800, onRetry: (_e: unknown, a: 
 // Retry config for write operations (fewer retries, user is waiting)
 const WRITE_RETRY = { maxRetries: 2, baseDelayMs: 500 };
 
+function isDemoAuthMode(): boolean {
+  if (typeof window === "undefined") return false;
+
+  try {
+    const mode = window.localStorage.getItem("carenet-auth-mode");
+    if (mode === "demo") return true;
+
+    const rawUser = window.localStorage.getItem("carenet-auth");
+    if (!rawUser) return false;
+    const parsed = JSON.parse(rawUser) as { id?: string; email?: string };
+    return (
+      typeof parsed.id === "string" && parsed.id.startsWith("demo-")
+    ) || (
+      typeof parsed.email === "string" && parsed.email.endsWith("@carenet.demo")
+    );
+  } catch {
+    return false;
+  }
+}
+
+function shouldUseSupabase(): boolean {
+  return USE_SUPABASE && !isDemoAuthMode();
+}
+
 // ─── Get wallet for current user (by role) ───
 export async function getMyWallet(role: string): Promise<WalletSummary | null> {
-  if (!USE_SUPABASE) {
+  if (!shouldUseSupabase()) {
     const walletId = role === "guardian" ? "guardian-1" : role === "agency" ? "agency-1" : "caregiver-1";
     const w = MOCK_WALLETS.find((w) => w.userId === walletId);
     return w || null;
@@ -61,7 +85,7 @@ export async function getWalletTransactions(
   walletUserId: string,
   opts?: { type?: string; limit?: number; offset?: number }
 ): Promise<PointTransaction[]> {
-  if (!USE_SUPABASE) {
+  if (!shouldUseSupabase()) {
     let txs = MOCK_POINT_TRANSACTIONS.filter((t) => t.walletId === walletUserId);
     if (opts?.type) {
       txs = txs.filter((t) => t.type === opts.type);
@@ -116,7 +140,7 @@ export async function buyPoints(
   packageId: string,
   paymentMethod: string
 ): Promise<{ success: boolean; error?: string }> {
-  if (!USE_SUPABASE) {
+  if (!shouldUseSupabase()) {
     console.log(`[Mock] Buying package ${packageId} via ${paymentMethod}`);
     return { success: true };
   }
@@ -139,7 +163,7 @@ export async function withdrawPoints(
   paymentMethod: string,
   accountNumber: string
 ): Promise<{ success: boolean; error?: string }> {
-  if (!USE_SUPABASE) {
+  if (!shouldUseSupabase()) {
     console.log(`[Mock] Withdrawing ${amount} CP to ${paymentMethod} ${accountNumber}`);
     return { success: true };
   }
@@ -159,7 +183,7 @@ export async function withdrawPoints(
 
 // ─── Admin: Get all wallets ───
 export async function getAllWallets(): Promise<WalletSummary[]> {
-  if (!USE_SUPABASE) {
+  if (!shouldUseSupabase()) {
     return MOCK_WALLETS.map((w) => ({
       ...w,
       status: w.status as WalletSummary["status"],
@@ -202,7 +226,7 @@ export async function adminCreditPoints(
   reason: string,
   reasonCategory: string
 ): Promise<{ success: boolean; error?: string }> {
-  if (!USE_SUPABASE) {
+  if (!shouldUseSupabase()) {
     console.log(`[Mock] Admin credit ${amount} CP to ${walletId}: ${reason} (${reasonCategory})`);
     return { success: true };
   }
@@ -233,7 +257,7 @@ export async function adminDebitPoints(
   reasonCategory: string,
   freeze: boolean = false
 ): Promise<{ success: boolean; error?: string }> {
-  if (!USE_SUPABASE) {
+  if (!shouldUseSupabase()) {
     console.log(`[Mock] Admin ${freeze ? "freeze" : "debit"} ${amount} CP from ${walletId}: ${reason}`);
     return { success: true };
   }
@@ -263,7 +287,7 @@ export async function adminToggleWalletFreeze(
   freeze: boolean,
   reason: string
 ): Promise<{ success: boolean; error?: string }> {
-  if (!USE_SUPABASE) {
+  if (!shouldUseSupabase()) {
     console.log(`[Mock] Admin ${freeze ? "freeze" : "unfreeze"} wallet ${walletId}: ${reason}`);
     return { success: true };
   }
@@ -291,7 +315,7 @@ export async function adminUpdateFeeConfig(
   feePercent: number,
   commissionPercent: number
 ): Promise<{ success: boolean; error?: string }> {
-  if (!USE_SUPABASE) {
+  if (!shouldUseSupabase()) {
     console.log(`[Mock] Admin update fee for ${walletId}: fee=${feePercent}%, commission=${commissionPercent}%`);
     return { success: true };
   }
@@ -307,3 +331,4 @@ export async function adminUpdateFeeConfig(
     return { success: true };
   }, WRITE_RETRY);
 }
+

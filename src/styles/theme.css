@@ -309,6 +309,11 @@
     line-height: 1.7;
   }
 
+  html[lang="bn"],
+  html[lang="bn"] body {
+    font-family: 'Noto Sans Bengali', sans-serif !important;
+  }
+
   h1 {
     font-size: var(--text-2xl);
     font-weight: var(--font-weight-medium);

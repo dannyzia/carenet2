@@ -1,7 +1,9 @@
 import { Link, useParams } from "react-router";
-import { useAsyncData, useDocumentTitle } from "@/frontend/hooks";
+import { ChevronLeft, Phone, MessageSquare, Star } from "lucide-react";
+import { cn } from "@/frontend/theme/tokens";
+import { useAsyncData, useDocumentTitle, useCareSeekerBasePath } from "@/frontend/hooks";
 import { guardianService } from "@/backend/services/guardian.service";
-import { PageSkeleton } from "@/frontend/components/PageSkeleton";
+import { PageSkeleton } from "@/frontend/components/shared/PageSkeleton";
 import { useTranslation } from "react-i18next";
 
 const statusBadge: Record<string, { color: string; bg: string }> = {
@@ -12,6 +14,7 @@ const statusBadge: Record<string, { color: string; bg: string }> = {
 export default function GuardianPlacementDetailPage() {
   const { t: tDocTitle } = useTranslation("common");
   useDocumentTitle(tDocTitle("pageTitles.guardianPlacementDetail", "Guardian Placement Detail"));
+  const base = useCareSeekerBasePath();
 
   const { id } = useParams();
   const { data: detailData, loading } = useAsyncData(() => guardianService.getPlacementDetail(id || ""), [id]);
@@ -23,7 +26,7 @@ export default function GuardianPlacementDetailPage() {
   return (
     <>
       <div className="max-w-3xl mx-auto space-y-6 pb-8">
-        <Link to="/guardian/placements" className="inline-flex items-center gap-1 text-sm" style={{ color: cn.textSecondary }}><ChevronLeft className="w-4 h-4" /> Back to Placements</Link>
+        <Link to={`${base}/placements`} className="inline-flex items-center gap-1 text-sm" style={{ color: cn.textSecondary }}><ChevronLeft className="w-4 h-4" /> Back to Placements</Link>
         <div className="finance-card p-5" style={{ borderLeft: `3px solid ${cn.green}` }}>
           <div className="flex items-center justify-between mb-3"><span className="text-sm" style={{ color: cn.text }}>{id || "PL-2026-0018"}</span><span className="px-2.5 py-1 rounded-full text-xs" style={{ background: cn.greenBg, color: cn.green }}>Active</span></div>
           <div className="grid grid-cols-2 gap-3 text-sm"><div><p className="text-xs" style={{ color: cn.textSecondary }}>Patient</p><p style={{ color: cn.text }}>Mr. Abdul Rahman, 74y</p></div><div><p className="text-xs" style={{ color: cn.textSecondary }}>Agency</p><p style={{ color: cn.text }}>HealthCare Pro BD</p></div><div><p className="text-xs" style={{ color: cn.textSecondary }}>Duration</p><p style={{ color: cn.text }}>Jan 10 - Mar 10, 2026</p></div><div><p className="text-xs" style={{ color: cn.textSecondary }}>Cost to Date</p><p style={{ color: cn.green }}>৳ 75,600</p></div></div>

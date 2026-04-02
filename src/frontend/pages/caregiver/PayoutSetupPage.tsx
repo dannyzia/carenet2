@@ -2,7 +2,6 @@
 import React from "react";
 import { CreditCard, Plus, ChevronRight, ArrowLeft, CheckCircle2, ShieldCheck, History, TrendingUp, Wallet } from "lucide-react";
 import { Button } from "@/frontend/components/ui/button";
-import { useNavigate } from "react-router";
 import { cn } from "@/frontend/theme/tokens";
 import { PageHero } from "@/frontend/components/PageHero";
 import { useAsyncData, useDocumentTitle } from "@/frontend/hooks";
@@ -18,7 +17,6 @@ export default function PayoutSetupPage() {
 
   if (loading || !payoutSettings) return <PageSkeleton />;
 
-  const navigate = useNavigate();
   return (
     <div>
       <PageHero gradient="radial-gradient(143.86% 887.35% at -10.97% -22.81%, #7CE577 0%, #5FB865 100%)">

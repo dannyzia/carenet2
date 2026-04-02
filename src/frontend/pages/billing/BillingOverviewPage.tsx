@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import {
   FileText, CreditCard, Clock, CheckCircle2, AlertTriangle,
   ArrowRight, Eye, Upload, Filter, TrendingUp, Banknote,
@@ -178,6 +178,14 @@ function InvoiceCard({ invoice, onView, onPay }: { invoice: BillingInvoice; onVi
       </div>
       <div className="text-right shrink-0">
         <p className="text-sm" style={{ color: cn.text }}>{formatBDT(invoice.total)}</p>
+        <Link
+          to={`/billing/invoice/${invoice.id}`}
+          className="text-xs inline-flex items-center gap-1 mt-1"
+          style={{ color: cn.pink }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Eye className="w-3 h-3" /> View Invoice
+        </Link>
         {(invoice.status === "unpaid" || invoice.status === "overdue") && (
           <Button size="sm" className="mt-1 h-7 text-xs rounded-lg" style={{ background: cn.green, color: "white" }} onClick={(e) => { e.stopPropagation(); onPay(); }}>
             <Upload className="w-3 h-3 mr-1" /> Pay

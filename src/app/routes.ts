@@ -1,4 +1,5 @@
 import { createBrowserRouter } from "react-router";
+import { createElement } from "react";
 import { RootLayout } from "@/frontend/components/shell/RootLayout";
 
 // ─── Layout Shells (eagerly loaded — small, shared across all routes) ───
@@ -27,6 +28,11 @@ export const router = createBrowserRouter([
   {
     path: "/",
     Component: RootLayout,
+    hydrateFallbackElement: createElement(
+      "div",
+      { className: "flex items-center justify-center min-h-screen" },
+      createElement("div", { className: "animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500" }),
+    ),
     children: [
       // ═══════════════════════════════════════════════════════════
       // PUBLIC PAGES — PublicLayout (PublicNavBar + PublicFooter)
@@ -36,6 +42,7 @@ export const router = createBrowserRouter([
         children: [
           { index: true, ...p(() => import("@/frontend/pages/public/HomePage")) },
           { path: "home", ...p(() => import("@/frontend/pages/public/HomePage")) },
+          { path: "experience", ...p(() => import("@/frontend/pages/public/ExperienceAppPage")) },
           { path: "about", ...p(() => import("@/frontend/pages/public/AboutPage")) },
           { path: "features", ...p(() => import("@/frontend/pages/public/FeaturesPage")) },
           { path: "pricing", ...p(() => import("@/frontend/pages/public/PricingPage")) },
@@ -121,8 +128,9 @@ export const router = createBrowserRouter([
               { path: "caregiver/handoff-notes", ...p(() => import("@/frontend/pages/caregiver/HandoffNotesPage")) },
 
               // ─── Guardian ───
-              { path: "guardian/dashboard", ...p(() => import("@/frontend/pages/guardian/GuardianDashboardPage")) },
-              { path: "guardian/patients", ...p(() => import("@/frontend/pages/guardian/GuardianPatientsPage")) },
+      { path: "guardian/dashboard", ...p(() => import("@/frontend/pages/guardian/GuardianDashboardPage")) },
+      { path: "guardian/emergency", ...p(() => import("@/frontend/pages/patient/EmergencyHubPage")) },
+      { path: "guardian/patients", ...p(() => import("@/frontend/pages/guardian/GuardianPatientsPage")) },
               { path: "guardian/schedule", ...p(() => import("@/frontend/pages/guardian/GuardianSchedulePage")) },
               { path: "guardian/messages", ...p(() => import("@/frontend/pages/guardian/GuardianMessagesPage")) },
               { path: "guardian/payments", ...p(() => import("@/frontend/pages/guardian/GuardianPaymentsPage")) },
@@ -214,6 +222,18 @@ export const router = createBrowserRouter([
               { path: "patient/schedule", ...p(() => import("@/frontend/pages/patient/PatientSchedulePage")) },
               { path: "patient/messages", ...p(() => import("@/frontend/pages/patient/PatientMessagesPage")) },
               { path: "patient/document-upload", ...p(() => import("@/frontend/pages/patient/PatientDocumentUploadPage")) },
+              { path: "patient/care-requirements", ...p(() => import("@/frontend/pages/guardian/CareRequirementsListPage")) },
+              { path: "patient/care-requirement-wizard", ...p(() => import("@/frontend/pages/guardian/CareRequirementWizardPage")) },
+              { path: "patient/care-requirement/:id", ...p(() => import("@/frontend/pages/guardian/CareRequirementDetailPage")) },
+              { path: "patient/marketplace-hub", ...p(() => import("@/frontend/pages/guardian/GuardianMarketplaceHubPage")) },
+              { path: "patient/marketplace/package/:id", ...p(() => import("@/frontend/pages/guardian/PackageDetailPage")) },
+              { path: "patient/bid-review/:id", ...p(() => import("@/frontend/pages/guardian/BidReviewPage")) },
+              { path: "patient/placements", ...p(() => import("@/frontend/pages/guardian/GuardianPlacementsPage")) },
+              { path: "patient/placement/:id", ...p(() => import("@/frontend/pages/guardian/GuardianPlacementDetailPage")) },
+              { path: "patient/booking", ...p(() => import("@/frontend/pages/guardian/BookingWizardPage")) },
+              { path: "patient/search", ...p(() => import("@/frontend/pages/guardian/CaregiverSearchPage")) },
+              { path: "patient/caregiver/:id", ...p(() => import("@/frontend/pages/guardian/CaregiverPublicProfilePage")) },
+              { path: "patient/agency/:id", ...p(() => import("@/frontend/pages/guardian/AgencyPublicProfilePage")) },
 
               // ─── Moderator ───
               { path: "moderator/dashboard", ...p(() => import("@/frontend/pages/moderator/ModeratorDashboardPage")) },

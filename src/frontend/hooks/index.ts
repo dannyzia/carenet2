@@ -15,3 +15,4 @@ export { useUnreadCounts } from "./useUnreadCounts";
 export type { UnreadCounts } from "./useUnreadCounts";
 export { UnreadCountsContext, useUnreadCountsCtx } from "./UnreadCountsContext";
 export { useDocumentTitle } from "./useDocumentTitle";
+export { useCareSeekerBasePath } from "./useCareSeekerBasePath";

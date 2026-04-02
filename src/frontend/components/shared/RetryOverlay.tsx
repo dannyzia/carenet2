@@ -18,7 +18,12 @@ import {
 } from "@/backend/services/realtime";
 import { cn } from "@/frontend/theme/tokens";
 
+declare const __CARENET_PLAYWRIGHT_E2E__: boolean;
+
 export function RetryOverlay() {
+  if (typeof __CARENET_PLAYWRIGHT_E2E__ !== "undefined" && __CARENET_PLAYWRIGHT_E2E__) {
+    return null;
+  }
   const { t } = useTranslation("common");
   const [activity, setActivity] = useState<RetryActivity>({
     activeRetries: 0,

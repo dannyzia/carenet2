@@ -1,0 +1,21 @@
+HTTP/1.1 404 Not Found
+Date: Mon, 23 Mar 2026 06:55:33 GMT
+Content-Type: application/json; charset=utf-8
+Transfer-Encoding: chunked
+Connection: keep-alive
+Server: cloudflare
+CF-Ray: 9e0b87f969aeded3-DAC
+CF-Cache-Status: DYNAMIC
+Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+Vary: Accept-Encoding
+X-Content-Type-Options: nosniff
+proxy-status: PostgREST; error=PGRST205
+sb-gateway-version: 1
+sb-project-ref: gnxqgtuxupuitrjjlrgc
+sb-request-id: 019d197a-37e4-79b8-8f85-c44531580635
+x-envoy-attempt-count: 1
+x-envoy-upstream-service-time: 63
+Set-Cookie: __cf_bm=vLTcrlKalZcdFL5WWHrzQIbddGpkcR6EQAjlmseW5_g-1774248933-1.0.1.1-Yb0ZOxFpiFS3rr2VzxPZZuMcDvSpz7D9MRon4MeRJARn268dtxGoJ19L7bK0qCWgnSR1BGz.9Gh6wK_DPMvl5UDcHRuGQGYdLSKO53HCNgc; path=/; expires=Mon, 23-Mar-26 07:25:33 GMT; domain=.supabase.co; HttpOnly; Secure; SameSite=None
+alt-svc: h3=":443"; ma=86400
+
+{"code":"PGRST205","details":null,"hint":"Perhaps you meant the table 'public.indications'","message":"Could not find the table 'public.supabase_migrations' in the schema cache"}

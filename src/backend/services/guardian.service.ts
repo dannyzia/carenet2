@@ -38,9 +38,33 @@ import { USE_SUPABASE, sbRead, sb, currentUserId } from "./_sb";
 
 const delay = (ms = 200) => new Promise((r) => setTimeout(r, ms));
 
+function isDemoAuthMode(): boolean {
+  if (typeof window === "undefined") return false;
+
+  try {
+    const mode = window.localStorage.getItem("carenet-auth-mode");
+    if (mode === "demo") return true;
+
+    const rawUser = window.localStorage.getItem("carenet-auth");
+    if (!rawUser) return false;
+    const parsed = JSON.parse(rawUser) as { id?: string; email?: string };
+    return (
+      typeof parsed.id === "string" && parsed.id.startsWith("demo-")
+    ) || (
+      typeof parsed.email === "string" && parsed.email.endsWith("@carenet.demo")
+    );
+  } catch {
+    return false;
+  }
+}
+
+function shouldUseSupabase(): boolean {
+  return USE_SUPABASE && !isDemoAuthMode();
+}
+
 export const guardianService = {
   async getPatients(): Promise<Patient[]> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead("gd:patients", async () => {
         const userId = await currentUserId();
         const { data, error } = await sb().from("patients")
@@ -71,7 +95,7 @@ export const guardianService = {
   },
 
   async getPlacements(): Promise<GuardianPlacement[]> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead("gd:placements", async () => {
         const userId = await currentUserId();
         const { data, error } = await sb().from("placements")
@@ -157,7 +181,7 @@ export const guardianService = {
   },
 
   async getGuardianProfile(): Promise<GuardianProfile> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead("gd:profile", async () => {
         const userId = await currentUserId();
         const { data, error } = await sb().from("guardian_profiles")
@@ -178,7 +202,7 @@ export const guardianService = {
   },
 
   async getInvoiceDetail(id: string): Promise<InvoiceDetail> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead(`gd:invoice:${id}`, async () => {
         const { data, error } = await sb().from("invoices")
           .select("*")

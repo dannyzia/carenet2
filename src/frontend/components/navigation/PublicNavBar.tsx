@@ -1,44 +1,57 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router";
-import { Heart, LogIn, X, Menu } from "lucide-react";
+import { Heart, LogIn, Bell, X } from "lucide-react";
 import { Button } from "@/frontend/components/ui/button";
 import { cn } from "@/frontend/theme/tokens";
 import { useTheme } from "@/frontend/components/ThemeProvider";
 import { Sun, Moon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "@/frontend/components/shared/LanguageSwitcher";
+import { useUnreadCounts } from "@/frontend/hooks/useUnreadCounts";
+import type { Role } from "@/frontend/theme/tokens";
 
-const navLinks = [
+const ROLE_SEGMENTS: Role[] = ["caregiver", "guardian", "admin", "moderator", "patient", "agency", "shop"];
+
+function roleForUnreadCounts(pathname: string): Role {
+  const seg = pathname.split("/")[1];
+  if (seg && ROLE_SEGMENTS.includes(seg as Role)) return seg as Role;
+  return "guardian";
+}
+
+/** Desktop center nav — WIREFRAMES §1: Home · Marketplace · About · Features · Pricing */
+const navLinks: { labelKey: string; to: string; activePaths?: string[] }[] = [
+  { labelKey: "home", to: "/home", activePaths: ["/", "/home"] },
+  { labelKey: "marketplace", to: "/marketplace" },
+  { labelKey: "about", to: "/about" },
   { labelKey: "features", to: "/features" },
-  { labelKey: "pricing",  to: "/pricing"  },
-  { labelKey: "about",    to: "/about"    },
-  { labelKey: "contact",  to: "/contact"  },
+  { labelKey: "pricing", to: "/pricing" },
 ];
 
-// Extended links for mobile drawer — includes all publicly accessible pages
+// Mobile drawer — same primary order + contact (not in desktop center per wireframe)
 const mobileNavLinks = [
-  { label: "Home", to: "/home", labelKey: "home" },
-  { label: "Features", to: "/features", labelKey: "features" },
-  { label: "Pricing", to: "/pricing", labelKey: "pricing" },
-  { label: "About", to: "/about", labelKey: "about" },
-  { label: "Contact", to: "/contact", labelKey: "contact" },
+  { to: "/home", labelKey: "home" },
+  { to: "/marketplace", labelKey: "marketplace" },
+  { to: "/about", labelKey: "about" },
+  { to: "/features", labelKey: "features" },
+  { to: "/pricing", labelKey: "pricing" },
+  { to: "/contact", labelKey: "contact" },
 ];
 
+/** i18n keys under common namespace (same labels as AuthenticatedLayout sidebar). */
 const mobileBrowseLinks = [
-  { label: "Marketplace", to: "/marketplace" },
-  { label: "Agencies", to: "/agencies" },
-  { label: "Shop", to: "/shop" },
+  { to: "/agencies", labelKey: "sidebar.agencies" },
+  { to: "/shop", labelKey: "sidebar.shop" },
 ];
 
 const mobileSupportLinks = [
-  { label: "Help Center", to: "/support/help" },
-  { label: "Submit Ticket", to: "/support/ticket" },
-  { label: "Refund Request", to: "/support/refund" },
-  { label: "Contact Us", to: "/support/contact" },
-  { label: "Blog", to: "/community/blog" },
-  { label: "Careers", to: "/community/careers" },
-  { label: "Privacy Policy", to: "/privacy" },
-  { label: "Terms of Service", to: "/terms" },
+  { to: "/support/help", labelKey: "sidebar.helpCenter" },
+  { to: "/support/ticket", labelKey: "sidebar.submitTicket" },
+  { to: "/support/refund", labelKey: "sidebar.refundRequest" },
+  { to: "/support/contact", labelKey: "sidebar.contactUs" },
+  { to: "/community/blog", labelKey: "sidebar.blog" },
+  { to: "/community/careers", labelKey: "sidebar.careers" },
+  { to: "/privacy", labelKey: "sidebar.privacyPolicy" },
+  { to: "/terms", labelKey: "sidebar.termsOfService" },
 ];
 
 export function PublicNavBar() {
@@ -47,6 +60,7 @@ export function PublicNavBar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { t } = useTranslation("common");
+  const unreadCounts = useUnreadCounts(roleForUnreadCounts(location.pathname));
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -80,6 +94,7 @@ export function PublicNavBar() {
         }}
       >
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center gap-3">
+          {/* Mobile menu: BottomNav “Menu” dispatches toggle-sidebar / toggle-public-sidebar */}
 
           {/* Logo */}
           <Link to="/home" className="flex items-center gap-2 shrink-0 no-underline">
@@ -89,13 +104,15 @@ export function PublicNavBar() {
             >
               <Heart className="w-4 h-4 text-white" />
             </div>
-            <span className="text-base" style={{ color: cn.text }}>CareNet</span>
+            <span className="text-base" style={{ color: cn.text }}>{t("app.name")}</span>
           </Link>
 
           {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-1 ml-6">
-            {navLinks.map(({ labelKey, to }) => {
-              const active = location.pathname === to;
+          <nav className="hidden md:flex items-center gap-1 ml-6 flex-1 justify-center">
+            {navLinks.map(({ labelKey, to, activePaths }) => {
+              const active = activePaths
+                ? activePaths.includes(location.pathname)
+                : location.pathname === to;
               return (
                 <Link key={to} to={to} className="no-underline">
                   <button
@@ -113,27 +130,49 @@ export function PublicNavBar() {
             })}
           </nav>
 
-          {/* Right side */}
+          {/* Right side — same rhythm as AuthenticatedLayout header */}
           <div className="flex items-center gap-2 ml-auto">
-            {/* Language switcher */}
-            <div>
+            <Link
+              to="/notifications"
+              className="relative p-2 rounded-lg hover:opacity-80 transition-all no-underline shrink-0"
+              aria-label={t("a11y.notifications", "Notifications")}
+            >
+              <Bell className="w-5 h-5" style={{ color: cn.textSecondary }} aria-hidden />
+              {unreadCounts.notifications > 0 && (
+                <span
+                  className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] rounded-full flex items-center justify-center text-[10px] text-white px-1"
+                  style={{ background: cn.pink }}
+                  aria-label={t("a11y.unreadNotifications", { count: unreadCounts.notifications })}
+                >
+                  {unreadCounts.notifications > 9 ? "9+" : unreadCounts.notifications}
+                </span>
+              )}
+            </Link>
+
+            {/* Language — drawer has full list; keep compact in bar */}
+            <div className="min-w-0 max-w-[min(140px,28vw)] sm:max-w-none">
               <LanguageSwitcher variant="compact" />
             </div>
             {/* Theme toggle */}
             <button
+              type="button"
               onClick={toggleTheme}
               className="flex items-center justify-center w-8 h-8 rounded-lg transition-all hover:opacity-80"
               style={{ color: cn.textSecondary, background: "rgba(128,128,128,0.1)" }}
-              aria-label="Toggle theme"
+              aria-label={
+                resolvedTheme === "dark"
+                  ? t("a11y.switchToLight", "Switch to light mode")
+                  : t("a11y.switchToDark", "Switch to dark mode")
+              }
             >
               {resolvedTheme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
 
-            {/* Divider */}
-            <div className="hidden sm:block w-px h-6 mx-1" style={{ background: cn.borderLight }} />
+            {/* Divider — md+ only (auth hidden on phone/tablet portrait; use drawer) */}
+            <div className="hidden md:block w-px h-6 mx-1" style={{ background: cn.borderLight }} />
 
-            {/* Auth buttons — desktop only */}
-            <Link to="/auth/register" className="hidden sm:block no-underline">
+            {/* Auth buttons — md+ only; mobile: drawer + BottomNav */}
+            <Link to="/auth/register" className="hidden md:flex no-underline">
               <Button
                 size="sm"
                 className="gap-1.5"
@@ -147,7 +186,7 @@ export function PublicNavBar() {
                 {t("nav.register")}
               </Button>
             </Link>
-            <Link to="/auth/login" className="hidden sm:block no-underline">
+            <Link to="/auth/login" className="hidden md:flex no-underline">
               <Button
                 size="sm"
                 className="gap-1.5"
@@ -189,9 +228,15 @@ export function PublicNavBar() {
             <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "var(--cn-gradient-caregiver)" }}>
               <Heart className="w-5 h-5 text-white" />
             </div>
-            <span className="text-lg" style={{ color: cn.text }}>CareNet</span>
+            <span className="text-lg" style={{ color: cn.text }}>{t("app.name")}</span>
           </Link>
-          <button onClick={() => setMenuOpen(false)} className="p-2 rounded-lg hover:opacity-80" style={{ color: cn.textSecondary }}>
+          <button
+            type="button"
+            onClick={() => setMenuOpen(false)}
+            className="p-2 rounded-lg hover:opacity-80"
+            style={{ color: cn.textSecondary }}
+            aria-label={t("a11y.closeMenu", "Close menu")}
+          >
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -248,10 +293,10 @@ export function PublicNavBar() {
 
           {/* Browse links */}
           <p className="px-3 pt-4 pb-1 text-[10px] uppercase tracking-wider" style={{ color: cn.textSecondary, opacity: 0.6 }}>
-            Browse
+            {t("sidebar.section.browse")}
           </p>
           <div className="space-y-0.5">
-            {mobileBrowseLinks.map(({ to, label }) => {
+            {mobileBrowseLinks.map(({ to, labelKey }) => {
               const active = location.pathname === to;
               return (
                 <Link key={to} to={to} onClick={() => setMenuOpen(false)}
@@ -260,7 +305,7 @@ export function PublicNavBar() {
                     color: active ? "#FEB4C5" : cn.textSecondary,
                     background: active ? "rgba(254,180,197,0.10)" : "transparent",
                   }}>
-                  <span>{label}</span>
+                  <span>{t(labelKey)}</span>
                 </Link>
               );
             })}
@@ -268,10 +313,10 @@ export function PublicNavBar() {
 
           {/* Support links */}
           <p className="px-3 pt-4 pb-1 text-[10px] uppercase tracking-wider" style={{ color: cn.textSecondary, opacity: 0.6 }}>
-            Support & Info
+            {t("sidebar.section.supportInfo")}
           </p>
           <div className="space-y-0.5">
-            {mobileSupportLinks.map(({ to, label }) => {
+            {mobileSupportLinks.map(({ to, labelKey }) => {
               const active = location.pathname === to;
               return (
                 <Link key={to} to={to} onClick={() => setMenuOpen(false)}
@@ -280,7 +325,7 @@ export function PublicNavBar() {
                     color: active ? "#FEB4C5" : cn.textSecondary,
                     background: active ? "rgba(254,180,197,0.10)" : "transparent",
                   }}>
-                  <span>{label}</span>
+                  <span>{t(labelKey)}</span>
                 </Link>
               );
             })}
@@ -293,12 +338,22 @@ export function PublicNavBar() {
             <LanguageSwitcher variant="dropdown" />
           </div>
           <button
+            type="button"
             onClick={toggleTheme}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:opacity-80 transition-all text-sm"
             style={{ color: cn.textSecondary, background: "rgba(128,128,128,0.1)" }}
+            aria-label={
+              resolvedTheme === "dark"
+                ? t("a11y.switchToLight", "Switch to light mode")
+                : t("a11y.switchToDark", "Switch to dark mode")
+            }
           >
             {resolvedTheme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            <span>{resolvedTheme === "dark" ? "Light Mode" : "Dark Mode"}</span>
+            <span>
+              {resolvedTheme === "dark"
+                ? t("theme.lightMode", "Light mode")
+                : t("theme.darkMode", "Dark mode")}
+            </span>
           </button>
         </div>
       </aside>

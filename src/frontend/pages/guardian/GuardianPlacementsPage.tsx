@@ -2,7 +2,7 @@ import { useState } from "react";
 import { cn } from "@/frontend/theme/tokens";
 import { Link } from "react-router";
 import { Shield, ChevronRight, Calendar, Building2, Heart, User, Clock, MessageSquare, Eye } from "lucide-react";
-import { useAsyncData, useDocumentTitle } from "@/frontend/hooks";
+import { useAsyncData, useDocumentTitle, useCareSeekerBasePath } from "@/frontend/hooks";
 import { guardianService } from "@/backend/services";
 import { PageSkeleton } from "@/frontend/components/shared/PageSkeleton";
 import { useTranslation } from "react-i18next";
@@ -18,6 +18,7 @@ const tabs = [{ key: "all", label: "All" }, { key: "active", label: "Active" }, 
 
 export default function GuardianPlacementsPage() {
   const { t: tDocTitle } = useTranslation("common");
+  const base = useCareSeekerBasePath();
   useDocumentTitle(tDocTitle("pageTitles.guardianPlacements", "Guardian Placements"));
 
   const [activeTab, setActiveTab] = useState("all");
@@ -50,7 +51,7 @@ export default function GuardianPlacementsPage() {
                 </div>
                 <div className="mb-3"><div className="flex justify-between text-xs mb-1" style={{ color: cn.textSecondary }}><span>Shifts: {pl.shiftsCompleted} / {pl.shiftsTotal}</span><span>{Math.round(pct)}%</span></div><div className="w-full h-1.5 rounded-full" style={{ background: cn.bgInput }}><div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: cn.green }} /></div></div>
                 <div className="flex items-center gap-2 pt-3" style={{ borderTop: `1px solid ${cn.border}` }}>
-                  <Link to={`/guardian/placements/${pl.id}`} className="px-3 py-1.5 rounded-lg text-xs text-white flex items-center gap-1" style={{ background: "var(--cn-gradient-guardian)" }}>View Details <ChevronRight className="w-3 h-3" /></Link>
+                  <Link to={`${base}/placement/${pl.id}`} className="px-3 py-1.5 rounded-lg text-xs text-white flex items-center gap-1" style={{ background: "var(--cn-gradient-guardian)" }}>View Details <ChevronRight className="w-3 h-3" /></Link>
                   <button className="px-3 py-1.5 rounded-lg text-xs border flex items-center gap-1" style={{ borderColor: cn.border, color: cn.textSecondary }}><MessageSquare className="w-3 h-3" /> Message Agency</button>
                 </div>
               </div>

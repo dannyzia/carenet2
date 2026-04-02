@@ -3,7 +3,7 @@ import { useAsyncData, useDocumentTitle } from "@/frontend/hooks";
 import { caregiverService } from "@/backend/services";
 import { PageSkeleton } from "@/frontend/components/shared/PageSkeleton";
 import React from "react";
-import { Upload, Download, CheckCircle, Clock, AlertCircle, FileText, Eye, Trash } from "lucide-react";
+import { Upload, Download, CheckCircle, Clock, AlertCircle, FileText, Eye, Trash2, Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 const statusConfig: Record<string, { color: string; bg: string; icon: React.ElementType; label: string }> = {

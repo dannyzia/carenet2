@@ -8,7 +8,7 @@ import {
   FileText, AlertTriangle, Zap, Award, TrendingUp, ChevronRight,
 } from "lucide-react";
 import { cn } from "@/frontend/theme/tokens";
-import { useAsyncData, useDocumentTitle } from "@/frontend/hooks";
+import { useAsyncData, useDocumentTitle, useCareSeekerBasePath } from "@/frontend/hooks";
 import { marketplaceService } from "@/backend/services";
 import { PageSkeleton } from "@/frontend/components/shared/PageSkeleton";
 import { useAriaToast } from "@/frontend/hooks/useAriaToast";
@@ -38,6 +38,7 @@ export default function PackageDetailPage() {
   useDocumentTitle(tDocTitle("pageTitles.packageDetail", "Package Detail"));
 
   const toast = useAriaToast();
+  const base = useCareSeekerBasePath();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: pkg, loading } = useAsyncData(() =>
@@ -49,7 +50,7 @@ export default function PackageDetailPage() {
     <div className="text-center py-20">
       <Package className="w-12 h-12 mx-auto mb-3" style={{ color: cn.borderLight }} />
       <p style={{ color: cn.textSecondary }}>Package not found</p>
-      <Link to="/guardian/marketplace-hub" className="text-sm mt-3 inline-block" style={{ color: cn.green }}>Back to Marketplace</Link>
+      <Link to={`${base}/marketplace-hub`} className="text-sm mt-3 inline-block" style={{ color: cn.green }}>Back to Marketplace</Link>
     </div>
   );
 
@@ -67,7 +68,7 @@ export default function PackageDetailPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-6 pb-20">
       {/* Back */}
-      <Link to="/guardian/marketplace-hub" className="inline-flex items-center gap-1.5 text-sm no-underline" style={{ color: cn.textSecondary }}>
+      <Link to={`${base}/marketplace-hub`} className="inline-flex items-center gap-1.5 text-sm no-underline" style={{ color: cn.textSecondary }}>
         <ArrowLeft className="w-4 h-4" /> Back to Marketplace
       </Link>
 
@@ -110,14 +111,14 @@ export default function PackageDetailPage() {
         {/* CTA */}
         <div className="flex gap-3 pt-2">
           <button
-            onClick={() => navigate(`/guardian/booking?package=${pkg.id}`)}
+            onClick={() => navigate(`${base}/booking?package=${pkg.id}`)}
             className="flex-1 py-3 rounded-xl text-white text-sm cn-touch-target"
             style={{ background: "var(--cn-gradient-guardian)" }}
           >
             Subscribe to Package
           </button>
           <button
-            onClick={() => navigate(`/guardian/messages?to=${pkg.agency_id}`)}
+            onClick={() => navigate(`${base}/messages?to=${pkg.agency_id}`)}
             className="px-4 py-3 rounded-xl border text-sm cn-touch-target"
             style={{ borderColor: cn.border, color: cn.text }}
           >
@@ -144,7 +145,7 @@ export default function PackageDetailPage() {
               <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {pkg.party.service_area?.join(", ")}</span>
             </div>
           </div>
-          <Link to={`/guardian/agency/${pkg.agency_id}`} className="text-xs no-underline flex items-center gap-1" style={{ color: cn.green }}>
+          <Link to={`${base}/agency/${pkg.agency_id}`} className="text-xs no-underline flex items-center gap-1" style={{ color: cn.green }}>
             Profile <ChevronRight className="w-3 h-3" />
           </Link>
         </div>
@@ -323,14 +324,14 @@ export default function PackageDetailPage() {
       {/* Bottom CTA */}
       <div className="stat-card p-5 flex gap-3">
         <button
-          onClick={() => navigate(`/guardian/booking?package=${pkg.id}`)}
+          onClick={() => navigate(`${base}/booking?package=${pkg.id}`)}
           className="flex-1 py-3 rounded-xl text-white text-sm cn-touch-target"
           style={{ background: "var(--cn-gradient-guardian)" }}
         >
           Subscribe to This Package
         </button>
         <button
-          onClick={() => navigate(`/guardian/messages?to=${pkg.agency_id}`)}
+          onClick={() => navigate(`${base}/messages?to=${pkg.agency_id}`)}
           className="px-6 py-3 rounded-xl border text-sm cn-touch-target flex items-center gap-2"
           style={{ borderColor: cn.border, color: cn.text }}
         >

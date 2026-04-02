@@ -17,6 +17,30 @@ import { USE_SUPABASE, sbRead, sbWrite, sb, currentUserId } from "./_sb";
 
 const delay = (ms = 200) => new Promise((r) => setTimeout(r, ms));
 
+function isDemoAuthMode(): boolean {
+  if (typeof window === "undefined") return false;
+
+  try {
+    const mode = window.localStorage.getItem("carenet-auth-mode");
+    if (mode === "demo") return true;
+
+    const rawUser = window.localStorage.getItem("carenet-auth");
+    if (!rawUser) return false;
+    const parsed = JSON.parse(rawUser) as { id?: string; email?: string };
+    return (
+      typeof parsed.id === "string" && parsed.id.startsWith("demo-")
+    ) || (
+      typeof parsed.email === "string" && parsed.email.endsWith("@carenet.demo")
+    );
+  } catch {
+    return false;
+  }
+}
+
+function shouldUseSupabase(): boolean {
+  return USE_SUPABASE && !isDemoAuthMode();
+}
+
 // ─── Mock data lookup by role ───────────────────────────────
 const CONVERSATIONS_BY_ROLE: Record<string, ConversationItem[]> = {
   agency: MOCK_AGENCY_CONVERSATIONS,
@@ -96,7 +120,7 @@ export const messageService = {
 
   // ─── Generic: get conversations for any role ───────────────
   async getConversations(role?: Role): Promise<ConversationItem[]> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead(`convos:${role || "all"}`, async () => {
         const myId = await currentUserId();
         return fetchConversations(myId);
@@ -108,7 +132,7 @@ export const messageService = {
 
   // ─── Generic: get messages for a conversation ─────────────
   async getMessages(conversationId: string): Promise<ChatMessage[]> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbRead(`msgs:${conversationId}`, async () => {
         const myId = await currentUserId();
         return fetchMessages(conversationId, myId);
@@ -120,7 +144,7 @@ export const messageService = {
 
   // ─── Get or create a conversation with a specific user ────
   async getOrCreateConversation(otherUserId: string): Promise<string> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       const myId = await currentUserId();
       // Check if conversation already exists
       const { data: existing } = await sb().from("conversations")
@@ -150,7 +174,7 @@ export const messageService = {
 
   // ─── Send a message ────────────────────────────────────────
   async sendMessage(conversationId: string, text: string): Promise<ChatMessage> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       return sbWrite(async () => {
         const myId = await currentUserId();
         const { data: profile } = await sb().from("profiles").select("name").eq("id", myId).single();
@@ -196,7 +220,7 @@ export const messageService = {
     return this.getConversations("agency");
   },
   async getAgencyMessages(conversationId: string) {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       const msgs = await this.getMessages(conversationId);
       return msgs.map((m) => ({
         ...m,
@@ -212,7 +236,7 @@ export const messageService = {
 
   // ─── Mark all messages in a conversation as read ───────────
   async markConversationRead(conversationId: string): Promise<void> {
-    if (USE_SUPABASE) {
+    if (shouldUseSupabase()) {
       const myId = await currentUserId();
       // Set read=true on all messages in this conversation that were NOT sent by me
       const { error } = await sb()
@@ -228,3 +252,4 @@ export const messageService = {
     await delay(50);
   },
 };
+

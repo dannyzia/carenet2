@@ -42,7 +42,7 @@ export const moderatorService = {
           text: d.text,
           date: d.created_at,
           flagReason: null,
-          status: "published",
+          status: "approved",
         }));
       });
     }
@@ -76,21 +76,27 @@ export const moderatorService = {
 
   async getDashboardQueue(): Promise<ModerationQueueItem[]> {
     if (USE_SUPABASE) {
-      return sbRead("mod:queue", async () => {
-        const { data, error } = await sb().from("moderation_queue")
-          .select("*")
-          .in("status", ["pending", "in_review"])
-          .order("created_at", { ascending: true });
-        if (error) throw error;
-        return (data || []).map((d: any) => ({
-          id: d.id,
-          type: d.type,
-          content: d.content,
-          reporter: d.reporter_name || "System",
-          time: d.created_at,
-          priority: d.priority,
-        }));
-      });
+      try {
+        return await sbRead("mod:queue", async () => {
+          const { data, error } = await sb().from("moderation_queue")
+            .select("*")
+            .in("status", ["pending", "in_review"])
+            .order("created_at", { ascending: true });
+          if (error) throw error;
+          return (data || []).map((d: any) => ({
+            id: d.id,
+            type: d.type,
+            content: d.content,
+            reporter: d.reporter_name || "System",
+            time: d.created_at,
+            priority: d.priority,
+          }));
+        });
+      } catch (error) {
+        console.warn("[Moderator Service] Supabase moderation_queue failed, using mock queue:", error);
+        await delay();
+        return MOCK_MODERATION_QUEUE;
+      }
     }
     await delay();
     return MOCK_MODERATION_QUEUE;

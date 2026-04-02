@@ -6,6 +6,14 @@
  */
 import type { Role, User, RegisterData } from "./types";
 
+/** True for one-click demo users and @carenet.demo accounts — stable ids for Dexie drafts / offline queue */
+export function isDemoUser(user: Pick<User, "email" | "id">): boolean {
+  return (
+    user.email?.endsWith("@carenet.demo") === true ||
+    user.id.startsWith("demo-") === true
+  );
+}
+
 export const DEMO_PASSWORD = "demo1234";
 export const DEMO_TOTP = "123456";
 /** @deprecated Use DEMO_TOTP */

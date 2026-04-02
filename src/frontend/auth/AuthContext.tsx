@@ -9,6 +9,7 @@ import {
   getDemoUserByRole,
   mockRequestOtp,
   mockVerifyOtp,
+  isDemoUser,
 } from "./mockAuth";
 import { USE_SUPABASE, supabase } from "@/backend/services/supabase";
 import { clearAllDedup } from "@/backend/utils/dedup";
@@ -17,8 +18,18 @@ import { registerDeviceForPush } from "@/frontend/native/registerDevice";
 import { unregisterDeviceForPush } from "@/frontend/native/unregisterDevice";
 
 const STORAGE_KEY = "carenet-auth";
+/** `"demo"` = mock / @carenet.demo (Dexie keys must follow this user); `"live"` = Supabase or non-demo mock */
+const AUTH_MODE_KEY = "carenet-auth-mode";
 
 const AuthContext = createContext<AuthContextType | null>(null);
+
+type AuthMode = "demo" | "live";
+
+function readAuthMode(): AuthMode | null {
+  const v = localStorage.getItem(AUTH_MODE_KEY);
+  if (v === "demo" || v === "live") return v;
+  return null;
+}
 
 /**
  * Persist auth to localStorage so refresh doesn't lose session.
@@ -26,8 +37,10 @@ const AuthContext = createContext<AuthContextType | null>(null);
 function persistUser(user: User | null) {
   if (user) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+    localStorage.setItem(AUTH_MODE_KEY, isDemoUser(user) ? "demo" : "live");
   } else {
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(AUTH_MODE_KEY);
   }
 }
 
@@ -37,6 +50,15 @@ function loadPersistedUser(): User | null {
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
+  }
+}
+
+/** One-time: legacy installs had no mode flag — infer demo from persisted user */
+function migrateAuthModeIfNeeded() {
+  if (localStorage.getItem(AUTH_MODE_KEY)) return;
+  const u = loadPersistedUser();
+  if (u && isDemoUser(u)) {
+    localStorage.setItem(AUTH_MODE_KEY, "demo");
   }
 }
 
@@ -69,47 +91,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // ─── Restore session on mount ───
   useEffect(() => {
-    if (USE_SUPABASE) {
-      // Listen for Supabase auth state changes
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        async (event, session) => {
-          if (session?.user) {
-            // Try to fetch profile from profiles table
-            const { data: profile } = await supabase
-              .from("profiles")
-              .select("*")
-              .eq("id", session.user.id)
-              .single();
-            const appUser = mapSupabaseUser(session.user, profile);
-            setUser(appUser);
-            persistUser(appUser);
-            registerDeviceForPush().catch(() => {});
-          } else if (event === "SIGNED_OUT") {
-            setUser(null);
-            persistUser(null);
-          }
-          setIsLoading(false);
-        }
-      );
+    migrateAuthModeIfNeeded();
 
-      // Also check current session immediately
-      supabase.auth.getSession().then(async ({ data: { session } }) => {
-        if (session?.user) {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("id", session.user.id)
-            .single();
-          const appUser = mapSupabaseUser(session.user, profile);
-          setUser(appUser);
-          persistUser(appUser);
-        }
-        setIsLoading(false);
-      });
-
-      return () => { subscription.unsubscribe(); };
-    } else {
-      // Mock mode: restore from localStorage
+    if (!USE_SUPABASE) {
       const persisted = loadPersistedUser();
       if (persisted) {
         setUser(persisted);
@@ -118,11 +102,81 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         );
       }
       setIsLoading(false);
+      return;
     }
+
+    let cancelled = false;
+
+    const applySupabaseSession = async (session: import("@supabase/supabase-js").Session | null) => {
+      if (cancelled) return;
+      const mode = readAuthMode();
+      const persisted = loadPersistedUser();
+
+      // Demo / mock users: keep stable ids for Dexie — do not replace with Supabase JWT user
+      if (mode === "demo" && persisted && isDemoUser(persisted)) {
+        if (session?.user) {
+          await supabase.auth.signOut();
+          return;
+        }
+        setUser(persisted);
+        persistUser(persisted);
+        setIsLoading(false);
+        return;
+      }
+
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", session.user.id)
+          .single();
+        const appUser = mapSupabaseUser(session.user, profile);
+        setUser(appUser);
+        persistUser(appUser);
+        registerDeviceForPush().catch(() => {});
+      } else {
+        setUser(null);
+        persistUser(null);
+      }
+      setIsLoading(false);
+    };
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      void applySupabaseSession(session);
+    });
+
+    void (async () => {
+      migrateAuthModeIfNeeded();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (cancelled) return;
+      await applySupabaseSession(session);
+    })();
+
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
   }, []);
 
   // ─── Login ───
   const login = useCallback(async (email: string, password: string) => {
+    // Always allow built-in demo credentials, even when Supabase is configured.
+    // This keeps manual test/demo flows stable across environments.
+    if (email.toLowerCase().endsWith("@carenet.demo")) {
+      const demoResult = await mockLogin(email, password);
+      if (demoResult.success && demoResult.user) {
+        if (demoResult.needsMfa) {
+          pendingMfaUser.current = demoResult.user;
+          return { success: true, needsMfa: true, user: demoResult.user };
+        }
+        setUser(demoResult.user);
+        persistUser(demoResult.user);
+        registerDeviceForPush().catch(() => {});
+        return { success: true, user: demoResult.user };
+      }
+      return demoResult;
+    }
+
     if (USE_SUPABASE) {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) return { success: false, error: error.message };
@@ -164,6 +218,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // ─── Verify MFA ───
   const verifyMfa = useCallback(async (code: string) => {
+    const pendingUser = pendingMfaUser.current;
+
+    // Demo credential logins should stay fully on mock auth, even when Supabase is configured.
+    if (pendingUser && isDemoUser(pendingUser)) {
+      const result = await mockVerifyTotp(code);
+      if (result.success) {
+        pendingMfaUser.current = null;
+        setUser(pendingUser);
+        persistUser(pendingUser);
+        registerDeviceForPush().catch(() => {});
+        return { success: true, user: pendingUser };
+      }
+      return { success: false, error: result.error || "Verification failed" };
+    }
+
     if (USE_SUPABASE) {
       const { data: factors } = await supabase.auth.mfa.listFactors();
       const totpFactor = factors?.totp?.[0];
@@ -208,6 +277,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // ─── Register ───
   const register = useCallback(async (data: RegisterData) => {
+    // Keep demo registration flows independent from Supabase availability/rate limits.
+    if (data.email.toLowerCase().endsWith("@carenet.demo")) {
+      const demoRegister = await mockRegister(data);
+      if (demoRegister.success && demoRegister.user) {
+        setUser(demoRegister.user);
+        persistUser(demoRegister.user);
+        registerDeviceForPush().catch(() => {});
+      }
+      return demoRegister;
+    }
+
     if (USE_SUPABASE) {
       const { data: authData, error } = await supabase.auth.signUp({
         email: data.email,
@@ -224,7 +304,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) return { success: false, error: error.message };
       if (authData.user) {
         const appUser = mapSupabaseUser(authData.user);
-        // onAuthStateChange will handle setting user if email confirmed
+        // Keep the newly registered user available immediately for MFA setup/skip flows.
+        // onAuthStateChange will reconcile against Supabase session lifecycle afterwards.
+        setUser(appUser);
+        persistUser(appUser);
         return { success: true, user: appUser };
       }
       return { success: false, error: "Registration failed" };
@@ -290,10 +373,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // ─── Demo Login (always mock, for dev/demo purposes) ───
-  const demoLogin = useCallback((role: Role) => {
+  const demoLogin = useCallback(async (role: Role) => {
     const demoUser = getDemoUserByRole(role);
-    setUser(demoUser);
     persistUser(demoUser);
+    setUser(demoUser);
+    if (USE_SUPABASE) {
+      await supabase.auth.signOut();
+    }
     registerDeviceForPush().catch(() => {});
   }, []);
 

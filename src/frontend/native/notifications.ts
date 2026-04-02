@@ -96,7 +96,7 @@ export function onNotificationTapped(callback: (notification: PushNotification) 
 
 export async function showLocalNotification(title: string, body: string): Promise<void> {
   if ("Notification" in window && Notification.permission === "granted") {
-    new Notification(title, { body, icon: "/icons/icon-192.png" });
+    new Notification(title, { body, icon: "/pwa-192.png" });
   }
 }
 

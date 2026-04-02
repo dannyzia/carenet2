@@ -38,5 +38,6 @@ export {
 } from "./haptics";
 export { setStatusBarForRole, setStatusBarColor, resetStatusBar, showStatusBar, hideStatusBar } from "./statusBar";
 export { registerBackButton, unregisterBackButton } from "./backButton";
+export { registerAppUrlOpenListener, parseDeepLinkToPath } from "./deepLinks";
 export { registerDeviceForPush, getStoredDeviceToken, clearStoredDeviceToken } from "./registerDevice";
 export { unregisterDeviceForPush } from "./unregisterDevice";

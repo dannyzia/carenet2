@@ -3,7 +3,7 @@ import { Building2, User, HeartPulse, Wallet, ClipboardCheck, CheckCircle2, Chev
 import { useNavigate, useSearchParams, Link } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@/frontend/theme/tokens";
-import { useAsyncData, useDocumentTitle } from "@/frontend/hooks";
+import { useAsyncData, useDocumentTitle, useCareSeekerBasePath } from "@/frontend/hooks";
 import { guardianService } from "@/backend/services";
 import { marketplaceService } from "@/backend/services";
 import { PageSkeleton } from "@/frontend/components/shared/PageSkeleton";
@@ -31,6 +31,7 @@ const careTypes = [
 export default function CareRequirementWizardPage() {
   const toast = useAriaToast();
   const navigate = useNavigate();
+  const base = useCareSeekerBasePath();
   const { t } = useTranslation("guardian");
   const { t: tCommon } = useTranslation("common");
   useDocumentTitle(tCommon("pageTitles.newCareRequirement", "New Care Requirement"));
@@ -94,10 +95,10 @@ export default function CareRequirementWizardPage() {
       if (postToMarketplace) {
         await marketplaceService.publishCareRequest(req.id);
         toast.success(t("wizard.submitMarketplaceSuccess"));
-        navigate("/guardian/marketplace-hub", { replace: true });
+        navigate(`${base}/marketplace-hub`, { replace: true });
       } else {
         toast.success(t("wizard.submitSuccess"));
-        navigate("/guardian/dashboard", { replace: true });
+        navigate(`${base}/dashboard`, { replace: true });
       }
     } catch {
       toast.error(t("wizard.submitFailed"));
@@ -125,7 +126,7 @@ export default function CareRequirementWizardPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Option 1: Browse marketplace */}
           <Link
-            to="/guardian/marketplace-hub"
+            to={`${base}/marketplace-hub`}
             className="stat-card p-6 hover:shadow-md transition-all no-underline group"
             style={{ border: `2px solid ${cn.green}` }}
           >

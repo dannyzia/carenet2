@@ -10,6 +10,8 @@
  *   node scripts/translate.mjs --lang=bn                # Translate to Bengali only
  *   node scripts/translate.mjs --lang=hi,ar,es          # Translate to multiple languages
  *   node scripts/translate.mjs --lang=bn --force        # Overwrite existing translations
+ *   node scripts/translate.mjs --lang=bn --fill-identical --key-prefix=sidebar.  # Retranslate keys still equal to English (sync placeholders)
+ *   node scripts/translate.mjs --fill-identical --key-prefix=sidebar. --key-prefix=roles.  # Multiple prefixes; omit --lang for all targets
  *   node scripts/translate.mjs --lang=bn --dry          # Preview without writing files
  *   node scripts/translate.mjs --list                   # List all supported languages
  *   node scripts/translate.mjs --verify --lang=bn       # Verify Bengali translations against Google
@@ -220,6 +222,11 @@ function similarity(a, b) {
 
 const args = process.argv.slice(2);
 const flagForce = args.includes("--force");
+/** When set, re-translate keys whose value still exactly matches English (e.g. i18n:sync placeholders). */
+const flagFillIdentical = args.includes("--fill-identical");
+const keyPrefixes = args
+  .filter((a) => a.startsWith("--key-prefix="))
+  .map((a) => a.replace("--key-prefix=", ""));
 const flagDry = args.includes("--dry");
 const flagList = args.includes("--list");
 const flagVerify = args.includes("--verify");
@@ -439,6 +446,15 @@ async function main() {
 
   log("blue", "i", `Translating to: ${validLangs.map((l) => `${l} (${TARGET_LANGUAGES[l] || l})`).join(", ")}`);
   if (flagForce) log("yellow", "!", "Force mode: will OVERWRITE existing translations");
+  if (flagFillIdentical) {
+    log(
+      "yellow",
+      "!",
+      keyPrefixes.length
+        ? `Fill-identical mode: keys under ${keyPrefixes.map((p) => `"${p}"`).join(", ")} that still match English will be re-translated`
+        : "Fill-identical mode: any key whose value still exactly matches English will be re-translated"
+    );
+  }
   if (flagDry) log("yellow", "!", "Dry run: will NOT write any files");
 
   console.log();
@@ -477,10 +493,23 @@ async function main() {
         }
       }
 
+      function keyMatchesPrefix(key) {
+        if (keyPrefixes.length === 0) return true;
+        return keyPrefixes.some((p) => key.startsWith(p));
+      }
+
       // Find keys that need translation
-      const keysToTranslate = Object.entries(enFlat).filter(([key]) => {
+      const keysToTranslate = Object.entries(enFlat).filter(([key, enValue]) => {
+        if (!keyMatchesPrefix(key)) return false;
         if (flagForce) return true;
-        return !(key in existingFlat);
+        if (!(key in existingFlat)) return true;
+        if (flagFillIdentical) {
+          const ex = existingFlat[key];
+          const enStr = String(enValue).trim();
+          const exStr = String(ex).trim();
+          return enStr !== "" && exStr === enStr;
+        }
+        return false;
       });
 
       if (keysToTranslate.length === 0) {

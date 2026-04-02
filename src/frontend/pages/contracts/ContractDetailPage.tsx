@@ -129,15 +129,14 @@ export default function ContractDetailPage() {
                 {contract.status.charAt(0).toUpperCase() + contract.status.slice(1)}
               </span>
             </div>
-            <p className="text-sm mt-1" style={{ color: cn.textSecondary }}>
-              {contract.type === "guardian_agency" ? "Guardian ↔ Agency" : "Agency ↔ Caregiver"} · {contract.serviceType}
+            <div className="mt-1 flex flex-wrap items-center gap-2 text-sm" style={{ color: cn.textSecondary }}>
+              <span>{contract.type === "guardian_agency" ? "Guardian ↔ Agency" : "Agency ↔ Caregiver"} · {contract.serviceType}</span>
               <SubscriptionHealthBadge
                 channelId="admin:monetization"
                 compact={false}
                 showThreshold
-                className="ml-2 align-middle"
               />
-            </p>
+            </div>
           </div>
           {canNegotiate && (
             <div className="flex gap-2">

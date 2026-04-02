@@ -13,7 +13,7 @@ import {
   RefreshCw, Timer,
 } from "lucide-react";
 import { cn } from "@/frontend/theme/tokens";
-import { useAsyncData, useDocumentTitle } from "@/frontend/hooks";
+import { useAsyncData, useDocumentTitle, useCareSeekerBasePath } from "@/frontend/hooks";
 import { marketplaceService } from "@/backend/services";
 import { PageSkeleton } from "@/frontend/components/shared/PageSkeleton";
 import type { CareContract, AgencyPackage, CareCategory, UCCFPricingRequest, UCCFPricingOffer } from "@/backend/models";
@@ -79,6 +79,7 @@ export default function GuardianMarketplaceHubPage() {
 
   const toast = useAriaToast();
   const navigate = useNavigate();
+  const base = useCareSeekerBasePath();
   const [activeTab, setActiveTab] = useState<Tab>("my_jobs");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState<CareCategory | "">("");
@@ -113,7 +114,7 @@ export default function GuardianMarketplaceHubPage() {
           </div>
         </div>
         <Link
-          to="/guardian/care-requirement-wizard?direct=true"
+          to={`${base}/care-requirement-wizard?direct=true`}
           className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm no-underline"
           style={{ background: "var(--cn-gradient-guardian)" }}
         >
@@ -179,7 +180,7 @@ export default function GuardianMarketplaceHubPage() {
                   return (
                     <div key={req.id} className="stat-card hover:shadow-md transition-shadow">
                       <Link
-                        to={`/guardian/bid-review/${req.id}`}
+                        to={`${base}/bid-review/${req.id}`}
                         className="block p-4 no-underline"
                       >
                         <div className="flex items-start justify-between gap-3 mb-2">
@@ -296,7 +297,7 @@ export default function GuardianMarketplaceHubPage() {
               {filteredPackages.map((pkg) => (
                 <Link
                   key={pkg.id}
-                  to={`/guardian/marketplace/package/${pkg.id}`}
+                  to={`${base}/marketplace/package/${pkg.id}`}
                   className="block stat-card p-4 hover:shadow-md transition-shadow no-underline"
                 >
                   {pkg.featured && (

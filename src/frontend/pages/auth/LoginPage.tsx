@@ -74,8 +74,8 @@ export default function LoginPage() {
     }
   };
 
-  const handleVerifyMfa = async () => {
-    const code = totp.join("");
+  const handleVerifyMfa = async (explicitCode?: string) => {
+    const code = explicitCode ?? totp.join("");
     if (code.length < 6) return;
     setError("");
     setIsLoading(true);
@@ -102,7 +102,9 @@ export default function LoginPage() {
     next[idx] = digit;
     setTotp(next);
     if (digit && idx < 5) totpRefs.current[idx + 1]?.focus();
-    if (digit && idx === 5 && next.every((d) => d)) setTimeout(() => handleVerifyMfa(), 100);
+    if (digit && idx === 5 && next.every((d) => d)) {
+      setTimeout(() => void handleVerifyMfa(next.join("")), 0);
+    }
   };
 
   const handleTotpKeyDown = (e: React.KeyboardEvent, idx: number) => {
@@ -117,12 +119,12 @@ export default function LoginPage() {
     setTotp(next);
     if (pasted.length === 6) {
       totpRefs.current[5]?.focus();
-      setTimeout(() => handleVerifyMfa(), 100);
+      setTimeout(() => void handleVerifyMfa(next.join("")), 0);
     }
   };
 
-  const handleDemoLogin = (role: Role) => {
-    demoLogin(role);
+  const handleDemoLogin = async (role: Role) => {
+    await demoLogin(role);
     navigate(`/${role}/dashboard`, { replace: true });
   };
 

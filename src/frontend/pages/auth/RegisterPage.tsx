@@ -28,7 +28,8 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const config = roleConfig[role || "guardian"] || roleConfig.guardian;
+  const resolvedRole: Role = (role as Role) || "guardian";
+  const config = roleConfig[resolvedRole] || roleConfig.guardian;
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,7 +44,7 @@ export default function RegisterPage() {
       email: formData.email || "",
       password: formData.password || "",
       phone: formData.phone,
-      role: (role as Role) || "guardian",
+      role: resolvedRole,
     });
     setLoading(false);
     if (result.success) {
@@ -101,7 +102,7 @@ export default function RegisterPage() {
               <label className="block text-sm mb-1" style={{ color: cn.text }}>Password</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: cn.textSecondary }} />
-                <input type={showPwd ? "text" : "password"} placeholder="Min. 8 characters" value={formData.password || ""} onChange={(e) => setFormData({ ...formData, password: e.target.value })} className="w-full pl-10 pr-10 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput, fontSize: "16px" }} autoComplete="new-password" required minLength={8} />
+                <input type={showPwd ? "text" : "password"} placeholder="Min. 8 characters" value={formData.password || ""} onChange={(e) => setFormData({ ...formData, password: e.target.value })} className="w-full pl-10 pr-10 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput, fontSize: "16px" }} autoComplete="new-password" required />
                 <button type="button" onClick={() => setShowPwd(!showPwd)} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: cn.textSecondary }}>{showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button>
               </div>
             </div>
@@ -120,7 +121,7 @@ export default function RegisterPage() {
               <p className="text-sm" style={{ color: cn.textSecondary }}>Welcome to CareNet as a {config.label}. Next, set up Google Authenticator for secure login.</p>
             </div>
             <button onClick={handleContinue} className="w-full py-3.5 rounded-xl text-white cn-touch-target" style={{ background: config.gradient }}>Set Up Authenticator</button>
-            <button onClick={() => navigate(`/${role}/dashboard`, { replace: true })} className="w-full text-center text-sm hover:underline" style={{ color: cn.textSecondary }}>Skip for now</button>
+            <button onClick={() => navigate(`/${resolvedRole}/dashboard`, { replace: true })} className="w-full text-center text-sm hover:underline" style={{ color: cn.textSecondary }}>Skip for now</button>
           </div>
         )}
       </div>

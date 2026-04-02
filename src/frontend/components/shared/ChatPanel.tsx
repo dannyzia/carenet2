@@ -63,7 +63,9 @@ export function ChatPanel({
   const [input, setInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterRole, setFilterRole] = useState("all");
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  // Mobile toggles list vs chat; desktop layout ignores this (both panes always shown).
+  // When a conversation is pre-selected, open the chat pane on mobile so the composer is mounted.
+  const [sidebarOpen, setSidebarOpen] = useState(() => !initialConvoId);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const activeConvo = conversations.find((c) => c.id === selectedId);

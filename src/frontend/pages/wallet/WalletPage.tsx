@@ -97,17 +97,23 @@ export default function WalletPage() {
             CarePoints Wallet
             <RealtimeStatusIndicator variant="dot" className="inline-block ml-2 align-middle" />
           </h1>
-          <p className="text-sm" style={{ color: cn.textSecondary }}>
-            {wallet.userName} · Platform fee: {wallet.feePercent}%
+          <div className="text-sm flex flex-wrap items-center gap-1.5" style={{ color: cn.textSecondary }}>
+            <span>{wallet.userName} · Platform fee: {wallet.feePercent}%</span>
             <SubscriptionHealthBadge
               channelId={realtimeChannelId}
               compact={false}
               showThreshold
-              className="ml-2 align-middle"
             />
-          </p>
+          </div>
         </div>
         <div className="flex gap-2">
+          <Link
+            to="/wallet/top-up"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm cn-touch-target border"
+            style={{ borderColor: cn.border, color: cn.text }}
+          >
+            <CreditCard className="w-4 h-4" /> Top Up
+          </Link>
           <button
             onClick={() => setBuyOpen(!buyOpen)}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm cn-touch-target"
