@@ -4,6 +4,7 @@ import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/frontend/theme/tokens";
 import { useAsyncData, useDocumentTitle } from "@/frontend/hooks";
+import { useAuth } from "@/frontend/auth/AuthContext";
 import { guardianService } from "@/backend/services";
 import { PageSkeleton } from "@/frontend/components/shared/PageSkeleton";
 import type { LucideIcon } from "lucide-react";
@@ -12,8 +13,13 @@ const activityIconMap: Record<string, LucideIcon> = {
   heart: Heart, calendar: Calendar, creditCard: CreditCard, message: MessageSquare, star: Star,
 };
 
+function formatDate(date: Date): string {
+  return date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+}
+
 export default function GuardianDashboardPage() {
   const { t } = useTranslation("common");
+  const { user } = useAuth();
   useDocumentTitle(t("pageTitles.guardianDashboard", "Dashboard"));
 
   const { data: spendingData, loading: lS } = useAsyncData(guardianService.getSpendingData);
@@ -24,13 +30,16 @@ export default function GuardianDashboardPage() {
     return <PageSkeleton />;
   }
 
+  const patientCount = patients?.length ?? 0;
+  const today = formatDate(new Date());
+
   return (
     <>
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl" style={{ color: cn.text }}>Welcome, Rashed! 👋</h1>
-            <p className="text-sm" style={{ color: cn.textSecondary }}>Monitoring care for 2 patients — Sunday, March 15</p>
+            <h1 className="text-2xl" style={{ color: cn.text }}>Welcome, {user?.name || "User"}! 👋</h1>
+            <p className="text-sm" style={{ color: cn.textSecondary }}>Monitoring care for {patientCount} patient{patientCount !== 1 ? "s" : ""} — {today}</p>
           </div>
           <div className="flex gap-2">
             <Link to="/guardian/care-requirement-wizard" className="px-4 py-2 rounded-lg text-sm text-white" style={{ background: "var(--cn-gradient-guardian)" }}>Submit Care Requirement</Link>
@@ -39,13 +48,13 @@ export default function GuardianDashboardPage() {
 
         <div className="p-4 rounded-xl flex items-start gap-3" style={{ background: cn.amberBg, border: `1px solid ${cn.amber}40` }}>
           <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" style={{ color: cn.amber }} />
-          <div><p className="text-sm" style={{ color: cn.text }}>Reminder: Mr. Rahman's 10 AM medication is due</p><p className="text-xs mt-0.5" style={{ color: cn.textSecondary }}>Caregiver Karim has been notified. Tap to view care log.</p></div>
+          <div><p className="text-sm" style={{ color: cn.text }}>Reminder: Mr. Rahman's 10 AM medication is due</p><p className="text-xs mt-0.5" style={{ color: cn.textSecondary }}>The assigned caregiver has been notified. Tap to view care log.</p></div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {[
-            { label: "Patients", value: "2", icon: Heart, color: cn.pink, bg: cn.pinkBg },
-            { label: "Active Placements", value: "2", icon: User, color: cn.green, bg: cn.greenBg },
+            { label: "Patients", value: patientCount.toString(), icon: Heart, color: cn.pink, bg: cn.pinkBg },
+            { label: "Active Placements", value: patientCount.toString(), icon: User, color: cn.green, bg: cn.greenBg },
             { label: "This Month", value: "৳ 16,200", icon: CreditCard, color: cn.purple, bg: cn.purpleBg },
             { label: "Total Sessions", value: "47", icon: Activity, color: cn.amber, bg: cn.amberBg },
           ].map(s => {

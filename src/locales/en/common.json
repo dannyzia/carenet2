@@ -342,15 +342,6 @@
     "notFoundTitle": "404",
     "unauthorized": "Please log in to continue"
   },
-  "experience": {
-    "disclaimerLead": "You’re in a browser-only preview. Nothing here is saved to the real CareNet production database.",
-    "disclaimerRetention": "Demo data stays on this device and expires over time (form drafts about {{days}} days). Other cached bits may clear sooner. Clearing browser/site data removes it right away.",
-    "infoTitle": "Good to know",
-    "replacesSession": "Choosing a role below signs you into a demo account and replaces any current session on this device.",
-    "selectPrompt": "Pick a role to explore the app:",
-    "subtitle": "Try dashboards and flows with sample data — no real account required.",
-    "title": "Experience the App"
-  },
   "footer": {
     "madeWith": "Made with care in Bangladesh",
     "privacy": "Privacy Policy",
@@ -358,68 +349,25 @@
     "support": "Support",
     "terms": "Terms of Service"
   },
-  "home": {
-    "contact": {
-      "emailLabel": "Email",
-      "emailNow": "Email Now",
-      "hotline": "Hotline",
-      "sendSms": "Send SMS",
-      "title": "Need Help?"
-    },
-    "features": {
-      "agency": {
-        "description": "Licensed, high-performing agencies with proven reliability and compliance standards.",
-        "title": "Vetted Agency Network"
-      },
-      "platform": {
-        "description": "Discover, book, manage, communicate, pay, and track—everything from one powerful dashboard.",
-        "title": "Single Integrated Platform"
-      },
-      "sectionTitle": "Why CareNet?",
-      "tracking": {
-        "description": "Full visibility into caregiver schedules and service delivery—bringing transparency and accountability.",
-        "title": "Real-Time Care Tracking"
-      },
-      "verified": {
-        "description": "Background-checked, certified, and trusted professionals—screened through police verification, health checks, and psychological evaluation.",
-        "title": "Verified Caregivers"
-      }
-    },
-    "hero": {
-      "brand": "CareNet",
-      "careShop": "Care Shop",
-      "experienceApp": "Experience the App",
-      "jobPortal": "Job Portal",
-      "register": "Register",
-      "signInRegister": "Sign in / Register",
-      "subtitle": "Bangladesh's trusted platform for connecting families with verified caregivers and professional agencies",
-      "tagline": "Quality care, connected"
-    }
-  },
   "language": {
     "bn": "বাংলা",
     "en": "English",
     "switchTo": "Switch to {{lang}}"
   },
   "nav": {
-    "about": "About",
-    "contact": "Contact",
     "dashboard": "Dashboard",
-    "features": "Features",
     "home": "Home",
     "login": "Log In",
     "logout": "Log Out",
     "marketplace": "Marketplace",
     "messages": "Messages",
     "notifications": "Notifications",
-    "pricing": "Pricing",
     "profile": "Profile",
     "register": "Register",
     "search": "Search",
     "settings": "Settings"
   },
   "pageTitles": {
-    "about": "About",
     "adminAgencyApprovals": "Admin Agency Approvals",
     "adminContracts": "Admin Contracts",
     "adminDashboard": "Dashboard",
@@ -454,11 +402,8 @@
     "bidReview": "Bid Review",
     "billing": "Billing",
     "billingInvoiceDetail": "Billing Invoice Detail",
-    "blogDetail": "Blog Detail",
-    "blogList": "Blog List",
     "bookingWizard": "Booking Wizard",
     "branchManagement": "Branch Management",
-    "career": "Career",
     "caregiverAssignedPatients": "Caregiver Assigned Patients",
     "caregiverCareNotes": "Caregiver Care Notes",
     "caregiverComparison": "Caregiver Comparison",
@@ -486,7 +431,6 @@
     "clientIntake": "Client Intake",
     "cmsManager": "CMS Manager",
     "connectivityDemo": "Connectivity Demo",
-    "contact": "Contact",
     "contactUs": "Contact Us",
     "contractDetail": "Contract Detail",
     "contractDispute": "Contract Dispute",
@@ -497,11 +441,7 @@
     "disputeAdjudication": "Dispute Adjudication",
     "documentVerification": "Document Verification",
     "emergencyHub": "Emergency Hub",
-    "experienceApp": "Experience the App",
     "familyHub": "Family Hub",
-    "features": "Features",
-    "financialAudit": "Financial Audit",
-    "forgotPassword": "Forgot Password",
     "globalSearch": "Global Search",
     "guardianDashboard": "Dashboard",
     "guardianMarketplaceHub": "Guardian Marketplace Hub",
@@ -556,8 +496,6 @@
     "payments": "Payments",
     "payoutSetup": "Payout Setup",
     "policyManager": "Policy Manager",
-    "portfolioEditor": "Portfolio Editor",
-    "pricing": "Pricing",
     "privacyPolicy": "Privacy Policy",
     "productCategory": "Product Category",
     "productDetails": "Product Details",
@@ -581,7 +519,6 @@
     "shopOrders": "Shop Orders",
     "shopProducts": "Shop Products",
     "signIn": "Sign In",
-    "sitemap": "Sitemap",
     "skillsAssessment": "Skills Assessment",
     "staffAttendance": "Staff Attendance",
     "staffHiring": "Staff Hiring",
@@ -612,16 +549,13 @@
     "shop": "Shop Owner"
   },
   "sidebar": {
-    "about": "About",
     "agencies": "Agencies",
     "agencyApprovals": "Agency Approvals",
     "analytics": "Analytics",
     "auditLogs": "Audit Logs",
     "bidManagement": "Bid Management",
     "billing": "Billing",
-    "blog": "Blog",
     "branches": "Branches",
-    "careers": "Careers",
     "caregivers": "Caregivers",
     "careHistory": "Care History",
     "careLog": "Care Log",
@@ -643,7 +577,6 @@
     "earnings": "Earnings",
     "emergencyHub": "Emergency Hub",
     "familyHub": "Family Hub",
-    "features": "Features",
     "financialAudit": "Financial Audit",
     "findCaregivers": "Find Caregivers",
     "fulfillment": "Fulfillment",
@@ -679,7 +612,6 @@
     "portfolio": "Portfolio",
     "postRequirement": "Post Requirement",
     "prescriptions": "Prescriptions",
-    "pricing": "Pricing",
     "privacyPolicy": "Privacy Policy",
     "productEditor": "Product Editor",
     "products": "Products",
@@ -714,7 +646,6 @@
     "shiftMonitor": "Shift Monitor",
     "shiftPlanner": "Shift Planner",
     "shop": "Shop",
-    "sitemap": "Sitemap",
     "skillsAssessment": "Skills Assessment",
     "staffAttendance": "Staff Attendance",
     "staffHiring": "Staff Hiring",

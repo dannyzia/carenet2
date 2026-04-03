@@ -4,12 +4,18 @@ import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { cn, statusColors } from "@/frontend/theme/tokens";
 import { useAsyncData, useDocumentTitle } from "@/frontend/hooks";
+import { useAuth } from "@/frontend/auth/AuthContext";
 import { caregiverService } from "@/backend/services";
 import { PageSkeleton } from "@/frontend/components/shared/PageSkeleton";
 import { DocumentExpiryWidget } from "@/frontend/components/shared/DocumentExpiryWidget";
 
+function formatDate(date: Date): string {
+  return date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+}
+
 export default function CaregiverDashboardPage() {
   const { t } = useTranslation("common");
+  const { user } = useAuth();
   useDocumentTitle(t("pageTitles.caregiverDashboard", "Dashboard"));
 
   const { data: earningsData, loading: lE } = useAsyncData(() => caregiverService.getDashboardEarnings());
@@ -18,13 +24,15 @@ export default function CaregiverDashboardPage() {
 
   if (lE || lJ || lS || !earningsData || !recentJobs || !upcomingSchedule) return <PageSkeleton variant="dashboard" />;
 
+  const today = formatDate(new Date());
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl" style={{ color: cn.text }}>Good Morning, Karim! 👋</h1>
-          <p className="text-sm mt-0.5" style={{ color: cn.textSecondary }}>Here's your caregiving activity today — Sunday, March 15</p>
+          <h1 className="text-2xl" style={{ color: cn.text }}>Good Morning, {user?.name || "User"}! 👋</h1>
+          <p className="text-sm mt-0.5" style={{ color: cn.textSecondary }}>Here's your caregiving activity today — {today}</p>
         </div>
         <div className="flex gap-2">
           <Link to="/caregiver/jobs" className="px-4 py-2 rounded-lg text-sm border hover:opacity-80 transition-all" style={{ borderColor: cn.border, color: cn.text }}>

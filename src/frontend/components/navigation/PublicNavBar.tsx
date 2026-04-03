@@ -18,23 +18,16 @@ function roleForUnreadCounts(pathname: string): Role {
   return "guardian";
 }
 
-/** Desktop center nav — WIREFRAMES §1: Home · Marketplace · About · Features · Pricing */
+/** Desktop center nav — essential links only */
 const navLinks: { labelKey: string; to: string; activePaths?: string[] }[] = [
-  { labelKey: "home", to: "/home", activePaths: ["/", "/home"] },
   { labelKey: "marketplace", to: "/marketplace" },
-  { labelKey: "about", to: "/about" },
-  { labelKey: "features", to: "/features" },
-  { labelKey: "pricing", to: "/pricing" },
 ];
 
-// Mobile drawer — same primary order + contact (not in desktop center per wireframe)
+// Mobile drawer — essential links only
 const mobileNavLinks = [
-  { to: "/home", labelKey: "home" },
   { to: "/marketplace", labelKey: "marketplace" },
-  { to: "/about", labelKey: "about" },
-  { to: "/features", labelKey: "features" },
-  { to: "/pricing", labelKey: "pricing" },
-  { to: "/contact", labelKey: "contact" },
+  { to: "/agencies", labelKey: "agencies" },
+  { to: "/shop", labelKey: "shop" },
 ];
 
 /** i18n keys under common namespace (same labels as AuthenticatedLayout sidebar). */
@@ -45,11 +38,6 @@ const mobileBrowseLinks = [
 
 const mobileSupportLinks = [
   { to: "/support/help", labelKey: "sidebar.helpCenter" },
-  { to: "/support/ticket", labelKey: "sidebar.submitTicket" },
-  { to: "/support/refund", labelKey: "sidebar.refundRequest" },
-  { to: "/support/contact", labelKey: "sidebar.contactUs" },
-  { to: "/community/blog", labelKey: "sidebar.blog" },
-  { to: "/community/careers", labelKey: "sidebar.careers" },
   { to: "/privacy", labelKey: "sidebar.privacyPolicy" },
   { to: "/terms", labelKey: "sidebar.termsOfService" },
 ];
@@ -86,7 +74,7 @@ export function PublicNavBar() {
     <>
       {/* ─── Top Header Bar ─── */}
       <header
-        className="sticky top-0 z-50"
+        className="sticky top-0 z-50 pt-[env(safe-area-inset-top,0px)]"
         style={{
           backgroundColor: cn.bgHeader,
           boxShadow: scrolled ? cn.shadowHeader : "0 1px 3px rgba(0,0,0,0.08)",
@@ -214,7 +202,7 @@ export function PublicNavBar() {
 
       {/* ─── Sidebar drawer ─── */}
       <aside
-        className="fixed top-0 left-0 h-full w-72 z-[70] flex flex-col md:hidden"
+        className="fixed left-0 top-0 z-[70] flex h-[100dvh] max-h-[100dvh] w-72 min-w-0 flex-col overflow-hidden pt-[env(safe-area-inset-top,0px)] md:hidden"
         style={{
           background: cn.bgSidebar,
           boxShadow: menuOpen ? "4px 0 24px rgba(0,0,0,0.18)" : "none",
@@ -332,11 +320,15 @@ export function PublicNavBar() {
           </div>
         </nav>
 
-        {/* Sidebar footer — language & theme */}
-        <div className="p-3 space-y-2" style={{ borderTop: `1px solid ${cn.borderLight}` }}>
-          <div className="px-3">
-            <LanguageSwitcher variant="dropdown" />
-          </div>
+        {/* Sidebar footer — language & theme (safe bottom clears gesture bar; drawer variant stays inside w-72) */}
+        <div
+          className="shrink-0 space-y-2 p-3"
+          style={{
+            borderTop: `1px solid ${cn.borderLight}`,
+            paddingBottom: "max(0.75rem, env(safe-area-inset-bottom, 0px))",
+          }}
+        >
+          <LanguageSwitcher variant="drawer" />
           <button
             type="button"
             onClick={toggleTheme}

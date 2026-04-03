@@ -36,29 +36,18 @@ export default function HelpCenterPage() {
 
   return (
     <div>
-      {/* Search Header */}
-      <PageHero gradient="radial-gradient(143.86% 887.35% at -10.97% -22.81%, #7CE577 0%, #5FB865 100%)" className="pt-20 pb-40 px-6 relative overflow-hidden">
-        <div className="max-w-4xl mx-auto relative z-10 text-white text-center">
-          <h1 className="text-4xl md:text-5xl font-black mb-6">How can we help you?</h1>
-          <div className="relative max-w-2xl mx-auto">
-            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 w-6 h-6" />
-            <input 
-              type="text" 
-              placeholder="Search for articles, guides, or troubleshooting..." 
-              className="w-full h-18 pl-16 pr-6 rounded-3xl bg-white text-gray-800 shadow-2xl border-none outline-none text-lg placeholder:text-gray-300"
-            />
-          </div>
-          <div className="mt-8 flex flex-wrap justify-center gap-3">
-             {["Booking", "Payment", "Verification", "Shop", "Refunds"].map(tag => (
-               <span key={tag} className="px-5 py-2 rounded-full bg-white/20 backdrop-blur-md text-sm font-bold border border-white/20">#{tag}</span>
-             ))}
-          </div>
+      {/* Simple Header */}
+      <div className="p-6" style={{ background: "var(--cn-gradient-caregiver)" }}>
+        <h1 className="text-xl font-bold text-white mb-4">Help Center</h1>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <input 
+            type="text" 
+            placeholder="Search help articles..." 
+            className="w-full h-12 pl-10 pr-4 rounded-xl bg-white text-gray-800 border-none outline-none"
+          />
         </div>
-        
-        {/* Abstract Background */}
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-white/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-white/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2" />
-      </PageHero>
+      </div>
 
       <div className="max-w-6xl mx-auto px-6 -mt-20 relative z-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
@@ -105,14 +94,11 @@ export default function HelpCenterPage() {
                  <div className="relative z-10">
                     <h3 className="text-2xl font-black mb-4">Can't find what you're looking for?</h3>
                     <p className="text-white/50 text-sm mb-8 max-w-md">Our support team is available 24/7 to assist you with any platform-related issues or medical inquiries.</p>
-                    <div className="flex gap-4">
-                       <Button onClick={() => navigate("/support/ticket")} className="h-14 px-8 rounded-2xl bg-[#FEB4C5] hover:bg-[#DB869A] text-white font-black shadow-xl">
-                          Submit a Ticket
+<div className="flex gap-4">
+                       <Button onClick={() => navigate("/support/ticket")} className="h-12 px-6 rounded-xl bg-[#FEB4C5] hover:bg-[#DB869A] text-white font-medium">
+                           Submit a Ticket
                        </Button>
-                       <Button variant="ghost" className="h-14 px-8 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold border border-white/20">
-                          Chat with Support
-                       </Button>
-                    </div>
+                     </div>
                  </div>
                  <LifeBuoy className="absolute -bottom-10 -right-10 w-64 h-64 text-white/5 opacity-10" />
               </div>
@@ -138,28 +124,10 @@ export default function HelpCenterPage() {
                        </div>
                     </div>
                  </div>
-              </div>
-
-              <div className="finance-card p-8">
-                 <h3 className="font-bold text-gray-800 mb-6">System Status</h3>
-                 <div className="space-y-4">
-                    {[
-                      { label: "API", status: "Operational" },
-                      { label: "Payments", status: "Operational" },
-                      { label: "Matching", status: "Operational" }
-                    ].map((s, i) => (
-                      <div key={i} className="flex justify-between items-center text-xs">
-                         <span className="text-gray-400 font-bold uppercase">{s.label}</span>
-                         <span className="text-[#5FB865] font-black flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-[#7CE577]" /> {s.status}</span>
-                      </div>
-                    ))}
-                 </div>
-              </div>
-           </div>
-        </div>
+</div>
+            </div>
+         </div>
       </div>
-
-      <style dangerouslySetInnerHTML={{ __html: "\n        .finance-card {\n          background: rgba(255, 255, 255, 0.95);\n          backdrop-filter: blur(10px);\n          border: 1px solid rgba(255, 255, 255, 0.4);\n          border-radius: 3rem;\n          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.03);\n        }\n        input::placeholder { color: #CBD5E1; }\n      " }} />
     </div>
   );
 }

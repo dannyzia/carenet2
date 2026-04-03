@@ -85,12 +85,6 @@ export default function AgencyDirectoryPage() {
             </div>
           ))}
         </div>
-        <div className="finance-card p-6 mt-8 text-center">
-          <Building2 className="w-8 h-8 mx-auto mb-2" style={{ color: cn.teal }} />
-          <h3 className="text-sm mb-1" style={{ color: cn.text }}>Are you a care agency?</h3>
-          <p className="text-xs mb-3" style={{ color: cn.textSecondary }}>Join CareNet to connect with guardians seeking care services</p>
-          <Link to="/auth/register" className="inline-block px-6 py-2 rounded-lg text-xs text-white" style={{ background: "var(--cn-gradient-agency)" }}>Register as Agency</Link>
-        </div>
       </div>
     </div>
   );

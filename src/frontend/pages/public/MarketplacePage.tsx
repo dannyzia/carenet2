@@ -86,9 +86,8 @@ export default function MarketplacePage() {
         )}
         <div className="mb-6">
           <h1 className="mb-2 text-3xl font-bold" style={{ color: "#535353" }}>
-            Caregiver Marketplace
+            Marketplace
           </h1>
-          <p style={{ color: "#848484" }}>Find the perfect caregiver for your loved ones</p>
         </div>
         <div className="flex gap-3 mb-6">
           <div className="flex-1 relative">
@@ -182,16 +181,6 @@ export default function MarketplacePage() {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        style={{
-                          background:
-                            "radial-gradient(143.86% 887.35% at -10.97% -22.81%, #FEB4C5 0%, #DB869A 100%)",
-                          color: "white",
-                        }}
-                      >
-                        Apply Now
-                      </Button>
                       <Button
                         variant="outline"
                         size="sm"
