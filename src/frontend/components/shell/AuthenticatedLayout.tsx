@@ -724,7 +724,7 @@ export function AuthenticatedLayout() {
         </header>
 
         {/* Page content rendered by router */}
-        <main className="flex-1 p-4 md:p-6 pb-24 md:pb-6 overflow-y-auto" id="main-content" tabIndex={-1} aria-label={t("a11y.mainContent", "Main content")}>
+        <main className="flex-1 p-4 md:p-6 pb-24 overflow-y-auto" id="main-content" tabIndex={-1} aria-label={t("a11y.mainContent", "Main content")}>
           <UnreadCountsContext.Provider value={unreadCounts}>
             <Suspense fallback={<PageSkeleton variant="dashboard" />}>
               <Outlet />

@@ -64,7 +64,7 @@ export function BottomNav({ unreadMessages = 0, unreadNotifications = 0, ...rest
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 md:hidden border-t"
+      className="fixed bottom-0 left-0 right-0 z-50 border-t"
       style={{
         backgroundColor: cn.bgHeader,
         borderColor: cn.borderLight,
