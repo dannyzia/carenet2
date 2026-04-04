@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router";
-import { Heart, LogIn, Bell, X } from "lucide-react";
+import { LogIn, Bell, X } from "lucide-react";
 import { Button } from "@/frontend/components/ui/button";
 import { cn } from "@/frontend/theme/tokens";
 import { useTheme } from "@/frontend/components/ThemeProvider";
@@ -86,12 +86,7 @@ export function PublicNavBar() {
 
           {/* Logo */}
           <Link to="/home" className="flex items-center gap-2 shrink-0 no-underline">
-            <div
-              className="w-8 h-8 rounded-xl flex items-center justify-center"
-              style={{ background: "var(--cn-gradient-caregiver)" }}
-            >
-              <Heart className="w-4 h-4 text-white" />
-            </div>
+            <img src="/logo.png" alt="" className="w-8 h-8 rounded-xl object-contain" />
             <span className="text-base" style={{ color: cn.text }}>{t("app.name")}</span>
           </Link>
 
@@ -213,9 +208,7 @@ export function PublicNavBar() {
         {/* Sidebar header */}
         <div className="p-5 flex items-center justify-between" style={{ borderBottom: `1px solid ${cn.borderLight}` }}>
           <Link to="/home" className="flex items-center gap-2 no-underline" onClick={() => setMenuOpen(false)}>
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "var(--cn-gradient-caregiver)" }}>
-              <Heart className="w-5 h-5 text-white" />
-            </div>
+            <img src="/logo.png" alt="" className="w-9 h-9 rounded-xl object-contain" />
             <span className="text-lg" style={{ color: cn.text }}>{t("app.name")}</span>
           </Link>
           <button

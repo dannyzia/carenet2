@@ -406,9 +406,7 @@ export function AuthenticatedLayout() {
       >
         <div className="shrink-0 p-5 flex items-center justify-between" style={{ borderBottom: `1px solid ${cn.borderLight}` }}>
           <Link to="/" className="flex items-center gap-2 no-underline">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: rCfg.gradient }}>
-              <Heart className="w-5 h-5 text-white" />
-            </div>
+            <img src="/logo.png" alt="" className="w-9 h-9 rounded-xl object-contain" />
             <span className="text-lg" style={{ color: cn.text }}>CareNet</span>
           </Link>
           <button onClick={() => setSidebarOpen(false)} className="md:hidden p-1" style={{ color: cn.textSecondary }} aria-label={t("a11y.closeSidebar", "Close sidebar")}>
