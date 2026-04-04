@@ -40,13 +40,7 @@ export const router = createBrowserRouter([
       {
         Component: PublicLayout,
         children: [
-          { index: true, ...p(() => import("@/frontend/pages/public/HomePage")) },
-          { path: "home", ...p(() => import("@/frontend/pages/public/HomePage")) },
-          { path: "experience", ...p(() => import("@/frontend/pages/public/ExperienceAppPage")) },
-          { path: "about", ...p(() => import("@/frontend/pages/public/AboutPage")) },
-          { path: "features", ...p(() => import("@/frontend/pages/public/FeaturesPage")) },
-          { path: "pricing", ...p(() => import("@/frontend/pages/public/PricingPage")) },
-          { path: "contact", ...p(() => import("@/frontend/pages/public/ContactPage")) },
+          { index: true, ...p(() => import("@/frontend/pages/auth/LoginPage")) },
           { path: "privacy", ...p(() => import("@/frontend/pages/public/PrivacyPage")) },
           { path: "terms", ...p(() => import("@/frontend/pages/public/TermsPage")) },
           { path: "marketplace", ...p(() => import("@/frontend/pages/public/MarketplacePage")) },
@@ -64,14 +58,8 @@ export const router = createBrowserRouter([
           { path: "auth/mfa-verify", ...p(() => import("@/frontend/pages/auth/MFAVerifyPage")) },
           { path: "auth/verification-result", ...p(() => import("@/frontend/pages/auth/VerificationResultPage")) },
 
-          // Community
-          { path: "community/blog", ...p(() => import("@/frontend/pages/community/BlogListPage")) },
-          { path: "community/blog/:id", ...p(() => import("@/frontend/pages/community/BlogDetailPage")) },
-          { path: "community/careers", ...p(() => import("@/frontend/pages/community/CareerPage")) },
-
           // Support
           { path: "support/help", ...p(() => import("@/frontend/pages/support/HelpCenterPage")) },
-          { path: "support/contact", ...p(() => import("@/frontend/pages/support/ContactUsPage")) },
           { path: "support/ticket", ...p(() => import("@/frontend/pages/support/TicketSubmissionPage")) },
           { path: "support/refund", ...p(() => import("@/frontend/pages/support/RefundRequestPage")) },
 
@@ -94,6 +82,8 @@ export const router = createBrowserRouter([
             children: [
               // Shared authenticated pages
               { path: "dashboard", ...p(() => import("@/frontend/pages/shared/DashboardPage")) },
+              { path: "schedule/daily", ...p(() => import("@/frontend/pages/shared/DailySchedulePage")) },
+              { path: "documents/view/:id", ...p(() => import("@/frontend/pages/shared/MedicalDocumentViewerPage")) },
               { path: "settings", ...p(() => import("@/frontend/pages/shared/SettingsPage")) },
               { path: "notifications", ...p(() => import("@/frontend/pages/shared/NotificationsPage")) },
               { path: "messages", ...p(() => import("@/frontend/pages/shared/MessagesPage")) },
@@ -124,8 +114,12 @@ export const router = createBrowserRouter([
               { path: "caregiver/shift-planner", ...p(() => import("@/frontend/pages/caregiver/CaregiverShiftPlannerPage")) },
               { path: "caregiver/care-notes", ...p(() => import("@/frontend/pages/caregiver/CaregiverCareNotesPage")) },
               { path: "caregiver/shift-check-in", ...p(() => import("@/frontend/pages/caregiver/ShiftCheckInPage")) },
+              { path: "caregiver/shift-check-in/:id", ...p(() => import("@/frontend/pages/caregiver/ShiftCheckInPage")) },
+              { path: "caregiver/shift-checkout/:id", ...p(() => import("@/frontend/pages/caregiver/ShiftCheckOutPage")) },
               { path: "caregiver/incident-report", ...p(() => import("@/frontend/pages/caregiver/IncidentReportPage")) },
               { path: "caregiver/handoff-notes", ...p(() => import("@/frontend/pages/caregiver/HandoffNotesPage")) },
+              { path: "caregiver/handoff", ...p(() => import("@/frontend/pages/caregiver/HandoffNotesPage")) },
+              { path: "caregiver/alerts", ...p(() => import("@/frontend/pages/caregiver/CaregiverAlertsPage")) },
 
               // ─── Guardian ───
       { path: "guardian/dashboard", ...p(() => import("@/frontend/pages/guardian/GuardianDashboardPage")) },
@@ -153,6 +147,13 @@ export const router = createBrowserRouter([
               { path: "guardian/marketplace-hub", ...p(() => import("@/frontend/pages/guardian/GuardianMarketplaceHubPage")) },
               { path: "guardian/marketplace/package/:id", ...p(() => import("@/frontend/pages/guardian/PackageDetailPage")) },
               { path: "guardian/bid-review/:id", ...p(() => import("@/frontend/pages/guardian/BidReviewPage")) },
+              { path: "guardian/care-log", ...p(() => import("@/frontend/pages/guardian/GuardianCareDiaryPage")) },
+              { path: "guardian/alerts", ...p(() => import("@/frontend/pages/guardian/GuardianAlertsPage")) },
+              { path: "guardian/live-tracking", ...p(() => import("@/frontend/pages/guardian/GuardianLiveTrackingPage")) },
+              { path: "guardian/live-monitor", ...p(() => import("@/frontend/pages/guardian/GuardianLiveMonitorPage")) },
+              { path: "guardian/care-scorecard", ...p(() => import("@/frontend/pages/guardian/GuardianCareScorecardPage")) },
+              { path: "guardian/family-board", ...p(() => import("@/frontend/pages/guardian/GuardianFamilyBoardPage")) },
+              { path: "guardian/incident-report", ...p(() => import("@/frontend/pages/guardian/GuardianIncidentReportPage")) },
 
               // ─── Admin ───
               { path: "admin/dashboard", ...p(() => import("@/frontend/pages/admin/AdminDashboardPage")) },
@@ -203,11 +204,13 @@ export const router = createBrowserRouter([
               { path: "agency/settings", ...p(() => import("@/frontend/pages/agency/AgencySettingsPage")) },
               { path: "agency/document-verification", ...p(() => import("@/frontend/pages/agency/DocumentVerificationPage")) },
               { path: "agency/backup-caregiver", ...p(() => import("@/frontend/pages/agency/BackupCaregiverPage")) },
+              { path: "agency/reassignment-history", ...p(() => import("@/frontend/pages/agency/ReassignmentHistoryPage")) },
               { path: "agency/care-plan-template", ...p(() => import("@/frontend/pages/agency/CarePlanTemplatePage")) },
               { path: "agency/package-create", ...p(() => import("@/frontend/pages/agency/AgencyPackageCreatePage")) },
               { path: "agency/marketplace-browse", ...p(() => import("@/frontend/pages/agency/AgencyMarketplaceBrowsePage")) },
               { path: "agency/bid-management", ...p(() => import("@/frontend/pages/agency/AgencyBidManagementPage")) },
               { path: "agency/incidents", ...p(() => import("@/frontend/pages/agency/AgencyIncidentsPage")) },
+              { path: "agency/care-scorecard", ...p(() => import("@/frontend/pages/agency/AgencyCareScorecardPage")) },
 
               // ─── Patient ───
               { path: "patient/dashboard", ...p(() => import("@/frontend/pages/patient/PatientDashboardPage")) },
@@ -217,11 +220,21 @@ export const router = createBrowserRouter([
               { path: "patient/health-report", ...p(() => import("@/frontend/pages/patient/PatientHealthReportPage")) },
               { path: "patient/data-privacy", ...p(() => import("@/frontend/pages/patient/DataPrivacyManagerPage")) },
               { path: "patient/emergency", ...p(() => import("@/frontend/pages/patient/EmergencyHubPage")) },
+              { path: "patient/emergency-sos", ...p(() => import("@/frontend/pages/patient/EmergencySOSPage")) },
               { path: "patient/medications", ...p(() => import("@/frontend/pages/patient/MedicationRemindersPage")) },
               { path: "patient/vitals", ...p(() => import("@/frontend/pages/patient/VitalsTrackingPage")) },
               { path: "patient/schedule", ...p(() => import("@/frontend/pages/patient/PatientSchedulePage")) },
               { path: "patient/messages", ...p(() => import("@/frontend/pages/patient/PatientMessagesPage")) },
               { path: "patient/document-upload", ...p(() => import("@/frontend/pages/patient/PatientDocumentUploadPage")) },
+              { path: "patient/care-log", ...p(() => import("@/frontend/pages/patient/PatientCareDiaryPage")) },
+              { path: "patient/care-plan", ...p(() => import("@/frontend/pages/patient/PatientCarePlanPage")) },
+              { path: "patient/alerts", ...p(() => import("@/frontend/pages/patient/PatientAlertsPage")) },
+              { path: "patient/symptoms", ...p(() => import("@/frontend/pages/patient/PatientSymptomsPage")) },
+              { path: "patient/photo-journal", ...p(() => import("@/frontend/pages/patient/PatientPhotoJournalPage")) },
+              { path: "patient/nutrition", ...p(() => import("@/frontend/pages/patient/PatientNutritionPage")) },
+              { path: "patient/rehab", ...p(() => import("@/frontend/pages/patient/PatientRehabPage")) },
+              { path: "patient/insurance", ...p(() => import("@/frontend/pages/patient/PatientInsurancePage")) },
+              { path: "patient/telehealth", ...p(() => import("@/frontend/pages/patient/PatientTelehealthPage")) },
               { path: "patient/care-requirements", ...p(() => import("@/frontend/pages/guardian/CareRequirementsListPage")) },
               { path: "patient/care-requirement-wizard", ...p(() => import("@/frontend/pages/guardian/CareRequirementWizardPage")) },
               { path: "patient/care-requirement/:id", ...p(() => import("@/frontend/pages/guardian/CareRequirementDetailPage")) },

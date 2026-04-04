@@ -1,4 +1,4 @@
-import { User, Lock, Bell, Eye, HelpCircle, LogOut, ChevronRight, Shield, Globe, Palette, Database, Sun, Moon, Monitor } from "lucide-react";
+import { User, Lock, Bell, Eye, HelpCircle, LogOut, ChevronRight, Shield, Globe, Palette, Database, Sun, Moon, Monitor, FileText } from "lucide-react";
 import { Link } from "react-router";
 import { useTheme } from "@/frontend/components/shared/ThemeProvider";
 import { cn } from "@/frontend/theme/tokens";
@@ -35,6 +35,8 @@ export default function SettingsPage() {
     { title: "Support & Legal", items: [
       { label: "Help & Support", icon: HelpCircle, desc: "Get help from our customer support team.", color: "text-gray-500", bg: "bg-gray-100" },
       { label: "Data Usage", icon: Database, desc: "Request your data or manage data privacy.", color: "text-gray-500", bg: "bg-gray-100" },
+      { label: "Privacy Policy", icon: Shield, desc: "Read our privacy policy.", color: "text-gray-500", bg: "bg-gray-100", path: "/privacy" },
+      { label: "Terms of Service", icon: FileText, desc: "Read our terms of service.", color: "text-gray-500", bg: "bg-gray-100", path: "/terms" },
     ]},
   ];
 
@@ -47,15 +49,27 @@ export default function SettingsPage() {
             <h2 className="text-xs uppercase tracking-widest pl-1" style={{ color: cn.textSecondary }}>{group.title}</h2>
             <div className="finance-card overflow-hidden">
               <div className="divide-y" style={{ borderColor: cn.borderLight }}>
-                {group.items.map((item, iIdx) => (
-                  <div key={iIdx} className="p-4 flex items-center justify-between hover:opacity-90 transition-all cursor-pointer group" onClick={item.label === "Notifications" ? () => setShowNotifPrefs(!showNotifPrefs) : undefined}>
-                    <div className="flex items-center gap-4">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${item.bg} ${item.color}`}><item.icon className="w-5 h-5" /></div>
-                      <div><h3 className="text-sm" style={{ color: cn.text }}>{item.label}</h3><p className="text-xs" style={{ color: cn.textSecondary }}>{item.desc}</p></div>
+                {group.items.map((item, iIdx) => {
+                  const hasPath = item.path;
+                  const itemClick = item.label === "Notifications" ? () => setShowNotifPrefs(!showNotifPrefs) : undefined;
+                  return hasPath ? (
+                    <Link key={iIdx} to={item.path} className="p-4 flex items-center justify-between hover:opacity-90 transition-all cursor-pointer group">
+                      <div className="flex items-center gap-4">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${item.bg} ${item.color}`}><item.icon className="w-5 h-5" /></div>
+                        <div><h3 className="text-sm" style={{ color: cn.text }}>{item.label}</h3><p className="text-xs" style={{ color: cn.textSecondary }}>{item.desc}</p></div>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500 group-hover:translate-x-1 transition-all" />
+                    </Link>
+                  ) : (
+                    <div key={iIdx} className="p-4 flex items-center justify-between hover:opacity-90 transition-all cursor-pointer group" onClick={itemClick}>
+                      <div className="flex items-center gap-4">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${item.bg} ${item.color}`}><item.icon className="w-5 h-5" /></div>
+                        <div><h3 className="text-sm" style={{ color: cn.text }}>{item.label}</h3><p className="text-xs" style={{ color: cn.textSecondary }}>{item.desc}</p></div>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500 group-hover:translate-x-1 transition-all" />
                     </div>
-                    <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500 group-hover:translate-x-1 transition-all" />
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>

@@ -5,7 +5,7 @@ import type { BackupAssignment, ShiftReassignment, StandbySlot } from "@/backend
 
 export const MOCK_BACKUP_ASSIGNMENTS: BackupAssignment[] = [
   {
-    id: "ba-1", placementId: "pl-1", primaryCaregiverId: "cg-1", primaryCaregiverName: "Fatema Akter",
+    id: "ba-1", placementId: "pl-1", shiftId: "sp-1", primaryCaregiverId: "cg-1", primaryCaregiverName: "Fatema Akter",
     backupCaregivers: [
       { caregiverId: "cg-2", caregiverName: "Karim Uddin", priority: 1, available: true, distance: "2.3 km", rating: 4.8 },
       { caregiverId: "cg-4", caregiverName: "Nazmul Hasan", priority: 2, available: true, distance: "5.1 km", rating: 4.7 },

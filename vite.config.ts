@@ -11,6 +11,8 @@ export default defineConfig(({ mode }) => {
     process.env.VITE_PLAYWRIGHT_E2E === 'true' ||
     fileEnv.VITE_PLAYWRIGHT_E2E === 'true'
   const vitest = process.env.VITEST === 'true'
+  /** Capacitor/Android: Workbox SW + navigateFallback often yields a blank WebView; web builds keep PWA. */
+  const disablePwa = process.env.VITE_DISABLE_PWA === 'true'
 
   /** PWA: cache app shell only; avoid caching Supabase/API (D016 offline uses Dexie). */
   const pwaPlugin = VitePWA({
@@ -63,7 +65,7 @@ export default defineConfig(({ mode }) => {
     react(),
     tailwindcss(),
     i18nSyncPlugin(),
-    ...(vitest ? [] : [pwaPlugin]),
+    ...(vitest || disablePwa ? [] : [pwaPlugin]),
   ],
   resolve: {
     alias: {

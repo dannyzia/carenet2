@@ -5,6 +5,8 @@
 export interface BackupAssignment {
   id: string;
   placementId: string;
+  /** When set, agency can trigger reassignment for this shift from the backup UI */
+  shiftId?: string;
   primaryCaregiverId: string;
   primaryCaregiverName: string;
   backupCaregivers: Array<{

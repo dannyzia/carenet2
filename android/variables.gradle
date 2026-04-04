@@ -1,6 +1,6 @@
 ext {
-    // D008 §12.1 — min 23 for BD device coverage; target 34+ Play policy baseline
-    minSdkVersion = 23
+    // min 24 — Cordova Android framework 14.x (Capacitor cordova bridge) requires API 24+
+    minSdkVersion = 24
     compileSdkVersion = 36
     targetSdkVersion = 34
     androidxActivityVersion = '1.11.0'

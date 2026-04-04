@@ -81,6 +81,25 @@ function shouldUseSupabase(): boolean {
   return USE_SUPABASE && !isDemoAuthMode();
 }
 
+function mapDbShiftToShiftPlan(d: any): ShiftPlan {
+  const patientName =
+    d.patients?.name ?? d.patient?.name ?? d.patient_name ?? "";
+  const st = String(d.status || "scheduled");
+  let status: ShiftPlan["status"] = "upcoming";
+  if (st === "completed" || st === "checked-out") status = "completed";
+  else if (st === "scheduled") status = "upcoming";
+  else status = "active";
+  return {
+    id: d.id,
+    patientName,
+    date: d.date,
+    shiftTime: `${d.start_time} - ${d.end_time}`,
+    status,
+    tasks: [],
+    dbStatus: st,
+  };
+}
+
 export const caregiverService = {
   /** Search caregiver profiles by keyword */
   async searchCaregivers(query: string): Promise<CaregiverProfile[]> {
@@ -194,19 +213,35 @@ export const caregiverService = {
       return sbRead("cg:shifts", async () => {
         const userId = await currentUserId();
         const { data, error } = await sb().from("shifts")
-          .select("*")
+          .select("*, patients(name)")
           .eq("caregiver_id", userId)
           .order("date", { ascending: true })
           .limit(30);
         if (error) throw error;
-        return (data || []).map((d: any) => ({
-          id: d.id, date: d.date, startTime: d.start_time, endTime: d.end_time,
-          patient: "", location: d.location || "", status: d.status,
-        }));
+        return (data || []).map(mapDbShiftToShiftPlan);
       });
     }
     await delay();
     return MOCK_SHIFT_PLANS;
+  },
+
+  /** Single shift plan by id (caregiver must own the shift) */
+  async getShiftPlanById(id: string): Promise<ShiftPlan | undefined> {
+    if (shouldUseSupabase()) {
+      return sbRead(`cg:shift:${id}`, async () => {
+        const userId = await currentUserId();
+        const { data, error } = await sb().from("shifts")
+          .select("*, patients(name)")
+          .eq("id", id)
+          .eq("caregiver_id", userId)
+          .maybeSingle();
+        if (error) throw error;
+        if (!data) return undefined;
+        return mapDbShiftToShiftPlan(data);
+      });
+    }
+    await delay();
+    return MOCK_SHIFT_PLANS.find((p) => p.id === id);
   },
 
   /** Get prescriptions managed by the current caregiver */

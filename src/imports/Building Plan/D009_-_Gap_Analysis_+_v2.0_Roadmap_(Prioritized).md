@@ -15,10 +15,10 @@ The corpus shows a strong distinction between closed compliance gaps and real re
 | Gap Source | Current Position | Status |
 |---|---|---|
 | Section 18 core compliance gaps | Closed through added pages and route corrections | [✅ 100% Built] |
-| Section 18 residual enhancement | Agency incidents list/dashboard still pending | [🔄 Enhancement] |
-| Section 15 proposed pages | 14 pages explicitly not built | [❌ Not Built – v2.0] |
-| Voice notes enhancement | Proposed, not built | [❌ Not Built – v2.0] |
-| AI and smart-care extensions | Explicitly future-state in the architecture corpus | [❌ Not Built – v2.0] |
+| Section 18 residual enhancement | Agency incidents **list** shipped at `/agency/incidents`; deeper D006-style analytics optional | [🔄 Enhancement optional] |
+| Section 15 proposed pages | **Routes + first-cut UI + `section15` service + DB migration** shipped in repo; deepen realtime, telehealth, and AI per epics below | [⚠️ Partially Built – v2.0] |
+| Voice notes enhancement | Baseline **Voice Note** action on caregiver care log (UI + offline queue); full STT pipeline still future | [⚠️ Partial] |
+| AI and smart-care extensions | **Roadmap / labs page** + tables for future jobs; detection & device ingestion not production | [⚠️ Spike / partial] |
 
 ```mermaid
 flowchart TD
@@ -46,16 +46,16 @@ Section 18 identifies eight compliance gaps, but seven are already closed and on
 | Agency payroll and payouts | Closed | Not backlog |
 | Caregiver job marketplace alignment | Closed correction | Not backlog |
 | Care timeline coverage | Closed via placement detail | Not backlog |
-| Agency incidents management list view | Still described as enhancement needed | Active backlog |
+| Agency incidents management list view | **Shipped:** `AgencyIncidentsPage` + route `/agency/incidents` | Optional enhancement only (richer analytics, exports) |
 
 ### 3.1 Residual Section 18 Backlog [🔄 Enhancement] [🟠 Medium]
 
 | Item | Route | Source Statement | Dependency |
 |---|---|---|---|
-| Agency incidents list and management dashboard | `/agency/incidents` | Existing incident wizard creates incidents, but viewing and resolving dashboard is still needed | → D006 §6, → D007 §5.4 |
+| Agency incidents dashboard depth | `/agency/incidents` | List/filter/resolve UI exists; optional: KPIs, exports, SLA timers per D006 | → D006 §6, → D007 §5.4 |
 
-## 4. Section 15 Proposed Pages [❌ Not Built – v2.0] [🔴 High]
-Section 15 is the main v2.0 page backlog.
+## 4. Section 15 Proposed Pages [⚠️ Partially Built – v2.0] [🔴 High]
+Section 15 routes and baseline pages are registered in `src/app/routes.ts` with `section15.service.ts`, mock + Supabase reads, and migration `20260403120000_section15_v2_tables.sql`. Remaining work: harden RLS with your org rules, realtime subscriptions, telehealth provider integration, and AI jobs.
 
 ### 4.1 High-Priority Pages [❌ Not Built – v2.0] [🔴 High]
 
@@ -115,7 +115,7 @@ The epics below only group items already present in the corpus. The `Effort` col
 | E06 | Remote clinical access | P10 Telehealth | 🟠 Medium | Not specified in source corpus | → D007 §5.3, → D008 §10 |
 | E07 | Daily wellness tracking | P11 Nutrition, P12 Rehab | 🟡 Low | Not specified in source corpus | → D005 §4.2, → D005 §4.4 |
 | E08 | Family and financial support tools | P13 Family Board, P14 Insurance Tracker | 🟡 Low | Not specified in source corpus | → D003 §6, → D007 §5.1 |
-| E09 | Residual operational enhancement | Agency incidents list enhancement | 🟠 Medium | Not specified in source corpus | → D006 §6, → D007 §5.4 |
+| E09 | Residual operational enhancement | Agency incidents list (**shipped**); optional dashboard depth | 🟠 Medium | Not specified in source corpus | → D006 §6, → D007 §5.4 |
 | E10 | AI vitals monitoring | AI anomaly detection for vitals | 🔴 High | Not specified in source corpus | → D006 §8, → D005 §8 |
 | E11 | Voice-driven documentation | Voice care logging and voice notes integration | 🟠 Medium | Not specified in source corpus | → D004 §8, → D008 §7 |
 | E12 | Wearable and device ingestion | Caregiver wearable integration | 🟠 Medium | Not specified in source corpus | → D006 §6, → D008 §8 |

@@ -64,14 +64,18 @@ export function onNotificationReceived(callback: (notification: PushNotification
   if (!PushNotifications) return () => {};
 
   let cleanup: (() => void) | null = null;
-  PushNotifications.addListener("pushNotificationReceived", (notification: any) => {
-    callback({
-      id: notification.id,
-      title: notification.title || "",
-      body: notification.body || "",
-      data: notification.data,
-    });
-  }).then((listener: any) => { cleanup = () => listener.remove(); });
+  void Promise.resolve(
+    PushNotifications.addListener("pushNotificationReceived", (notification: any) => {
+      callback({
+        id: notification.id,
+        title: notification.title || "",
+        body: notification.body || "",
+        data: notification.data,
+      });
+    }),
+  ).then((listener: any) => {
+    cleanup = () => listener.remove();
+  });
 
   return () => cleanup?.();
 }
@@ -82,14 +86,18 @@ export function onNotificationTapped(callback: (notification: PushNotification) 
   if (!PushNotifications) return () => {};
 
   let cleanup: (() => void) | null = null;
-  PushNotifications.addListener("pushNotificationActionPerformed", (action: any) => {
-    callback({
-      id: action.notification.id,
-      title: action.notification.title || "",
-      body: action.notification.body || "",
-      data: action.notification.data,
-    });
-  }).then((listener: any) => { cleanup = () => listener.remove(); });
+  void Promise.resolve(
+    PushNotifications.addListener("pushNotificationActionPerformed", (action: any) => {
+      callback({
+        id: action.notification.id,
+        title: action.notification.title || "",
+        body: action.notification.body || "",
+        data: action.notification.data,
+      });
+    }),
+  ).then((listener: any) => {
+    cleanup = () => listener.remove();
+  });
 
   return () => cleanup?.();
 }

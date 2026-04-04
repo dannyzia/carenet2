@@ -1,24 +1,50 @@
 import { useState } from "react";
+import { Link } from "react-router";
 import { cn } from "@/frontend/theme/tokens";
-import { Shield, Users, ArrowRightLeft, UserCheck, Phone, Star, MapPin, Clock, ChevronDown, AlertTriangle, CheckCircle } from "lucide-react";
+import { Shield, Users, ArrowRightLeft, UserCheck, Phone, Star, MapPin, Clock } from "lucide-react";
 import { useAsyncData, useDocumentTitle } from "@/frontend/hooks";
 import { backupService } from "@/backend/services";
 import { PageSkeleton } from "@/frontend/components/shared/PageSkeleton";
+import { ShiftReassignmentModal } from "@/frontend/components/shared/ShiftReassignmentModal";
 import { useTranslation } from "react-i18next";
 
 export default function BackupCaregiverPage() {
   const { t: tDocTitle } = useTranslation("common");
   useDocumentTitle(tDocTitle("pageTitles.backupCaregiver", "Backup Caregiver"));
 
-  const { data: assignments, loading: l1 } = useAsyncData(() => backupService.getBackupAssignments());
-  const { data: reassignments, loading: l2 } = useAsyncData(() => backupService.getReassignmentHistory());
+  const { data: assignments, loading: l1, refetch: r1 } = useAsyncData(() => backupService.getBackupAssignments());
+  const { data: reassignments, loading: l2, refetch: r2 } = useAsyncData(() => backupService.getReassignmentHistory());
   const { data: standby, loading: l3 } = useAsyncData(() => backupService.getStandbyPool());
   if (l1 || l2 || l3 || !assignments || !reassignments || !standby) return <PageSkeleton cards={4} />;
-  return <BackupContent assignments={assignments} reassignments={reassignments} standby={standby} />;
+  return (
+    <BackupContent
+      assignments={assignments}
+      reassignments={reassignments}
+      standby={standby}
+      onRefresh={() => {
+        void r1();
+        void r2();
+      }}
+    />
+  );
 }
 
-function BackupContent({ assignments, reassignments, standby }: { assignments: any[]; reassignments: any[]; standby: any[] }) {
+function BackupContent({
+  assignments,
+  reassignments,
+  standby,
+  onRefresh,
+}: {
+  assignments: any[];
+  reassignments: any[];
+  standby: any[];
+  onRefresh: () => void;
+}) {
+  const { t } = useTranslation("common");
   const [tab, setTab] = useState<"assignments" | "standby" | "history">("assignments");
+  const [reassignOpen, setReassignOpen] = useState(false);
+  const [reassignShiftId, setReassignShiftId] = useState("");
+  const [reassignBackups, setReassignBackups] = useState<{ caregiverId: string; caregiverName: string; available: boolean }[]>([]);
   const tabs = [
     { key: "assignments" as const, label: "Backup Pairs", icon: Shield, count: assignments.length },
     { key: "standby" as const, label: "Standby Pool", icon: Users, count: standby.filter((s: any) => s.available).length },
@@ -27,9 +53,14 @@ function BackupContent({ assignments, reassignments, standby }: { assignments: a
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-xl" style={{ color: cn.textHeading }}>Backup & Standby Management</h1>
-        <p className="text-sm mt-0.5" style={{ color: cn.textSecondary }}>Manage backup caregivers, standby pool, and shift reassignments</p>
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+        <div>
+          <h1 className="text-xl" style={{ color: cn.textHeading }}>Backup & Standby Management</h1>
+          <p className="text-sm mt-0.5" style={{ color: cn.textSecondary }}>Manage backup caregivers, standby pool, and shift reassignments</p>
+        </div>
+        <Link to="/agency/reassignment-history" className="text-sm shrink-0 underline" style={{ color: cn.pink }}>
+          {t("reassignmentHistory.pageLink")}
+        </Link>
       </div>
 
       {/* Stats */}
@@ -66,7 +97,23 @@ function BackupContent({ assignments, reassignments, standby }: { assignments: a
                   <UserCheck className="w-4 h-4" style={{ color: cn.green }} />
                   <span className="text-sm" style={{ color: cn.textHeading }}>Primary: {a.primaryCaregiverName}</span>
                 </div>
-                <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(95,184,101,0.1)", color: cn.green }}>Active</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(95,184,101,0.1)", color: cn.green }}>Active</span>
+                  {a.shiftId ? (
+                    <button
+                      type="button"
+                      className="text-xs px-2 py-1 rounded-lg text-white"
+                      style={{ background: "var(--cn-gradient-caregiver)" }}
+                      onClick={() => {
+                        setReassignShiftId(a.shiftId);
+                        setReassignBackups(a.backupCaregivers);
+                        setReassignOpen(true);
+                      }}
+                    >
+                      {t("shiftReassignment.openAction")}
+                    </button>
+                  ) : null}
+                </div>
               </div>
               <div className="space-y-2">
                 {a.backupCaregivers.map((b: any, idx: number) => (
@@ -153,6 +200,14 @@ function BackupContent({ assignments, reassignments, standby }: { assignments: a
           ))}
         </div>
       )}
+
+      <ShiftReassignmentModal
+        open={reassignOpen}
+        onOpenChange={setReassignOpen}
+        shiftId={reassignShiftId}
+        backups={reassignBackups}
+        onCompleted={() => onRefresh()}
+      />
     </div>
   );
 }

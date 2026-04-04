@@ -1,17 +1,22 @@
 import { defineConfig } from "vitest/config";
 import path from "path";
+import react from "@vitejs/plugin-react";
 
 export default defineConfig({
+  plugins: [react()],
   resolve: {
     alias: {
-      // Mirror the @ alias from vite.config.ts
       "@": path.resolve(__dirname, "./src"),
+      "react-router-original": path.resolve(__dirname, "node_modules/react-router"),
+      "react-router": path.resolve(__dirname, "src/lib/react-router-shim.ts"),
     },
   },
   test: {
     // Use node environment for utility/service tests (no DOM overhead).
     // Component tests can override with `// @vitest-environment jsdom` per-file.
     environment: "node",
+
+    setupFiles: ["./src/test/setup-indexeddb.ts"],
 
     // Test file discovery
     include: ["src/**/__tests__/**/*.test.ts", "src/**/__tests__/**/*.test.tsx"],

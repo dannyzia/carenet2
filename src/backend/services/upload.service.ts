@@ -5,7 +5,7 @@
  * In production: uses Supabase Storage.
  */
 import type { UploadedFile, DocumentCategory, CaptureMethod, DocumentExpiryAlert } from "@/backend/models";
-import { MOCK_UPLOADED_FILES, MOCK_DOCUMENT_EXPIRY_ALERTS } from "@/backend/api/mock";
+import { MOCK_UPLOADED_FILES, MOCK_DOCUMENT_EXPIRY_ALERTS, MOCK_CAREGIVER_DOCUMENTS } from "@/backend/api/mock";
 import { USE_SUPABASE, sbWrite, sbRead, sb, currentUserId } from "./_sb";
 
 const delay = (ms = 200) => new Promise((r) => setTimeout(r, ms));
@@ -105,11 +105,35 @@ export const uploadService = {
   },
 
   /**
-   * Get a file by ID
+   * Get a file by ID (mock in-memory uploads, or Supabase caregiver_documents row by UUID)
    */
   async getFile(fileId: string): Promise<UploadedFile | undefined> {
+    if (USE_SUPABASE) {
+      return sbRead(`upload:file:${fileId}`, async () => {
+        const { data, error } = await sb().from("caregiver_documents").select("*").eq("id", fileId).maybeSingle();
+        if (error) throw error;
+        if (!data) return undefined;
+        const url = data.file_url || "";
+        return {
+          id: data.id,
+          fileName: data.name,
+          fileSize: Number.parseInt(String(data.file_size || "0"), 10) || 0,
+          mimeType: mimeFromDocNameAndType(data.name, data.type),
+          category: (data.category || "other") as DocumentCategory,
+          captureMethod: (data.capture_method || "file") as CaptureMethod,
+          url,
+          thumbnailUrl: data.thumbnail_url || undefined,
+          uploadedBy: data.caregiver_id,
+          uploadedByRole: "caregiver",
+          uploadedAt: data.uploaded || data.created_at,
+          status: "completed",
+        };
+      });
+    }
     await delay(100);
-    return uploadedFiles.find((f) => f.id === fileId);
+    const fromMemory = uploadedFiles.find((f) => f.id === fileId);
+    if (fromMemory) return fromMemory;
+    return mockCaregiverDocumentToUploadedFile(fileId);
   },
 
   /**
@@ -155,6 +179,50 @@ export const uploadService = {
     return MOCK_DOCUMENT_EXPIRY_ALERTS.filter((a) => a.daysUntilExpiry <= daysAhead);
   },
 };
+
+/** Mock-only: caregiver document list uses numeric ids; resolve to a stable public URL for the viewer. */
+const MOCK_PDF_VIEW_URL =
+  "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf";
+const MOCK_IMAGE_VIEW_URL =
+  "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=80&w=1200";
+
+function mockCaregiverDocumentToUploadedFile(fileId: string): UploadedFile | undefined {
+  const cd = MOCK_CAREGIVER_DOCUMENTS.find((d) => String(d.id) === fileId);
+  if (!cd) return undefined;
+  const mimeType = mimeFromDocNameAndType(cd.file, cd.type);
+  const url =
+    mimeType === "application/pdf"
+      ? MOCK_PDF_VIEW_URL
+      : mimeType.startsWith("image/")
+        ? MOCK_IMAGE_VIEW_URL
+        : MOCK_PDF_VIEW_URL;
+  return {
+    id: String(cd.id),
+    fileName: cd.file,
+    fileSize: 0,
+    mimeType,
+    category: (cd.category ?? "other") as DocumentCategory,
+    captureMethod: "file",
+    url,
+    uploadedBy: "mock-caregiver",
+    uploadedByRole: "caregiver",
+    uploadedAt: cd.uploaded,
+    status: "completed",
+  };
+}
+
+function mimeFromDocNameAndType(name: string, typeField: string): string {
+  const n = name.toLowerCase();
+  if (n.endsWith(".pdf")) return "application/pdf";
+  if (n.endsWith(".png")) return "image/png";
+  if (n.endsWith(".jpg") || n.endsWith(".jpeg")) return "image/jpeg";
+  if (n.endsWith(".webp")) return "image/webp";
+  const t = String(typeField || "").toLowerCase();
+  if (t.includes("pdf")) return "application/pdf";
+  if (t.includes("png")) return "image/png";
+  if (t.includes("jpeg") || t.includes("jpg")) return "image/jpeg";
+  return "application/octet-stream";
+}
 
 /** Convert a File to a data URL (for mock storage) */
 function fileToDataUrl(file: File): Promise<string> {

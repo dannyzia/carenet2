@@ -40,7 +40,7 @@ export const scheduleService = {
       return sbRead(key, async () => {
         const userId = await currentUserId();
         let q = sb().from("daily_tasks").select("*")
-          .or(`caregiver_id.eq.${userId},guardian_id.eq.${userId},agency_id.eq.${userId}`)
+          .or(`caregiver_id.eq.${userId},guardian_id.eq.${userId},agency_id.eq.${userId},created_by.eq.${userId}`)
           .order("time", { ascending: true });
         if (date) q = q.eq("date", date);
         const { data, error } = await q;

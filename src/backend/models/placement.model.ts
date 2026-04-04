@@ -68,6 +68,8 @@ export interface ShiftPlan {
   shiftTime: string;
   status: "active" | "upcoming" | "completed";
   tasks: { label: string; done: boolean }[];
+  /** Raw DB shift status when loaded from Supabase (for check-in / check-out gating) */
+  dbStatus?: string;
 }
 
 /** Caregiver's assigned patient (from their perspective) */

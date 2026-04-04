@@ -3,6 +3,7 @@ import { useAsyncData, useDocumentTitle } from "@/frontend/hooks";
 import { caregiverService } from "@/backend/services";
 import { PageSkeleton } from "@/frontend/components/shared/PageSkeleton";
 import React from "react";
+import { Link } from "react-router";
 import { Upload, Download, CheckCircle, Clock, AlertCircle, FileText, Eye, Trash2, Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -95,7 +96,13 @@ export default function CaregiverDocumentsPage() {
                       <StatusIcon className="w-3 h-3 mr-1" /> {sc.label}
                     </span>
                     <div className="flex gap-1">
-                      <button className="p-1.5 rounded-lg hover:bg-white transition-all"><Eye className="w-4 h-4" style={{ color: "#848484" }} /></button>
+                      <Link
+                        to={`/documents/view/${doc.id}`}
+                        className="p-1.5 rounded-lg hover:bg-white transition-all inline-flex"
+                        aria-label="View document"
+                      >
+                        <Eye className="w-4 h-4" style={{ color: "#848484" }} />
+                      </Link>
                       <button className="p-1.5 rounded-lg hover:bg-white transition-all"><Download className="w-4 h-4" style={{ color: "#848484" }} /></button>
                       <button className="p-1.5 rounded-lg hover:bg-red-50 transition-all"><Trash2 className="w-4 h-4" style={{ color: "#EF4444" }} /></button>
                     </div>

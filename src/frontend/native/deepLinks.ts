@@ -13,10 +13,13 @@ export function registerAppUrlOpenListener(navigate: (to: string) => void): () =
   if (!App) return () => {};
 
   let cleanup: (() => void) | null = null;
-  void App.addListener("appUrlOpen", (event: { url: string }) => {
-    const path = parseDeepLinkToPath(event.url);
-    if (path) navigate(path);
-  }).then((handle) => {
+  // Legacy window.Capacitor.Plugins.App returns a sync handle; @capacitor/app ES module returns a Promise.
+  void Promise.resolve(
+    App.addListener("appUrlOpen", (event: { url: string }) => {
+      const path = parseDeepLinkToPath(event.url);
+      if (path) navigate(path);
+    }),
+  ).then((handle) => {
     cleanup = () => handle.remove();
   });
 

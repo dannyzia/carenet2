@@ -78,6 +78,8 @@ Run all SQL files in order in the **Supabase SQL Editor**:
 4. `03_moderation_tables.sql` — Creates 6 moderation tables + triggers + seed data for moderator role
 5. `04_rls_policies.sql` — Enables RLS on all 36 tables with role-based access policies
 
+Then apply notification and hardening migrations from `supabase/migrations/` in filename order (see root `deployment.md` steps 7–19), including `20260403120000_section15_v2_tables.sql` when using v2.0 Section 15 pages.
+
 > **Why SQL instead of CSV?** Supabase's CSV importer cannot handle PostgreSQL array literals
 > (e.g., `{diabetes,hypertension}`) or JSONB columns. The SQL file handles these natively.
 >

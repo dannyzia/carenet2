@@ -150,21 +150,29 @@ export default function LoginPage() {
             <p className="text-center text-sm mb-6" style={{ color: cn.textSecondary }}>Sign in with your email and password</p>
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
-                <label className="block text-sm mb-1.5" style={{ color: cn.text }}>Email</label>
+                <label htmlFor="carenet-login-email" className="block text-sm mb-1.5" style={{ color: cn.text }}>Email</label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: cn.textSecondary }} />
-                  <input type="email" value={email} onChange={(e) => { setEmail(e.target.value); setError(""); }} placeholder="you@example.com" className="w-full pl-10 pr-4 py-3.5 rounded-xl border text-sm" style={{ background: cn.bgInput, borderColor: error ? "#EF4444" : cn.border, color: cn.text, fontSize: "16px" }} autoComplete="email" required />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: cn.textSecondary }} aria-hidden />
+                  <input id="carenet-login-email" type="email" value={email} onChange={(e) => { setEmail(e.target.value); setError(""); }} placeholder="you@example.com" className="w-full pl-10 pr-4 py-3.5 rounded-xl border text-sm" style={{ background: cn.bgInput, borderColor: error ? "#EF4444" : cn.border, color: cn.text, fontSize: "16px" }} autoComplete="email" required />
                 </div>
               </div>
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-sm" style={{ color: cn.text }}>Password</label>
-                  <Link to="/auth/forgot-password" className="text-xs hover:underline" style={{ color: cn.pink }}>Forgot password?</Link>
+                  <label htmlFor="carenet-login-password" className="block text-sm" style={{ color: cn.text }}>Password</label>
+                  <Link to="/auth/forgot-password" className="text-xs underline-offset-2 hover:underline" style={{ color: cn.pink }}>{t("auth:login.forgotPassword")}</Link>
                 </div>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: cn.textSecondary }} />
-                  <input type={showPwd ? "text" : "password"} value={password} onChange={(e) => { setPassword(e.target.value); setError(""); }} placeholder="Enter password" className="w-full pl-10 pr-10 py-3.5 rounded-xl border text-sm" style={{ background: cn.bgInput, borderColor: error ? "#EF4444" : cn.border, color: cn.text, fontSize: "16px" }} autoComplete="current-password" required />
-                  <button type="button" onClick={() => setShowPwd(!showPwd)} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: cn.textSecondary }}>{showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button>
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: cn.textSecondary }} aria-hidden />
+                  <input id="carenet-login-password" type={showPwd ? "text" : "password"} value={password} onChange={(e) => { setPassword(e.target.value); setError(""); }} placeholder="Enter password" className="w-full pl-10 pr-10 py-3.5 rounded-xl border text-sm" style={{ background: cn.bgInput, borderColor: error ? "#EF4444" : cn.border, color: cn.text, fontSize: "16px" }} autoComplete="current-password" required />
+                  <button
+                    type="button"
+                    onClick={() => setShowPwd(!showPwd)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2"
+                    style={{ color: cn.textSecondary }}
+                    aria-label={showPwd ? t("auth:login.hidePassword") : t("auth:login.showPassword")}
+                  >
+                    {showPwd ? <EyeOff className="w-4 h-4" aria-hidden /> : <Eye className="w-4 h-4" aria-hidden />}
+                  </button>
                 </div>
                 <p className="text-xs mt-1.5" style={{ color: cn.textSecondary }}>Demo: {DEMO_ACCOUNTS[0].email} / {DEMO_PASSWORD}</p>
               </div>
@@ -203,7 +211,13 @@ export default function LoginPage() {
             <div className="mt-6 text-center">
               <p className="text-sm" style={{ color: cn.textSecondary }}>
                 {t("auth:login.noAccount")}{" "}
-                <Link to="/auth/role-selection" className="hover:underline" style={{ color: cn.pink }}>{t("auth:login.signUp")}</Link>
+                <Link
+                  to="/auth/role-selection"
+                  className="font-medium underline underline-offset-2 decoration-1 hover:opacity-90"
+                  style={{ color: cn.pink }}
+                >
+                  {t("auth:login.signUp")}
+                </Link>
               </p>
             </div>
           </>

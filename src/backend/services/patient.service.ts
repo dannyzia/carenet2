@@ -325,6 +325,36 @@ export const patientService = {
     return MOCK_EMERGENCY_DATA;
   },
 
+  /** Log an SOS event (local mock ring buffer or Supabase sos_events). */
+  async triggerSos(payload?: { note?: string; lat?: number; lng?: number }): Promise<{ id: string }> {
+    if (shouldUseSupabase()) {
+      return sbWrite(async () => {
+        const userId = await currentUserId();
+        const { data, error } = await sb().from("sos_events").insert({
+          user_id: userId,
+          note: payload?.note || null,
+          client_lat: payload?.lat ?? null,
+          client_lng: payload?.lng ?? null,
+        }).select("id").single();
+        if (error) throw error;
+        return { id: data.id };
+      });
+    }
+    await delay(150);
+    const id = `sos-${Date.now()}`;
+    try {
+      const raw = typeof localStorage !== "undefined" ? localStorage.getItem("carenet-sos-log") : null;
+      const arr = raw ? (JSON.parse(raw) as unknown[]) : [];
+      arr.push({ id, at: new Date().toISOString(), ...payload });
+      if (typeof localStorage !== "undefined") {
+        localStorage.setItem("carenet-sos-log", JSON.stringify(arr.slice(-20)));
+      }
+    } catch {
+      /* ignore */
+    }
+    return { id };
+  },
+
   async getPrivacyData(): Promise<PrivacyData> {
     await delay();
     return MOCK_PRIVACY_DATA;

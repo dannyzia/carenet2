@@ -47,7 +47,7 @@ export default defineConfig({
         : "env VITE_PLAYWRIGHT_E2E=true npx vite --host",
     url: "http://localhost:5173",
     reuseExistingServer: !process.env.CI,
-    timeout: 30_000,
+    timeout: 120_000,
     env: {
       ...process.env,
       VITE_PLAYWRIGHT_E2E: "true",

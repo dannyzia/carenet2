@@ -12,6 +12,7 @@ import type {
   GuardianProfile, InvoiceDetail,
 } from "@/backend/models";
 import {
+  MOCK_INCIDENT_HISTORY,
   MOCK_GUARDIAN_PATIENTS,
   MOCK_GUARDIAN_SPENDING,
   MOCK_FAMILY_MEMBERS,
@@ -34,7 +35,7 @@ import {
   MOCK_GUARDIAN_PROFILE,
   MOCK_INVOICE_DETAIL,
 } from "@/backend/api/mock";
-import { USE_SUPABASE, sbRead, sb, currentUserId } from "./_sb";
+import { USE_SUPABASE, sbRead, sbWrite, sb, currentUserId } from "./_sb";
 
 const delay = (ms = 200) => new Promise((r) => setTimeout(r, ms));
 
@@ -227,5 +228,60 @@ export const guardianService = {
     }
     await delay();
     return { ...MOCK_INVOICE_DETAIL, id: id || MOCK_INVOICE_DETAIL.id };
+  },
+
+  async reportIncident(data: {
+    type: string;
+    severity: string;
+    patientId: string;
+    shiftId?: string;
+    description: string;
+    immediateAction: string;
+    photos: string[];
+  }): Promise<{ id: string }> {
+    if (shouldUseSupabase()) {
+      return sbWrite(async () => {
+        const userId = await currentUserId();
+        const { data: row, error } = await sb().from("incident_reports").insert({
+          reported_by: userId,
+          reporter_role: "guardian",
+          type: data.type,
+          severity: data.severity,
+          patient_id: data.patientId,
+          shift_id: data.shiftId || null,
+          description: data.description,
+          immediate_action: data.immediateAction,
+          photos: data.photos,
+          status: "open",
+        }).select("id").single();
+        if (error) throw error;
+        return { id: row.id };
+      });
+    }
+    await delay(400);
+    return { id: `inc-${crypto.randomUUID().slice(0, 8)}` };
+  },
+
+  async getIncidentHistory(): Promise<
+    Array<{ id: string; type: string; severity: string; date: string; status: string; patient: string }>
+  > {
+    if (shouldUseSupabase()) {
+      return sbRead("gd:incidents", async () => {
+        const { data, error } = await sb().from("incident_reports")
+          .select("*, patients!incident_reports_patient_id_fkey(name)")
+          .order("created_at", { ascending: false });
+        if (error) throw error;
+        return (data || []).map((d: any) => ({
+          id: d.id,
+          type: d.type,
+          severity: d.severity,
+          date: d.created_at,
+          status: d.status,
+          patient: d.patients?.name || "",
+        }));
+      });
+    }
+    await delay();
+    return MOCK_INCIDENT_HISTORY;
   },
 };

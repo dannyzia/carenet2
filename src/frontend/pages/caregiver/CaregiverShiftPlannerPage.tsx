@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router";
 import { cn } from "@/frontend/theme/tokens";
 import { Plus, Clock, CheckSquare, User, Calendar, ChevronRight, GripVertical, Trash2, Edit3, Copy, AlertCircle, Save, ClipboardList, Pill, Activity, UtensilsCrossed, Dumbbell } from "lucide-react";
 import { useAsyncData, useDocumentTitle } from "@/frontend/hooks";
@@ -8,7 +9,7 @@ import { useTranslation } from "react-i18next";
 import type { ShiftPlan as ApiShiftPlan } from "@/backend/models";
 
 interface ShiftTask { id: string; title: string; category: string; scheduledTime: string; duration: string; priority: "high" | "medium" | "low"; notes: string; completed: boolean; }
-interface ShiftPlan { id: string; patientName: string; date: string; shiftTime: string; tasks: ShiftTask[]; status: "draft" | "active" | "completed"; }
+interface ShiftPlan { id: string; patientName: string; date: string; shiftTime: string; tasks: ShiftTask[]; status: "draft" | "active" | "completed"; dbStatus?: string; }
 
 function adaptShiftPlans(api: ApiShiftPlan[]): ShiftPlan[] {
   return api.map((p) => ({
@@ -16,6 +17,7 @@ function adaptShiftPlans(api: ApiShiftPlan[]): ShiftPlan[] {
     patientName: p.patientName,
     date: p.date,
     shiftTime: p.shiftTime,
+    dbStatus: p.dbStatus,
     status: p.status === "upcoming" ? "draft" : p.status === "completed" ? "completed" : "active",
     tasks: p.tasks.map((t, i) => ({
       id: `${p.id}-task-${i}`,
@@ -71,6 +73,24 @@ function ShiftPlannerContent({ initialPlans }: { initialPlans: ShiftPlan[] }) {
             <div className="flex items-center justify-between mt-2">
               <span className="text-xs" style={{ color: cn.textSecondary }}>{plan.tasks.length} tasks</span>
               <span className="px-2 py-0.5 rounded-full text-[10px]" style={{ background: plan.status === "active" ? cn.greenBg : plan.status === "draft" ? cn.amberBg : cn.bgInput, color: plan.status === "active" ? cn.green : plan.status === "draft" ? cn.amber : cn.textSecondary }}>{plan.status}</span>
+            </div>
+            <div className="flex gap-2 mt-2">
+              <Link
+                to={`/caregiver/shift-check-in/${plan.id}`}
+                className="flex-1 text-center text-[10px] py-1.5 rounded-lg border no-underline"
+                style={{ borderColor: cn.border, color: cn.pink }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                Check in
+              </Link>
+              <Link
+                to={`/caregiver/shift-checkout/${plan.id}`}
+                className="flex-1 text-center text-[10px] py-1.5 rounded-lg border no-underline"
+                style={{ borderColor: cn.border, color: cn.text }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                Check out
+              </Link>
             </div>
           </button>
         ))}

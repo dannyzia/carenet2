@@ -23,3 +23,4 @@ export * from "./upload.model";
 export * from "./schedule.model";
 export * from "./backup.model";
 export * from "./uccf.model";
+export * from "./section15.model";

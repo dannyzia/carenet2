@@ -5,8 +5,8 @@ import { getAllLanguages } from "@/frontend/i18n/languageManager";
 import { Globe, ChevronDown } from "lucide-react";
 
 interface LanguageSwitcherProps {
-  /** "dropdown" (default) = select menu, "compact" = smaller select, "minimal" = globe icon with dropdown */
-  variant?: "dropdown" | "compact" | "minimal";
+  /** "dropdown" (default) = select menu, "compact" = smaller select, "minimal" = globe icon with dropdown, "drawer" = full-width for narrow side panels */
+  variant?: "dropdown" | "compact" | "minimal" | "drawer";
   className?: string;
 }
 
@@ -18,13 +18,40 @@ export function LanguageSwitcher({
   variant = "dropdown",
   className = "",
 }: LanguageSwitcherProps) {
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation("common");
+  const langLabel = t("language.selectLabel", "Interface language");
   const currentLang = i18n.language || "en";
   const languages = getAllLanguages();
 
   const handleChange = (code: string) => {
     changeLanguage(code);
   };
+
+  if (variant === "drawer") {
+    return (
+      <div className={`relative flex w-full min-w-0 max-w-full items-stretch ${className}`}>
+        <Globe className="pointer-events-none absolute left-2.5 top-1/2 z-[1] h-3.5 w-3.5 -translate-y-1/2" style={{ color: cn.green }} aria-hidden />
+        <select
+          value={currentLang}
+          onChange={(e) => handleChange(e.target.value)}
+          className="box-border min-h-[44px] w-full min-w-0 max-w-full cursor-pointer appearance-none rounded-lg border py-2 pl-8 pr-7 text-xs focus:outline-none"
+          style={{
+            borderColor: cn.border,
+            color: cn.text,
+            background: cn.bgCard,
+          }}
+          aria-label={langLabel}
+        >
+          {languages.map((lang) => (
+            <option key={lang.code} value={lang.code}>
+              {lang.name}
+            </option>
+          ))}
+        </select>
+        <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3 w-3 -translate-y-1/2" style={{ color: cn.textSecondary }} aria-hidden />
+      </div>
+    );
+  }
 
   if (variant === "minimal") {
     return (
@@ -35,7 +62,7 @@ export function LanguageSwitcher({
           onChange={(e) => handleChange(e.target.value)}
           className="appearance-none bg-transparent pl-7 pr-6 py-2 rounded-lg text-xs cursor-pointer focus:outline-none cn-touch-target"
           style={{ color: cn.text }}
-          title="Select language"
+          aria-label={langLabel}
         >
           {languages.map((lang) => (
             <option key={lang.code} value={lang.code}>
@@ -60,6 +87,7 @@ export function LanguageSwitcher({
             color: cn.text,
             background: cn.bgCard,
           }}
+          aria-label={langLabel}
         >
           {languages.map((lang) => (
             <option key={lang.code} value={lang.code}>
@@ -86,6 +114,7 @@ export function LanguageSwitcher({
           background: cn.bgCard,
           minWidth: "140px",
         }}
+        aria-label={langLabel}
       >
         {languages.map((lang) => (
           <option key={lang.code} value={lang.code}>

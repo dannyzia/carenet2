@@ -1,7 +1,7 @@
 # D022 - Feature Expansion Plan (Phases 1-10)
 
 > **Created:** March 17, 2026
-> **Status:** Planned
+> **Status:** Partially implemented (April 2026) — see repo for `upload.service.ts`, `FileUploadCapture`, `useFileUpload`, `schedule.service.ts` / `daily_tasks`, `backupService` + routes, `DocumentVerificationPage`, `ImagePreviewCrop`, `ShiftCheckInPage`, and related agency tools. Remaining rows below are **gaps vs this document**, not vs an empty codebase.
 > **Scope:** 10 original feature requests + 8 additional recommended features
 > **Impact:** 14 new pages (168 -> 182), 18 new model types, 30+ new service methods, 10 new hooks, 8 new shared components
 
@@ -22,7 +22,7 @@
 | 9 | Backup / standby caregiver system | Missing entirely | Critical |
 | 10 | Prescription / report document upload | Text entry only, no file/camera capture | Medium |
 | A1 | GPS-verified check-in | Not present | New |
-| A2 | Caregiver-to-caregiver handoff notes | Not present | New |
+| A2 | Caregiver-to-caregiver handoff notes | **Present:** `HandoffNotesPage` + `/caregiver/handoff-notes` (alias `/caregiver/handoff`) | Closed vs D022 text |
 | A3 | Document expiry alerts | Not present | New |
 | A4 | Guardian real-time shift notifications | Not present | New |
 | A5 | Patient vitals trend chart | VitalsTrackingPage exists, no longitudinal chart | New |

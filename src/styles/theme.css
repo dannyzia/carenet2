@@ -105,6 +105,11 @@
   --cn-shadow-green: rgba(124, 229, 119, 0.35);
   --cn-shadow-orange: rgba(230, 74, 25, 0.35);
   --cn-bg-hero: #FFF5F7;
+  /* Marketing hero decorative blurs (Features — dark mode orbs) */
+  --cn-hero-blur-orb-a: rgba(233, 154, 175, 0.12);
+  --cn-hero-blur-orb-b: rgba(114, 204, 120, 0.1);
+  /* Pricing featured tier card glow (teal / agency) */
+  --cn-shadow-pricing-featured: 0 8px 32px rgba(0, 137, 123, 0.15);
 
   /* ─── Role Gradients ─── */
   --cn-gradient-caregiver: radial-gradient(143.86% 887.35% at -10.97% -22.81%, #FEB4C5 0%, #DB869A 100%);
@@ -202,6 +207,9 @@
   --cn-shadow-green: rgba(114, 204, 120, 0.2);
   --cn-shadow-orange: rgba(255, 110, 64, 0.2);
   --cn-bg-hero: rgba(254, 180, 197, 0.08);
+  --cn-hero-blur-orb-a: rgba(233, 154, 175, 0.12);
+  --cn-hero-blur-orb-b: rgba(114, 204, 120, 0.1);
+  --cn-shadow-pricing-featured: 0 8px 32px rgba(38, 166, 154, 0.22);
 
   /* ─── Gradients remain same in dark (they're already vibrant) ─── */
   --cn-gradient-dark-hero: radial-gradient(143.86% 887.35% at -10.97% -22.81%, #0F172A 0%, #020617 100%);

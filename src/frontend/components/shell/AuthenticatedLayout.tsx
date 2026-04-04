@@ -1,6 +1,8 @@
 import { Link, Navigate, Outlet, useLocation } from "react-router";
 import React, { useState, useEffect, Suspense } from "react";
 import {
+  Ticket,
+  RefreshCw,
   LayoutDashboard, Calendar, MessageSquare, DollarSign, Star, FileText, User,
   Briefcase, Heart, CreditCard, Users, CheckCircle, BarChart2, Settings,
   Bell, Search, LogOut, X, ChevronRight, ShoppingBag, Package,
@@ -263,7 +265,6 @@ function getRoleNavSections(t: TFunction): Record<Role, NavSection[]> {
           { i18nKey: "policyManager", path: "/admin/policy", icon: Shield },
           { i18nKey: "promoManagement", path: "/admin/promos", icon: Star },
           { i18nKey: "languages", path: "/admin/languages", icon: Globe },
-          { i18nKey: "sitemap", path: "/admin/sitemap", icon: Globe },
           { i18nKey: "settings", path: "/admin/settings", icon: Settings },
         ],
       },
@@ -319,6 +320,7 @@ export function AuthenticatedLayout() {
   const [sidebarBrowseOpen, setSidebarBrowseOpen] = useState(false);
   const [sidebarSupportOpen, setSidebarSupportOpen] = useState(false);
   const [sidebarAppOpen, setSidebarAppOpen] = useState(false);
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
   const { resolvedTheme, toggleTheme } = useTheme();
   const { t } = useTranslation("common");
   const { user, logout } = useAuth();
@@ -440,16 +442,15 @@ export function AuthenticatedLayout() {
           className="px-3 py-3 shrink-0"
           aria-label={t("a11y.roleNav", "Role navigation")}
         >
-          {navSections.map((section, sIdx) => (
-            <div key={sIdx} className={sIdx > 0 ? "mt-3" : ""}>
-              {section.sectionKey && sIdx > 0 && (
-                <p
-                  className="px-3 pt-2 pb-1 text-[10px] uppercase tracking-wider"
-                  style={{ color: cn.textSecondary, opacity: 0.6 }}
-                >
-                  {t(`sidebar.section.${section.sectionKey}`)}
-                </p>
-              )}
+          {navSections.map((section, sIdx) => {
+            const isMain = sIdx === 0;
+            const sectionOpen = section.sectionKey ? (collapsedSections[section.sectionKey] ?? false) : false;
+            const setActive = (open: boolean) => {
+              if (section.sectionKey) setCollapsedSections((prev) => ({ ...prev, [section.sectionKey!]: open }));
+            };
+            const isActiveInSection = section.links.some((l) => location.pathname === l.path);
+
+            const sectionContent = (
               <div className="space-y-0.5">
                 {section.links.map((link) => {
                   const Icon = link.icon;
@@ -485,8 +486,47 @@ export function AuthenticatedLayout() {
                   );
                 })}
               </div>
-            </div>
-          ))}
+            );
+
+            if (isMain || !section.sectionKey) {
+              return (
+                <div key={sIdx}>
+                  {section.sectionKey && (
+                    <p
+                      className="px-3 pt-2 pb-1 text-[10px] uppercase tracking-wider"
+                      style={{ color: cn.textSecondary, opacity: 0.6 }}
+                    >
+                      {t(`sidebar.section.${section.sectionKey}`)}
+                    </p>
+                  )}
+                  {sectionContent}
+                </div>
+              );
+            }
+
+            return (
+              <div key={sIdx} className="mt-3">
+                <Collapsible
+                  className="group"
+                  open={isActiveInSection || sectionOpen}
+                  onOpenChange={setActive}
+                >
+                  <CollapsibleTrigger
+                    className="flex w-full items-center justify-between gap-2 px-3 py-1 text-left cn-touch-target hover:opacity-90"
+                    style={{ color: cn.textSecondary }}
+                  >
+                    <span className="text-[10px] uppercase tracking-wider" style={{ opacity: 0.6 }}>
+                      {t(`sidebar.section.${section.sectionKey}`)}
+                    </span>
+                    <ChevronDown className="w-3.5 h-3.5 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" aria-hidden />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-none">
+                    {sectionContent}
+                  </CollapsibleContent>
+                </Collapsible>
+              </div>
+            );
+          })}
         </nav>
 
         {/* ─── Browse (no repeat: home/notifications/messages live in header + logo) ─── */}
@@ -537,17 +577,11 @@ export function AuthenticatedLayout() {
               <ChevronDown className="w-4 h-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" aria-hidden />
             </CollapsibleTrigger>
             <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-none">
-              <div className="space-y-0.5 px-1 pb-2 max-h-[40vh] overflow-y-auto overscroll-contain">
+              <div className="space-y-0.5 px-1 pb-2">
                 {[
                   { i18nKey: "sidebar.helpCenter", path: "/support/help", icon: Shield },
-                  { i18nKey: "sidebar.submitTicket", path: "/support/ticket", icon: ClipboardList },
-                  { i18nKey: "sidebar.refundRequest", path: "/support/refund", icon: CreditCard },
-                  { i18nKey: "sidebar.contactUs", path: "/support/contact", icon: MessageSquare },
-                  { i18nKey: "sidebar.blog", path: "/community/blog", icon: FileText },
-                  { i18nKey: "sidebar.careers", path: "/community/careers", icon: Briefcase },
-                  { i18nKey: "sidebar.about", path: "/about", icon: Heart },
-                  { i18nKey: "sidebar.features", path: "/features", icon: Star },
-                  { i18nKey: "sidebar.pricing", path: "/pricing", icon: DollarSign },
+                  { i18nKey: "sidebar.submitTicket", path: "/support/ticket", icon: Ticket },
+                  { i18nKey: "sidebar.refundRequest", path: "/support/refund", icon: RefreshCw },
                   { i18nKey: "sidebar.privacyPolicy", path: "/privacy", icon: Shield },
                   { i18nKey: "sidebar.termsOfService", path: "/terms", icon: FileText },
                 ].map((link) => {
@@ -570,48 +604,35 @@ export function AuthenticatedLayout() {
           </Collapsible>
         </div>
 
-        {/* ─── App controls (collapsible: compact vs header; logout stays one tap) ─── */}
-        <div className="shrink-0 border-t flex flex-col min-h-0" style={{ borderColor: cn.borderLight }}>
-          <Collapsible className="group" open={sidebarAppOpen} onOpenChange={setSidebarAppOpen}>
-            <CollapsibleTrigger
-              className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left rounded-lg cn-touch-target hover:opacity-90"
+        {/* ─── App controls (always visible) ─── */}
+        <div className="shrink-0 border-t flex flex-col" style={{ borderColor: cn.borderLight }}>
+          <div className="space-y-2 px-3 py-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <RealtimeStatusIndicator variant="badge" />
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <LanguageSwitcher variant="compact" className="flex-1 min-w-0" />
+              <button
+                type="button"
+                onClick={toggleTheme}
+                className="p-2 rounded-lg hover:opacity-80 transition-all shrink-0"
+                style={{ color: cn.textSecondary }}
+                aria-label={resolvedTheme === "dark" ? t("a11y.switchToLight", "Switch to light mode") : t("a11y.switchToDark", "Switch to dark mode")}
+                title={resolvedTheme === "dark" ? "Switch to light" : "Switch to dark"}
+              >
+                {resolvedTheme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              </button>
+            </div>
+            <Link
+              to="/settings"
+              onClick={() => setSidebarOpen(false)}
+              className="flex items-center gap-3 px-2 py-2 rounded-lg hover:opacity-80 transition-all text-sm no-underline"
               style={{ color: cn.textSecondary }}
             >
-              <span className="text-[10px] uppercase tracking-wider px-1" style={{ opacity: 0.85 }}>
-                {t("sidebar.section.appControls")}
-              </span>
-              <ChevronDown className="w-4 h-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" aria-hidden />
-            </CollapsibleTrigger>
-            <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-none">
-              <div className="space-y-2 px-3 pb-2">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <RealtimeStatusIndicator variant="badge" />
-                </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <LanguageSwitcher variant="compact" className="flex-1 min-w-0" />
-                  <button
-                    type="button"
-                    onClick={toggleTheme}
-                    className="p-2 rounded-lg hover:opacity-80 transition-all shrink-0"
-                    style={{ color: cn.textSecondary }}
-                    aria-label={resolvedTheme === "dark" ? t("a11y.switchToLight", "Switch to light mode") : t("a11y.switchToDark", "Switch to dark mode")}
-                    title={resolvedTheme === "dark" ? "Switch to light" : "Switch to dark"}
-                  >
-                    {resolvedTheme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                  </button>
-                </div>
-                <Link
-                  to="/settings"
-                  onClick={() => setSidebarOpen(false)}
-                  className="flex items-center gap-3 px-2 py-2 rounded-lg hover:opacity-80 transition-all text-sm no-underline"
-                  style={{ color: cn.textSecondary }}
-                >
-                  <Settings className="w-4 h-4 shrink-0" />
-                  <span>{t("nav.settings")}</span>
-                </Link>
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
+              <Settings className="w-4 h-4 shrink-0" />
+              <span>{t("nav.settings")}</span>
+            </Link>
+          </div>
           <div className="hidden px-3 py-2 md:block" style={{ borderTop: `1px solid ${cn.borderLight}` }}>
             <button
               type="button"

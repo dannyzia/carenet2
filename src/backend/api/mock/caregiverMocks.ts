@@ -55,14 +55,14 @@ export const MOCK_CARE_NOTES: CareNote[] = [
 
 /** Shift plans for the logged-in caregiver */
 export const MOCK_SHIFT_PLANS: ShiftPlan[] = [
-  { id: "sp-1", patientName: "Mr. Abdul Rahman", date: "2026-03-16", shiftTime: "8:00 PM - 8:00 AM", status: "active", tasks: [
+  { id: "sp-1", patientName: "Mr. Abdul Rahman", date: "2026-03-16", shiftTime: "8:00 PM - 8:00 AM", status: "active", dbStatus: "checked-in", tasks: [
     { label: "Evening medication (Amlodipine 5mg)", done: true },
     { label: "Blood pressure check", done: true },
     { label: "Dinner supervision", done: false },
     { label: "Night comfort round (11 PM)", done: false },
     { label: "Morning medication (Metformin 500mg)", done: false },
   ]},
-  { id: "sp-2", patientName: "Baby Arif", date: "2026-03-17", shiftTime: "8:00 AM - 8:00 PM", status: "upcoming", tasks: [
+  { id: "sp-2", patientName: "Baby Arif", date: "2026-03-17", shiftTime: "8:00 AM - 8:00 PM", status: "upcoming", dbStatus: "scheduled", tasks: [
     { label: "Morning stretching routine", done: false },
     { label: "Speech therapy exercises", done: false },
     { label: "Lunch & medication", done: false },

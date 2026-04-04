@@ -1,5 +1,7 @@
 # CareNet Detailed Coding Plan
 
+> **Status (April 2026):** Historical baseline. The live app has long since adopted `ProtectedRoute`, `src/frontend/*` shells, Capacitor, Supabase + mock services, and broad route coverage. Use this file only for **targeted** parity checks (e.g. a11y pass, extra E2E), not as a sequential implementation gate. Prefer `deployment.md`, `seed/README.md`, and `src/imports/Building Plan/D009` / `D022` for current roadmap language.
+
 ## Project Folder Structure
 
 ### Constraint

@@ -1,6 +1,7 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
+import { useParams, Link } from "react-router";
 import { cn } from "@/frontend/theme/tokens";
-import { Camera, MapPin, Clock, CheckCircle, AlertTriangle, Navigation, Upload } from "lucide-react";
+import { Camera, MapPin, Clock, CheckCircle, AlertTriangle, Navigation } from "lucide-react";
 import { useAsyncData, useDocumentTitle } from "@/frontend/hooks";
 import { caregiverService } from "@/backend/services";
 import { PageSkeleton } from "@/frontend/components/shared/PageSkeleton";
@@ -8,15 +9,48 @@ import { MOCK_SHIFT_CHECKIN_DATA } from "@/backend/api/mock";
 import { useTranslation } from "react-i18next";
 
 export default function ShiftCheckInPage() {
-  const { t: tDocTitle } = useTranslation("common");
+  const { t, t: tDocTitle } = useTranslation("common");
   useDocumentTitle(tDocTitle("pageTitles.shiftCheckIn", "Shift Check In"));
 
+  const { id } = useParams<{ id: string }>();
   const { data: shifts, loading } = useAsyncData(() => caregiverService.getShiftPlans());
+
+  const shiftId = useMemo(() => {
+    if (!shifts?.length) return "";
+    if (id) return id;
+    const open = shifts.find((s) => s.dbStatus === "scheduled" || s.status === "upcoming");
+    return open?.id ?? shifts[0]!.id;
+  }, [id, shifts]);
+
   if (loading || !shifts) return <PageSkeleton cards={3} />;
-  return <ShiftCheckInContent />;
+  if (!shiftId) {
+    return (
+      <div className="max-w-lg mx-auto p-6 text-center text-sm" style={{ color: cn.textSecondary }}>
+        {t("shiftCheckIn.noShifts")}
+      </div>
+    );
+  }
+
+  const plan = shifts.find((s) => s.id === shiftId);
+  if (plan && (plan.dbStatus === "checked-in" || plan.dbStatus === "in-progress")) {
+    return (
+      <div className="max-w-lg mx-auto space-y-3">
+        <h1 className="text-xl" style={{ color: cn.textHeading }}>{t("shiftCheckIn.alreadyCheckedInTitle")}</h1>
+        <p className="text-sm" style={{ color: cn.textSecondary }}>{t("shiftCheckIn.alreadyCheckedInBody")}</p>
+        <Link
+          to={`/caregiver/shift-checkout/${shiftId}`}
+          className="inline-block text-sm font-medium text-[#DB869A] underline"
+        >
+          {t("shiftCheckIn.goCheckOut")}
+        </Link>
+      </div>
+    );
+  }
+
+  return <ShiftCheckInContent shiftId={shiftId} />;
 }
 
-function ShiftCheckInContent() {
+function ShiftCheckInContent({ shiftId }: { shiftId: string }) {
   const [step, setStep] = useState<"ready" | "selfie" | "gps" | "done">("ready");
   const [selfieUrl, setSelfieUrl] = useState<string | null>(null);
   const [gps, setGps] = useState<{ lat: number; lng: number } | null>(null);
@@ -59,7 +93,7 @@ function ShiftCheckInContent() {
     if (!selfieUrl || !gps) return;
     setSubmitting(true);
     try {
-      await caregiverService.startShift("sh-current", selfieUrl, gps);
+      await caregiverService.startShift(shiftId, selfieUrl, gps);
       setStep("done");
     } finally {
       setSubmitting(false);

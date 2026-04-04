@@ -70,6 +70,8 @@ export function BottomNav({ unreadMessages = 0, unreadNotifications = 0, ...rest
         borderColor: cn.borderLight,
         boxShadow: "0 -2px 10px rgba(0,0,0,0.06)",
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
+        /* Ensure bar background fills the gesture inset (no dead band above system nav) */
+        minHeight: "calc(3.5rem + env(safe-area-inset-bottom, 0px))",
       }}
     >
       <div className="flex items-stretch justify-around">

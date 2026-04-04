@@ -1,6 +1,7 @@
 -- CareNet 2 — post-migration sanity checks (run in Supabase SQL Editor)
 -- Use this AFTER you have run the 10 SQL files listed in D024 Item 5.
--- We cannot connect to your project from the repo; these queries let YOU verify.
+-- Primary production project (carenet) was verified April 2026 (D024 Session 8); re-run when you
+-- provision a new Supabase project or after major schema changes.
 --
 -- SUPABASE UI — avoid this error:
 --   "EXPLAIN only works on a single SQL statement..."

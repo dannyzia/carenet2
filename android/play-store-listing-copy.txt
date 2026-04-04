@@ -1,0 +1,46 @@
+================================================================================
+SHORT DESCRIPTION (max 80 characters) — current length: 74
+================================================================================
+
+Find trusted caregivers for home care. Book shifts, chat & pay in CareNet.
+
+================================================================================
+FULL DESCRIPTION (max 4,000 characters)
+================================================================================
+
+CareNet helps families and guardians find, book, and coordinate professional care in one place. Whether you need home support, visits, or ongoing care for a loved one, CareNet connects you with caregivers and agencies so you can move from search to confirmed care without juggling spreadsheets and endless messages.
+
+WHAT YOU CAN DO
+
+• Search and compare caregivers and care providers
+• Book visits and manage schedules with clearer visibility for everyone involved
+• Keep care communication in one thread—fewer missed updates across SMS and calls
+• Handle billing-related flows in-app where enabled (availability may vary by region and provider)
+• Stay informed with notifications for important updates (when you allow them)
+
+FOR CAREGIVERS & STAFF
+
+• See shifts and assignments in a structured workflow
+• Document care notes and handoffs so the next person has context
+• Reduce admin friction with tools designed for real-world care delivery
+
+FOR AGENCIES
+
+• Coordinate jobs, placements, and team workflows from a single hub
+• Support transparency for families while keeping operations organized
+
+BUILT FOR REAL LIFE
+
+Care is personal. CareNet is designed around clarity, accountability, and respectful communication—so families spend less time coordinating and more time supporting the people they love.
+
+NOTES
+
+• CareNet requires an internet connection for most features.
+• Features and availability can vary by account type, verification status, and region.
+• CareNet does not replace emergency services. In a medical emergency, call your local emergency number.
+
+We’re continuously improving CareNet. If something isn’t working as expected, use in-app support where available or contact us through the details on our website.
+
+================================================================================
+(End of full description — paste into Play Console “Full description” field.)
+================================================================================

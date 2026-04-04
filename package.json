@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
+    "build:cap": "node scripts/capacitor-web-build.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
@@ -24,10 +25,13 @@
     "i18n:refresh": "npm run i18n:extract && npm run i18n:sync",
     "dev": "vite",
     "ai:sync": "node scripts/sync-ai-context.mjs",
-    "cap:sync": "npm run build && npx cap sync android",
+    "cap:sync": "npm run build:cap && npx cap sync android",
     "cap:copy": "npx cap copy android",
     "cap:open": "npx cap open android",
-    "cap:run:android": "npm run build && npx cap run android"
+    "cap:run:android": "npm run build:cap && npx cap run android",
+    "android:release": "node scripts/android-release.mjs",
+    "android:release:apk": "node scripts/android-release.mjs apk",
+    "android:release:debug-sign": "node scripts/android-release.mjs -- -PcarenetAllowDebugSigning=true"
   },
   "dependencies": {
     "@capacitor/android": "^8.3.0",
@@ -112,9 +116,11 @@
     "vitest": "^4.1.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.1",
     "@capacitor/cli": "^8.3.0",
     "@tailwindcss/vite": "4.1.12",
     "@vitejs/plugin-react": "4.7.0",
+    "fake-indexeddb": "^6.2.5",
     "i18next-parser": "^9.4.0",
     "supabase": "^2.83.0",
     "tailwindcss": "4.1.12",

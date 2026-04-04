@@ -1,13 +1,14 @@
 import { useEffect } from "react";
 import { RouterProvider } from "react-router";
+import { Capacitor } from "@capacitor/core";
 import { router } from "./routes";
 import { ThemeProvider } from "@/frontend/components/shared/ThemeProvider";
 import { AuthProvider } from "@/backend/store/auth/AuthContext";
 import { registerBackButton, unregisterBackButton } from "@/frontend/native/backButton";
 import { registerAppUrlOpenListener } from "@/frontend/native/deepLinks";
 import { onNotificationTapped } from "@/frontend/native/notifications";
-import { router } from "./routes";
 import { Toaster } from "sonner";
+import { sessionLog } from "@/debug/sessionLog";
 import { startDemoSimulation, stopDemoSimulation } from "@/backend/services/realtime";
 
 // Initialize i18n — must be imported before any component that uses useTranslation
@@ -21,6 +22,33 @@ import "@/frontend/i18n";
  * `src/frontend/i18n/tolgee.ts`.
  */
 export default function App() {
+  // #region agent log
+  useEffect(() => {
+    void (async () => {
+      let swRegs = 0;
+      let swUrls: string[] = [];
+      try {
+        const regs = await navigator.serviceWorker?.getRegistrations();
+        swRegs = regs?.length ?? 0;
+        swUrls = (regs ?? []).map((r) => r.scope);
+      } catch {
+        /* ignore */
+      }
+      sessionLog(
+        "App.tsx:mount",
+        "App mounted",
+        {
+          platform: Capacitor.getPlatform(),
+          isNative: Capacitor.isNativePlatform(),
+          swRegistrations: swRegs,
+          swScopes: swUrls,
+        },
+        "H1",
+      );
+    })();
+  }, []);
+  // #endregion
+
   useEffect(() => {
     registerBackButton();
     return unregisterBackButton;

@@ -23,3 +23,4 @@ export { billingService } from "./billing.service";
 export { uploadService } from "./upload.service";
 export { scheduleService } from "./schedule.service";
 export { backupService } from "./backup.service";
+export { section15Service } from "./section15.service";

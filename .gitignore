@@ -47,12 +47,18 @@ supabase/config.toml.local
 # Commit android/ / ios/ for team builds; ignore machine-local and Gradle outputs.
 android/.gradle/
 android/**/build/
+# Fallback :app Gradle output when not using LOCALAPPDATA (see android/app/build.gradle)
+.carenet-android-build/
 android/local.properties
 android/.idea/
 android/*.iml
 android/app/release/
 # Firebase config is optional until FCM is wired (use .example in repo)
 android/app/google-services.json
+# Play signing (never commit)
+android/keystore.properties
+android/*.jks
+android/*.keystore
 ios/App/Pods/
 ios/**/build/
 ios/App/App/public/

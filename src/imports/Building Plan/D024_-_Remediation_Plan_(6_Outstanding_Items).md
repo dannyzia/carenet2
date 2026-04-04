@@ -2,6 +2,9 @@
 > Authored after full line-by-line audit of the codebase (March 2026)
 > All findings are confirmed from actual file reads, not assumptions.
 > Execution log appended at the bottom as work is completed.
+>
+> **Status (April 3, 2026):** All **six** items are **complete** (including Item 5 — Supabase, host
+> env, and production smoke test). Sections below keep historical audit wording where useful.
 
 ---
 
@@ -29,7 +32,7 @@ The `src/imports/` folder is safe to leave exactly where it is.
 | 2 | FeaturesPage is a stub | UX / public-facing | 🟠 Medium | Medium | ✅ DONE (full page; see log) |
 | 3 | PricingPage is a stub | UX / public-facing | 🟠 Medium | Medium | ✅ DONE (full page; see log) |
 | 4 | `/agency/incidents` page missing | Functional gap | 🟠 Medium | Medium | ✅ DONE |
-| 5 | Supabase not connected | Deployment blocker | 🔴 High | Ops task | 🔄 `.env` configured; database + deploy env still pending (see Item 5) |
+| 5 | Supabase + production deploy | Deployment / ops | 🔴 High | Ops task | ✅ DONE (April 2026 — DB seeded, MCP verified project **carenet**; host `VITE_*` + live smoke test done) |
 | 6 | `useDocumentTitle` hook missing | Accessibility gap | 🟡 Low | Small | ✅ DONE (Waves 1–3 wired; see log) |
 
 **Execution order: 1 → 5 → 6 → 4 → 2 → 3**
@@ -87,11 +90,10 @@ not wire it as a parent of the authenticated branch. Clerical omission, not an a
 
 ---
 
-## Item 2 — FeaturesPage Is a Stub
+## Item 2 — FeaturesPage (completed; was a stub)
 
-### Finding
-`src/frontend/pages/public/FeaturesPage.tsx` — 26 lines, 🐣 placeholder. Reachable from
-`PublicNavBar` and the authenticated sidebar. D013 flags as "placeholder content depth."
+### Historical finding (pre–Session 3)
+`FeaturesPage.tsx` was previously a short placeholder. It is now a full marketing page (hero, role tabs, platform strip, CTAs). Optional polish: move remaining English strings into i18n (`features` namespace).
 
 ### What the page should contain
 
@@ -128,7 +130,11 @@ FeaturesPage
 - Radix `Tabs` from `src/frontend/components/ui/tabs.tsx`
 - Study `HomePage.tsx` card structure before writing
 
-### Status: 🔄 Remaining
+### Status: ✅ DONE (verified March 19, 2026; Session 3)
+
+Full implementation in `src/frontend/pages/public/FeaturesPage.tsx` (hero, role tabs, platform strip,
+CTAs, `useDocumentTitle`). **Note:** Most body copy is still hardcoded English; optional i18n extraction
+remains a polish item (see Session 3 follow-ups).
 
 ---
 
@@ -376,23 +382,32 @@ import { useTranslation } from "react-i18next";
 
 ---
 
-## Item 5 — Supabase Not Connected
+## Item 5 — Supabase + production deploy ✅ DONE
 
 ### Finding
 `src/backend/services/supabase.ts` auto-detects from env vars. If `.env` is missing, `USE_SUPABASE`
 resolves to `false` → services use mock data. No code changes required.
 
-### Fix — Your action required 🔄 (partially completed)
+### Status — complete (April 3, 2026)
 
-#### Status update (March 19, 2026)
+✅ **CareNet Supabase project** (`carenet`, ref `dbruvyffevxxviyxltwf`): migrations/seeds applied; domain
++ notification tables present with seed data; `pg_cron` installed; expected tables sanity check passes
+(Supabase MCP + `scripts/verify-supabase-after-seed.sql` pattern).
 
-✅ Local `.env` is now configured for **two Supabase projects**:
-- **CareNet 2 (main app)**: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
-- **Medicine data**: `VITE_MEDICINE_API_URL`, `VITE_MEDICINE_API_KEY`
+✅ **Local `.env`** — **CareNet 2 (main app)**: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`; **Medicine
+data**: `VITE_MEDICINE_API_URL`, `VITE_MEDICINE_API_KEY` (optional; mock fallback if empty).
 
-🔄 Remaining to fully complete Item 5:
-- Run the SQL/migrations below on the **CareNet 2** Supabase project.
-- Set the same env vars in your deployment provider (e.g. Vercel) and redeploy.
+✅ **Hosting (e.g. Vercel)** — production `VITE_*` env vars set and app redeployed.
+
+✅ **Live smoke test** — production URL loads; sign-in against real backend confirmed.
+
+### Reference — how this was applied (for future environments)
+
+#### Historical status (March 19, 2026)
+
+✅ Local `.env` was configured for **two Supabase projects** (see above).
+
+#### If you clone a new environment, run:
 
 **Step 1** — Supabase dashboard → Settings → API → copy Project URL + anon key.
 
@@ -540,7 +555,7 @@ auto `cMSManager` / `mFA*` — corrected in pages + JSON).
 ```
 Item 1 — ProtectedRoute wiring          ✅ DONE
     ↓
-Item 5 — Supabase connection             🔄 Your action (ops task — not code)
+Item 5 — Supabase + production deploy    ✅ DONE (April 2026)
     ↓
 Item 6 — useDocumentTitle
   └─ Hook created + exported             ✅ DONE
@@ -682,8 +697,8 @@ automatically on next `pnpm dev` — no manual translation file edits required.
 #### Can we continue per plan?
 
 **Yes.** Next concrete coding work from D024: **wire `useDocumentTitle` on the 12 Wave 2 pages**
-(imports already documented in plan), then **Wave 3** module-by-module. Item 5 remains **operator /
-env** (no code). No blockers found for that sequence.
+(imports already documented in plan), then **Wave 3** module-by-module. Item 5 was **operator / env**
+(no code) until completed in Session 8 (April 2026). No blockers found for that sequence.
 
 ---
 
@@ -758,7 +773,7 @@ Next in plan: Item 6 Wave 2 — wire `useDocumentTitle` on the 12 core workflow 
 #### What you should do (operator)
 
 1. **i18n sync** — Already completed in Session 6; re-run `npm run i18n:sync` if you add more keys.
-2. **Item 5 (Supabase)** — Still your action: SQL seeds/migrations + Vercel env vars (see Item 5).
+2. **Item 5 (Supabase + deploy)** — ✅ Completed Session 8 (April 2026); see Item 5 section.
 3. **Optional** — Re-run the Wave 3 script is a no-op for already-wired pages; safe to keep script
    for new `*Page.tsx` files added later (watch acronym component names).
 
@@ -775,25 +790,23 @@ Next in plan: Item 6 Wave 2 — wire `useDocumentTitle` on the 12 core workflow 
    - Ensured test cleanup runs between hook instances to avoid multiple global keydown listeners affecting LIFO assertions.
 4. **Production build** — `npm run build` succeeds.
 
-#### Remaining (Item 5)
+#### Remaining (Item 5) — superseded by Session 8
 
-- Run the listed SQL files against the **CareNet 2** Supabase project.
-- Configure the same env vars in Vercel and redeploy.
+- ~~Run SQL / Vercel~~ — Completed April 2026 (see Session 8).
 
 ---
 
 ### Session 7 — March 19, 2026 (user ops status + Supabase self‑verify + i18n follow‑ups)
 
-#### User‑reported status
+#### User‑reported status (historical)
 
-1. **Vercel** — Not configured yet → still required for production `VITE_*` env vars + redeploy.
-2. **GitHub** — Remote not updated → push when ready (no agent access to your account).
-3. **Supabase SQL** — User reports migrations/seeds were run in the SQL Editor. **Agent cannot connect**
-   to your Supabase project from this environment; verification is **operator‑side**.
+1. **Vercel** — At the time: not configured; **resolved** in Session 8 (April 2026).
+2. **GitHub** — Remote push when ready (no agent access to your account).
+3. **Supabase SQL** — User reported migrations/seeds run in SQL Editor; later confirmed via MCP (Session 8).
 
-#### Supabase verification (you run)
+#### Supabase verification (repeatable)
 
-- New helper: **`scripts/verify-supabase-after-seed.sql`** — paste into Supabase → SQL → Run.
+- **`scripts/verify-supabase-after-seed.sql`** — paste into Supabase → SQL → Run.
   - Confirms expected tables exist, lists `public` tables, optional row counts / RLS spot‑check.
 - App‑side: with `.env` set, open the app → log in with a **seed demo user** (from `seed/00_seed_auth_users.sql`)
   → confirm data loads (not only mocks). Check browser devtools for Supabase errors.
@@ -803,6 +816,25 @@ Next in plan: Item 6 Wave 2 — wire `useDocumentTitle` on the 12 core workflow 
 - Locale JSON can be **100% filled** for `bn` while the UI still looks “broken” because many components
   use **hardcoded English** in JSX instead of `t()`. `npm run translate` only updates JSON files;
   it does not wrap components. See assistant reply / future i18n extraction workflow.
+
+---
+
+### Session 8 — April 3, 2026 (Item 5 closed — Supabase MCP + production deploy)
+
+#### Verification
+
+1. **Supabase MCP** — Listed projects; primary app project **`carenet`** (`dbruvyffevxxviyxltwf`) is
+   **ACTIVE_HEALTHY** with full `public` schema (50+ tables, RLS on), notification tables, seed row
+   counts, and **`pg_cron`** installed. SQL check: expected core + notification table names — **none
+   missing**.
+2. **User confirmation** — Production hosting env vars (`VITE_SUPABASE_*`, etc.) and **live app smoke
+   test** (login against real backend) reported **done**.
+
+#### Plan sync
+
+- Executive summary **Item 5** → ✅ DONE.
+- **All six D024 remediation items are now complete** (ops + code). Remaining product work lives in
+  D009 / D022 / CODING_PLAN follow‑through, not in D024.
 
 ## What Does NOT Need to Change
 

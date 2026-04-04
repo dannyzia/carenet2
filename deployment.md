@@ -42,8 +42,25 @@ Run the SQL migration files **in order** via the Supabase SQL Editor:
 8. `supabase/migrations/20260317b_queued_notifications.sql`
 9. `supabase/migrations/20260317c_pgcron_process_queue.sql`
 10. `supabase/migrations/20260317d_cleanup_queued_notifications.sql`
+11. `supabase/migrations/20260323045420_fix_function_search_path_update_updated_at.sql`
+12. `supabase/migrations/20260323045421_fix_function_search_path_update_updated_at_column.sql`
+13. `supabase/migrations/20260323045422_fix_function_search_path_generate_contract_number.sql`
+14. `supabase/migrations/20260323050953_add_missing_fk_indexes.sql`
+15. `supabase/migrations/20260323051429_fix_rls_auth_initplan_wrap_auth_uid.sql`
+16. `supabase/migrations/20260323053350_add_remaining_3_fk_indexes.sql`
+17. `supabase/migrations/20260323053757_consolidate_duplicate_permissive_policies.sql`
+18. `supabase/migrations/20260323053916_drop_shop_products_duplicate_select_policy.sql`
+19. `supabase/migrations/20260403120000_section15_v2_tables.sql` — Section 15 / v2.0 care tables (run when using those app routes)
 
-After running migrations, flip `USE_SUPABASE` to `true` in `src/backend/services/supabase.ts`.
+After SQL runs, set `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, and optional `VITE_MEDICINE_*` in `.env` (local) and in your host (e.g. Vercel). The app **auto-enables** Supabase when the main vars are present — do **not** manually flip flags in `supabase.ts`.
+
+**pg_cron:** Step 9 may require the `pg_cron` extension (Dashboard → Database → Extensions).
+
+**Edge functions:** Deploy `supabase/functions/*` if you use device registration or queued push processing.
+
+**Verify:** Run `scripts/verify-supabase-after-seed.sql` in the SQL Editor.
+
+**Production smoke:** Redeploy after env changes; sign in with a seeded user (`seed/README.md`); open a role dashboard and confirm no repeated PostgREST / RLS failures in the network tab.
 
 ---
 

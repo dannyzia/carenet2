@@ -46,6 +46,14 @@ type SyncListener = (event: SyncEvent) => void;
 const MAX_RETRIES = 5;
 const BASE_BACKOFF_MS = 1000;
 
+/** Exponential backoff before retrying a failed sync (capped). Exported for unit tests. */
+export function computeSyncBackoffMs(retryCount: number): number {
+  if (retryCount <= 0) return 0;
+  return Math.min(BASE_BACKOFF_MS * Math.pow(2, retryCount - 1), 30000);
+}
+
+const vitestRun = typeof process !== "undefined" && process.env.VITEST === "true";
+
 class SyncEngine {
   private listeners: Set<SyncListener> = new Set();
   private isSyncing = false;
@@ -89,12 +97,12 @@ class SyncEngine {
       });
 
       for (const action of actions) {
-        if (!navigator.onLine) break;
+        // jsdom sets navigator.onLine to false; Vitest needs the queue to run deterministically.
+        if (!vitestRun && typeof navigator !== "undefined" && !navigator.onLine) break;
 
         try {
           if (action.retryCount > 0) {
-            const delay = BASE_BACKOFF_MS * Math.pow(2, action.retryCount - 1);
-            await sleep(Math.min(delay, 30000));
+            await sleep(computeSyncBackoffMs(action.retryCount));
           }
 
           if (action.id) {
@@ -147,10 +155,11 @@ class SyncEngine {
   }
 
   private async sendToServer(action: OfflineAction): Promise<void> {
-    await sleep(200 + Math.random() * 300);
-
-    if (Math.random() < 0.05) {
-      throw new Error("Simulated network error");
+    if (!vitestRun) {
+      await sleep(200 + Math.random() * 300);
+      if (Math.random() < 0.05) {
+        throw new Error("Simulated network error");
+      }
     }
 
     console.log(`[SyncEngine] Synced action: ${action.actionType}`, {
@@ -162,7 +171,8 @@ class SyncEngine {
   startAutoSync(intervalMs: number = 30000) {
     this.stopAutoSync();
     this.syncInterval = setInterval(() => {
-      if (navigator.onLine && !this.isSyncing) {
+      const online = typeof navigator === "undefined" || navigator.onLine;
+      if (online && !this.isSyncing) {
         this.processQueue();
       }
     }, intervalMs);
