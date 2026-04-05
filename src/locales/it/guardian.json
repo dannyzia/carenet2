@@ -242,5 +242,8 @@
     "submitSuccess": "Requisito di cura inviato!",
     "submitting": "Invio in corso...",
     "verifiedAgencies": "Agenzie verificate"
+  },
+  "patientIntake": {
+    "emergencyContactHint": "Use the person to reach first for this patient; they can be different from your own details."
   }
 }

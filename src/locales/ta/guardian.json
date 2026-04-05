@@ -242,5 +242,8 @@
     "submitSuccess": "கேர் தேவை சமர்ப்பிக்கப்பட்டுள்ளது!",
     "submitting": "சமர்ப்பிக்கப்படுகிறது...",
     "verifiedAgencies": "சரிபார்க்கப்பட்ட ஏஜென்ஸிகள்"
+  },
+  "patientIntake": {
+    "emergencyContactHint": "Use the person to reach first for this patient; they can be different from your own details."
   }
 }

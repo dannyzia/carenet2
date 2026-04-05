@@ -242,5 +242,8 @@
     "submitSuccess": "护理需求已提交！",
     "submitting": "提交中...",
     "verifiedAgencies": "已验证机构"
+  },
+  "patientIntake": {
+    "emergencyContactHint": "Use the person to reach first for this patient; they can be different from your own details."
   }
 }

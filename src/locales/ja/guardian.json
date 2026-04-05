@@ -242,5 +242,8 @@
     "submitSuccess": "介護要件を提出しました！",
     "submitting": "提出中...",
     "verifiedAgencies": "確認済み代理店"
+  },
+  "patientIntake": {
+    "emergencyContactHint": "Use the person to reach first for this patient; they can be different from your own details."
   }
 }

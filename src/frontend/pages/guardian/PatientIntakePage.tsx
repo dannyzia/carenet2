@@ -1,8 +1,8 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { UserPlus, Heart, Calendar, FileText, ShieldAlert, ChevronRight, Stethoscope, Activity, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { Button } from "@/frontend/components/ui/button";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { PageHero } from "@/frontend/components/PageHero";
 import { cn } from "@/frontend/theme/tokens";
 import { useDocumentTitle } from "@/frontend/hooks";
@@ -20,6 +20,10 @@ export default function PatientIntakePage() {
   useDocumentTitle(tDocTitle("pageTitles.patientIntake", "Patient Intake"));
 
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const editId = searchParams.get("edit");
+  const isEditing = !!editId;
+
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -31,6 +35,30 @@ export default function PatientIntakePage() {
     emergencyName: "",
     emergencyPhone: "",
   });
+
+  useEffect(() => {
+    if (!editId || !USE_SUPABASE) return;
+    (async () => {
+      try {
+        const { data, error } = await sb().from("patients").select("*").eq("id", editId).single();
+        if (error) throw error;
+        if (data) {
+          setFormData({
+            name: data.name || "",
+            relationship: data.relation || "",
+            age: data.age?.toString() || "",
+            gender: data.gender || "",
+            conditions: data.conditions || [],
+            conditionNotes: data.condition_notes || "",
+            emergencyName: data.emergency_contact_name || "",
+            emergencyPhone: data.phone || "",
+          });
+        }
+      } catch (err) {
+        console.error("Failed to load patient:", err);
+      }
+    })();
+  }, [editId]);
 
   const toggleCondition = (condition: string) => {
     setFormData(prev => {
@@ -62,22 +90,36 @@ export default function PatientIntakePage() {
     setLoading(true);
     try {
       if (USE_SUPABASE) {
-        const userId = await currentUserId();
-        const { data, error } = await sb().from("patients").insert({
-          guardian_id: userId,
-          name: formData.name,
-          age: parseInt(formData.age) || 0,
-          gender: formData.gender || null,
-          relation: formData.relationship,
-          conditions: formData.conditions,
-          condition_notes: formData.conditionNotes.trim() || null,
-          emergency_contact_name: formData.emergencyName.trim() || null,
-          phone: formData.emergencyPhone.trim() || null,
-          location: "",
-          status: "active",
-        }).select().single();
+        if (isEditing) {
+          const { error } = await sb().from("patients").update({
+            name: formData.name,
+            age: parseInt(formData.age) || 0,
+            gender: formData.gender || null,
+            relation: formData.relationship,
+            conditions: formData.conditions,
+            condition_notes: formData.conditionNotes.trim() || null,
+            emergency_contact_name: formData.emergencyName.trim() || null,
+            phone: formData.emergencyPhone.trim() || null,
+          }).eq("id", editId);
+          if (error) throw error;
+        } else {
+          const userId = await currentUserId();
+          const { data, error } = await sb().from("patients").insert({
+            guardian_id: userId,
+            name: formData.name,
+            age: parseInt(formData.age) || 0,
+            gender: formData.gender || null,
+            relation: formData.relationship,
+            conditions: formData.conditions,
+            condition_notes: formData.conditionNotes.trim() || null,
+            emergency_contact_name: formData.emergencyName.trim() || null,
+            phone: formData.emergencyPhone.trim() || null,
+            location: "",
+            status: "active",
+          }).select().single();
 
-        if (error) throw error;
+          if (error) throw error;
+        }
       } else {
         // Mock mode - get existing patients and add new one
         const existing = localStorage.getItem("mock_patients");
@@ -109,7 +151,7 @@ export default function PatientIntakePage() {
 
   return (
     <div>
-      <PageHero gradient="radial-gradient(143.86% 887.35% at -10.97% -22.81%, #7CE577 0%, #5FB865 100%)" className="pt-12 pb-24 px-6 relative overflow-hidden"><div className="max-w-3xl mx-auto relative z-10 text-white"><h1 className="text-3xl font-bold mb-3">Add New Patient</h1><p className="text-white/80">Complete the health profile to get the best care matches for your loved one.</p></div><div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl animate-pulse" /></PageHero>
+      <PageHero gradient="radial-gradient(143.86% 887.35% at -10.97% -22.81%, #7CE577 0%, #5FB865 100%)" className="pt-12 pb-24 px-6 relative overflow-hidden"><div className="max-w-3xl mx-auto relative z-10 text-white"><h1 className="text-3xl font-bold mb-3">{isEditing ? "Edit Patient" : "Add New Patient"}</h1><p className="text-white/80">{isEditing ? "Update the health profile for your loved one." : "Complete the health profile to get the best care matches for your loved one."}</p></div><div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl animate-pulse" /></PageHero>
       {/* Match PageHero horizontal breakout so the card aligns with the hero (avoids double main padding + px-6 on mobile). */}
       <div className="-mx-4 md:-mx-6 px-6 -mt-12 relative z-20">
         <div className="max-w-3xl mx-auto">
@@ -265,9 +307,9 @@ export default function PatientIntakePage() {
                 className="w-full h-16 rounded-2xl font-bold text-lg shadow-xl" 
                 style={{ background: "radial-gradient(143.86% 887.35% at -10.97% -22.81%, #7CE577 0%, #5FB865 100%)" }}
               >
-                {loading ? "Creating..." : (
+                {loading ? (isEditing ? "Saving..." : "Creating...") : (
                   <>
-                    Create Profile
+                    {isEditing ? "Save Changes" : "Create Profile"}
                     <ChevronRight className="ml-2 w-6 h-6" />
                   </>
                 )}

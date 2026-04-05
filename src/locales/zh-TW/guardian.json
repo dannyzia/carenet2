@@ -242,5 +242,8 @@
     "submitSuccess": "照護需求已提交！",
     "submitting": "提交中...",
     "verifiedAgencies": "經驗證的機構"
+  },
+  "patientIntake": {
+    "emergencyContactHint": "Use the person to reach first for this patient; they can be different from your own details."
   }
 }

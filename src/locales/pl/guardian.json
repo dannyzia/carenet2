@@ -242,5 +242,8 @@
     "submitSuccess": "Wymaganie opieki przesłane!",
     "submitting": "Przesyłanie...",
     "verifiedAgencies": "Zweryfikowane agencje"
+  },
+  "patientIntake": {
+    "emergencyContactHint": "Use the person to reach first for this patient; they can be different from your own details."
   }
 }

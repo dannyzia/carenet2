@@ -242,5 +242,8 @@
     "submitSuccess": "نیاز مراقبتی ارسال شد!",
     "submitting": "در حال ارسال...",
     "verifiedAgencies": "آژانس‌های تأیید شده"
+  },
+  "patientIntake": {
+    "emergencyContactHint": "Use the person to reach first for this patient; they can be different from your own details."
   }
 }

@@ -242,5 +242,8 @@
     "submitSuccess": "देखभाल आवश्यकता जमा कर दी गई!",
     "submitting": "जमा कर रहा है...",
     "verifiedAgencies": "सत्यापित एजेंसियाँ"
+  },
+  "patientIntake": {
+    "emergencyContactHint": "Use the person to reach first for this patient; they can be different from your own details."
   }
 }

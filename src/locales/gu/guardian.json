@@ -242,5 +242,8 @@
     "submitSuccess": "કેર જરૂરિયાત સફળતાપૂર્વક સબમિટ કરવામાં આવી!",
     "submitting": "સબમિટ કરી રહ્યા છીએ...",
     "verifiedAgencies": "સત્યાપિત એજન્સીઓ"
+  },
+  "patientIntake": {
+    "emergencyContactHint": "Use the person to reach first for this patient; they can be different from your own details."
   }
 }

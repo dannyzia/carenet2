@@ -242,5 +242,8 @@
     "submitSuccess": "Zorgvereiste ingediend!",
     "submitting": "Bezig met indienen...",
     "verifiedAgencies": "Geverifieerde agenciën"
+  },
+  "patientIntake": {
+    "emergencyContactHint": "Use the person to reach first for this patient; they can be different from your own details."
   }
 }

@@ -242,5 +242,8 @@
     "submitSuccess": "ਕੇਅਰ ਲੋੜ ਪੇਸ਼ ਕੀਤੀ ਗਈ!",
     "submitting": "ਪੇਸ਼ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ...",
     "verifiedAgencies": "ਜਾਂਚੀਆਂ ਗਈਆਂ ਏਜੰਸੀਆਂ"
+  },
+  "patientIntake": {
+    "emergencyContactHint": "Use the person to reach first for this patient; they can be different from your own details."
   }
 }

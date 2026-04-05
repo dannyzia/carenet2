@@ -242,5 +242,8 @@
     "submitSuccess": "דרישת הטיפול נשלחה!",
     "submitting": "שולח...",
     "verifiedAgencies": "סוכנויות מאומתות"
+  },
+  "patientIntake": {
+    "emergencyContactHint": "Use the person to reach first for this patient; they can be different from your own details."
   }
 }

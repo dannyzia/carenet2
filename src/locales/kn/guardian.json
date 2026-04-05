@@ -242,5 +242,8 @@
     "submitSuccess": "ಕೇರ್ ಅಗತ್ಯವನ್ನು ಸಲ್ಲಿಸಲಾಗಿದೆ!",
     "submitting": "ಸಲ್ಲಿಸುತ್ತಿದೆ...",
     "verifiedAgencies": "ದೃಢೀಕರಿಸಲ್ಪಟ್ಟ ಏಜೆನ್ಸಿಗಳು"
+  },
+  "patientIntake": {
+    "emergencyContactHint": "Use the person to reach first for this patient; they can be different from your own details."
   }
 }

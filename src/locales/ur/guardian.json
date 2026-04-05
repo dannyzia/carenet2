@@ -242,5 +242,8 @@
     "submitSuccess": "کیئر کی ضرورت جمع ہو گئی!",
     "submitting": "جمع کیا جا رہا ہے...",
     "verifiedAgencies": "تصدیق شدہ ایجنسیاں"
+  },
+  "patientIntake": {
+    "emergencyContactHint": "Use the person to reach first for this patient; they can be different from your own details."
   }
 }

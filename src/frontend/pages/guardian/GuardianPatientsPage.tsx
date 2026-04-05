@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { Plus, Phone, Edit3, Trash2, ChevronDown, FileText } from "lucide-react";
 import { useAsyncData, useDocumentTitle } from "@/frontend/hooks";
 import { guardianService } from "@/backend/services";
 import { PageSkeleton } from "@/frontend/components/shared/PageSkeleton";
 import { useTranslation } from "react-i18next";
+import { USE_SUPABASE, sb, currentUserId } from "@/backend/services/_sb";
 
 export default function GuardianPatientsPage() {
   const { t: tDocTitle } = useTranslation("common");
@@ -14,8 +15,8 @@ export default function GuardianPatientsPage() {
 
   if (loading || !rawPatients) return <PageSkeleton cards={3} />;
 
-  const patients = rawPatients.map((p, i) => ({
-    ...p, id: i + 1, blood: p.bloodGroup || "",
+  const patients = rawPatients.map((p) => ({
+    ...p, blood: p.bloodGroup || "",
     avatar: p.avatar || p.name?.charAt(0)?.toUpperCase() || "?",
     color: p.color || "#5FB865",
   }));
@@ -25,6 +26,24 @@ export default function GuardianPatientsPage() {
 
 function GuardianPatientsContent({ patients }: { patients: any[] }) {
   const [expanded, setExpanded] = useState<number | null>(null);
+  const [removing, setRemoving] = useState<string | null>(null);
+  const navigate = useNavigate();
+
+  const handleRemove = async (p: any) => {
+    if (!confirm(`Remove ${p.name}? This cannot be undone.`)) return;
+    setRemoving(p.id);
+    try {
+      if (USE_SUPABASE) {
+        const { error } = await sb().from("patients").delete().eq("id", p.id);
+        if (error) throw error;
+      }
+      window.location.reload();
+    } catch (err: any) {
+      alert(err.message || "Failed to remove patient");
+    } finally {
+      setRemoving(null);
+    }
+  };
 
   return (
     <>
@@ -56,9 +75,9 @@ function GuardianPatientsContent({ patients }: { patients: any[] }) {
                 </div>
                 <div className="flex flex-wrap gap-2 mt-4">
                   <a href={p.phone ? `tel:${p.phone}` : undefined} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm border hover:bg-gray-50" style={{ borderColor: "#E5E7EB", color: "#535353", opacity: p.phone ? 1 : 0.5, cursor: p.phone ? "pointer" : "not-allowed", textDecoration: "none" }}><Phone className="w-3.5 h-3.5" /> {p.phone ? "Call" : "No Phone"}</a>
-                  <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm border hover:bg-gray-50" style={{ borderColor: "#E5E7EB", color: "#535353" }}><FileText className="w-3.5 h-3.5" /> Care Log</button>
-                  <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm border hover:bg-gray-50" style={{ borderColor: "#E5E7EB", color: "#535353" }}><Edit3 className="w-3.5 h-3.5" /> Edit</button>
-                  <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm border hover:bg-red-50" style={{ borderColor: "#EF4444", color: "#EF4444" }}><Trash2 className="w-3.5 h-3.5" /> Remove</button>
+                  <button onClick={() => navigate(`/guardian/patient-intake?edit=${p.id}`)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm border hover:bg-gray-50" style={{ borderColor: "#E5E7EB", color: "#535353" }}><FileText className="w-3.5 h-3.5" /> Care Log</button>
+                  <button onClick={() => navigate(`/guardian/patient-intake?edit=${p.id}`)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm border hover:bg-gray-50" style={{ borderColor: "#E5E7EB", color: "#535353" }}><Edit3 className="w-3.5 h-3.5" /> Edit</button>
+                  <button onClick={() => handleRemove(p)} disabled={removing === p.id} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm border hover:bg-red-50" style={{ borderColor: "#EF4444", color: "#EF4444" }}><Trash2 className="w-3.5 h-3.5" /> {removing === p.id ? "Removing..." : "Remove"}</button>
                 </div>
               </div>
             )}

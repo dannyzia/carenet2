@@ -242,5 +242,8 @@
     "submitSuccess": "돌봄 요구사항이 제출되었습니다!",
     "submitting": "제출 중...",
     "verifiedAgencies": "검증된 대행사"
+  },
+  "patientIntake": {
+    "emergencyContactHint": "Use the person to reach first for this patient; they can be different from your own details."
   }
 }

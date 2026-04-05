@@ -242,5 +242,8 @@
     "submitSuccess": "Keperluan penjagaan dihantar!",
     "submitting": "Menghantar...",
     "verifiedAgencies": "Agensi disahkan"
+  },
+  "patientIntake": {
+    "emergencyContactHint": "Use the person to reach first for this patient; they can be different from your own details."
   }
 }

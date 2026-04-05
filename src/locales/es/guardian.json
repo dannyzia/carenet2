@@ -71,12 +71,8 @@
     "bidExpiresIn": "Caduca en {{time}}",
     "confirmSubscription": "Confirmar Suscripción",
     "daysLeft": "{{count}}d restante(s)",
-    "daysLeft_one": "{{count}}d restante",
-    "daysLeft_other": "{{count}}d restantes",
     "expired": "Caducado",
     "expiryDaysFromPosting": "{{count}} días desde la publicación",
-    "expiryDaysFromPosting_one": "{{count}} día desde la publicación",
-    "expiryDaysFromPosting_other": "{{count}} días desde la publicación",
     "extraChargesMayApply": "Pueden aplicarse cargos adicionales",
     "featured": "Paquete Destacado",
     "fromPackage": "Desde Paquete",
@@ -100,15 +96,19 @@
     "searchPackages": "Buscar paquetes o agencias...",
     "serviceGuarantee": "Garantía de Servicio",
     "subscribers": "{{count}} suscriptor(es)",
-    "subscribers_one": "{{count}} suscriptor",
-    "subscribers_other": "{{count}} suscriptores",
     "subtitle": "Publicar requisitos o explorar paquetes de agencia",
     "title": "Mercado de Cuidado",
     "totalBids": "Total de Ofertas",
     "totalRequests": "Total de Solicitudes",
     "trialAvailable": "Prueba disponible",
     "view": "Ver",
-    "viewDetails": "Ver Detalles"
+    "viewDetails": "Ver Detalles",
+    "daysLeft_one": "{{count}}d restante",
+    "daysLeft_other": "{{count}}d restantes",
+    "expiryDaysFromPosting_one": "{{count}} día desde la publicación",
+    "expiryDaysFromPosting_other": "{{count}} días desde la publicación",
+    "subscribers_one": "{{count}} suscriptor",
+    "subscribers_other": "{{count}} suscriptores"
   },
   "nav": {
     "careRequirements": "Requisitos de Cuidado",
@@ -182,9 +182,9 @@
     "subtitle": "Las agencias proporcionan cuidadores verificados, cobertura 24/7, y reemplazo garantizado",
     "title": "Buscar una Agencia de Cuidado",
     "verifiedAgencies": "{{count}} agencia(s) verificada(s)",
+    "viewProfile": "Ver Perfil de Agencia",
     "verifiedAgencies_one": "{{count}} agencia verificada",
-    "verifiedAgencies_other": "{{count}} agencias verificadas",
-    "viewProfile": "Ver Perfil de Agencia"
+    "verifiedAgencies_other": "{{count}} agencias verificadas"
   },
   "wizard": {
     "additionalNotes": "Notas Adicionales",
@@ -208,8 +208,6 @@
     "duration": "Duración",
     "durationPlaceholder": "ej., 3 meses, continuo",
     "expiryDays": "{{count}} día(s)",
-    "expiryDays_one": "{{count}} día",
-    "expiryDays_other": "{{count}} días",
     "expiryDesc": "Su trabajo caduca automáticamente después de este período (máx 15 días)",
     "expiryNote": "Si no se establece caducidad, su anuncio caduca automáticamente en 15 días para mantener el mercado fresco. Siempre puede volver a publicar trabajos caducados desde su panel.",
     "exploreFirst": "Recomendamos explorar paquetes de agencia existentes primero — ¡podría encontrar exactamente lo que necesita!",
@@ -251,6 +249,11 @@
     "submitRequirement": "Enviar Requisito",
     "submitSuccess": "¡Requisito de cuidado enviado!",
     "submitting": "Enviando...",
-    "verifiedAgencies": "Agencias Verificadas"
+    "verifiedAgencies": "Agencias Verificadas",
+    "expiryDays_one": "{{count}} día",
+    "expiryDays_other": "{{count}} días"
+  },
+  "patientIntake": {
+    "emergencyContactHint": "Use the person to reach first for this patient; they can be different from your own details."
   }
 }

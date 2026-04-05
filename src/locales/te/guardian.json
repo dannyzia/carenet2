@@ -242,5 +242,8 @@
     "submitSuccess": "కేర్ అవసరాన్ని సమర్పించబడింది!",
     "submitting": "సమర్పిస్తున్నారు...",
     "verifiedAgencies": "ధృవీకరించబడిన ఏజెన్సీలు"
+  },
+  "patientIntake": {
+    "emergencyContactHint": "Use the person to reach first for this patient; they can be different from your own details."
   }
 }

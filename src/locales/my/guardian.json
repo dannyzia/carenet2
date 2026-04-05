@@ -242,5 +242,8 @@
     "submitSuccess": "ကာလူးကြီးစရာ လိုအပ်ချက်ကို ပေးပို့ထား!",
     "submitting": "ပေးပို့နေသည်...",
     "verifiedAgencies": "အတည်ပြုထား အေဂျင်စီများ"
+  },
+  "patientIntake": {
+    "emergencyContactHint": "Use the person to reach first for this patient; they can be different from your own details."
   }
 }

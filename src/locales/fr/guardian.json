@@ -242,5 +242,8 @@
     "submitSuccess": "Exigence de soins soumise !",
     "submitting": "Soumission en cours...",
     "verifiedAgencies": "Agences vérifiées"
+  },
+  "patientIntake": {
+    "emergencyContactHint": "Use the person to reach first for this patient; they can be different from your own details."
   }
 }
