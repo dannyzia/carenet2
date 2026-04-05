@@ -85,7 +85,7 @@ export function PublicNavBar() {
           {/* Mobile menu: BottomNav “Menu” dispatches toggle-sidebar / toggle-public-sidebar */}
 
           {/* Logo */}
-          <Link to="/home" className="flex items-center gap-2 shrink-0 no-underline">
+          <Link to="/" className="flex items-center gap-2 shrink-0 no-underline">
             <img src="/logo.png" alt="" className="w-8 h-8 rounded-xl object-contain" />
             <span className="text-base" style={{ color: cn.text }}>{t("app.name")}</span>
           </Link>
@@ -207,7 +207,7 @@ export function PublicNavBar() {
       >
         {/* Sidebar header */}
         <div className="p-5 flex items-center justify-between" style={{ borderBottom: `1px solid ${cn.borderLight}` }}>
-          <Link to="/home" className="flex items-center gap-2 no-underline" onClick={() => setMenuOpen(false)}>
+          <Link to="/" className="flex items-center gap-2 no-underline" onClick={() => setMenuOpen(false)}>
             <img src="/logo.png" alt="" className="w-9 h-9 rounded-xl object-contain" />
             <span className="text-lg" style={{ color: cn.text }}>{t("app.name")}</span>
           </Link>

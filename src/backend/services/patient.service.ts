@@ -233,13 +233,50 @@ export const patientService = {
   },
 
   async getAppointments(): Promise<PatientAppointment[]> {
-    // Appointments not yet a dedicated table — uses daily_tasks with type=event
+    if (shouldUseSupabase()) {
+      return sbRead("appointments", async () => {
+        const userId = await currentUserId();
+        const { data, error } = await sb().from("daily_tasks")
+          .select("*")
+          .eq("patient_id", userId)
+          .eq("type", "event")
+          .order("date", { ascending: true })
+          .order("time", { ascending: true });
+        if (error) throw error;
+        return (data || []).map((d: any) => ({
+          id: d.id,
+          title: d.title,
+          date: d.date,
+          time: d.time,
+          doctor: d.details || "",
+          location: d.location || "",
+          notes: d.notes || "",
+        }));
+      });
+    }
     await delay();
     return MOCK_PATIENT_APPOINTMENTS;
   },
 
   async getMedicalRecords(): Promise<MedicalRecord[]> {
-    // Medical records table not yet created
+    if (shouldUseSupabase()) {
+      return sbRead("medical-records", async () => {
+        const userId = await currentUserId();
+        const { data, error } = await sb().from("medical_records")
+          .select("*")
+          .eq("patient_id", userId)
+          .order("date", { ascending: false });
+        if (error) throw error;
+        return (data || []).map((d: any) => ({
+          id: d.id,
+          date: d.date,
+          type: d.record_type || "general",
+          doctor: d.doctor_name || "",
+          diagnosis: d.diagnosis || "",
+          notes: d.notes || "",
+        }));
+      });
+    }
     await delay();
     return MOCK_MEDICAL_RECORDS;
   },
@@ -267,6 +304,17 @@ export const patientService = {
   },
 
   async getAllergies(): Promise<string[]> {
+    if (shouldUseSupabase()) {
+      return sbRead("allergies", async () => {
+        const userId = await currentUserId();
+        const { data, error } = await sb().from("patients")
+          .select("conditions")
+          .eq("id", userId)
+          .single();
+        if (error) throw error;
+        return data?.conditions || [];
+      });
+    }
     await delay();
     return MOCK_PATIENT_ALLERGIES;
   },
@@ -321,6 +369,32 @@ export const patientService = {
   },
 
   async getEmergencyData(): Promise<EmergencyData> {
+    if (shouldUseSupabase()) {
+      return sbRead("emergency-data", async () => {
+        const userId = await currentUserId();
+        const { data: patient, error: pErr } = await sb().from("patients")
+          .select("blood_group, conditions")
+          .eq("id", userId)
+          .single();
+        if (pErr) throw pErr;
+        const { data: profile } = await sb().from("profiles")
+          .select("emergency_contact_name, emergency_contact_phone, emergency_contact_relation")
+          .eq("id", userId)
+          .single();
+        const contact = profile?.emergency_contact_name
+          ? [{ name: profile.emergency_contact_name, role: profile.emergency_contact_relation || "", phone: profile.emergency_contact_phone || "", color: "#E91E63" }]
+          : [];
+        return {
+          contacts: contact,
+          medical: {
+            bloodGroup: patient?.blood_group || "",
+            allergies: (patient?.conditions || []).join(", "),
+            chronic: "",
+          },
+          location: "",
+        };
+      });
+    }
     await delay();
     return MOCK_EMERGENCY_DATA;
   },
@@ -356,6 +430,9 @@ export const patientService = {
   },
 
   async getPrivacyData(): Promise<PrivacyData> {
+    if (shouldUseSupabase()) {
+      return { authorized: [], accessLogs: [] };
+    }
     await delay();
     return MOCK_PRIVACY_DATA;
   },

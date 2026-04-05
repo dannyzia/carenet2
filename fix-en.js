@@ -1,0 +1,1 @@
+const fs=require("fs");const p="src/locales/en/common.json";const d=JSON.parse(fs.readFileSync(p,"utf8"));d.sidebar.section.browse="Browse";d.sidebar.section.supportInfo="Support & Info";fs.writeFileSync(p,JSON.stringify(d,null,2)+"\n");console.log("en updated")

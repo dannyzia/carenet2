@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { useLocation, Link } from "react-router";
 import { useTransitionNavigate } from "@/frontend/hooks/useTransitionNavigate";
-import { Heart, Mail, Lock, Eye, EyeOff, ArrowRight, ChevronDown, ChevronUp, Shield } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, ArrowRight, ChevronDown, ChevronUp, Shield } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useDocumentTitle } from "@/frontend/hooks";
 import { cn } from "@/frontend/theme/tokens";
 import { useAuth } from "@/frontend/auth/AuthContext";
+import { USE_SUPABASE, supabase } from "@/backend/services/supabase";
 import { DEMO_ACCOUNTS, DEMO_PASSWORD, DEMO_TOTP } from "@/frontend/auth/mockAuth";
 import type { Role } from "@/frontend/auth/types";
 
@@ -39,9 +40,29 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [showDemo, setShowDemo] = useState(false);
   const [pendingUser, setPendingUser] = useState<{ name?: string } | null>(null);
+  const [resending, setResending] = useState(false);
+  const [resent, setResent] = useState(false);
   const totpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const returnTo = (location.state as any)?.from || null;
+
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (!hash) return;
+    const params = new URLSearchParams(hash.slice(1));
+    const errCode = params.get("error_code");
+    const errDesc = params.get("error_description");
+    if (errCode) {
+      if (errCode === "otp_expired") {
+        setError(t("auth:login.linkExpired"));
+      } else if (errDesc) {
+        setError(decodeURIComponent(errDesc.replace(/\+/g, " ")));
+      } else {
+        setError(t("auth:login.confirmFailed"));
+      }
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+    }
+  }, []);
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -133,12 +154,25 @@ export default function LoginPage() {
     navigate(`/${role}/dashboard`, { replace: true });
   };
 
+  const isUnconfirmedError = USE_SUPABASE && error.toLowerCase().includes("confirmation link");
+
+  const handleResendConfirmation = async () => {
+    if (!email) return;
+    setResending(true);
+    setResent(false);
+    const { error: resendErr } = await supabase.auth.resend({ type: "signup", email });
+    setResending(false);
+    if (resendErr) {
+      setError(resendErr.message);
+    } else {
+      setResent(true);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6" style={{ backgroundColor: cn.bgPage }}>
       <div className="w-full max-w-md mb-8 text-center">
-        <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ background: "var(--cn-gradient-caregiver)", boxShadow: "0px 4px 18px rgba(240,161,180,0.35)" }}>
-          <Heart className="w-8 h-8 text-white" />
-        </div>
+        <img src="/logo.png" alt="" className="w-16 h-16 rounded-2xl object-contain mx-auto mb-4" width={64} height={64} />
         <h1 className="mb-1 text-3xl" style={{ color: cn.text }}>{t("common:app.name")}</h1>
         <p className="text-sm" style={{ color: cn.textSecondary }}>{t("common:app.tagline")}</p>
       </div>
@@ -173,10 +207,24 @@ export default function LoginPage() {
                   >
                     {showPwd ? <EyeOff className="w-4 h-4" aria-hidden /> : <Eye className="w-4 h-4" aria-hidden />}
                   </button>
-                </div>
-                <p className="text-xs mt-1.5" style={{ color: cn.textSecondary }}>Demo: {DEMO_ACCOUNTS[0].email} / {DEMO_PASSWORD}</p>
-              </div>
-              {error && <p className="text-sm text-center py-2 px-3 rounded-lg" style={{ color: "#EF4444", background: "rgba(239,68,68,0.08)" }}>{error}</p>}
+                 </div>
+               </div>
+               {error && (
+                 <div className="text-sm text-center py-2 px-3 rounded-lg" style={{ color: "#EF4444", background: "rgba(239,68,68,0.08)" }}>
+                   <p>{error}</p>
+                   {isUnconfirmedError && email && (
+                     <button
+                       type="button"
+                       onClick={handleResendConfirmation}
+                       disabled={resending}
+                       className="mt-2 text-xs font-medium underline underline-offset-2 disabled:opacity-50"
+                       style={{ color: cn.pink }}
+                     >
+                       {resending ? t("auth:login.resending") : resent ? t("auth:login.resent") : t("auth:login.resendConfirmation")}
+                     </button>
+                   )}
+                 </div>
+               )}
               <button type="submit" disabled={isLoading || !email || !password} className="w-full py-3.5 rounded-xl text-white flex items-center justify-center gap-2 disabled:opacity-50 transition-all cn-touch-target" style={{ background: "var(--cn-gradient-caregiver)", boxShadow: "0 4px 15px rgba(254,180,197,0.35)" }}>
                 {isLoading ? <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" /> : <>{t("auth:login.loginBtn")}<ArrowRight className="w-4 h-4" /></>}
               </button>
@@ -239,9 +287,11 @@ export default function LoginPage() {
                 <input key={i} ref={(el) => { totpRefs.current[i] = el; }} type="text" inputMode="numeric" maxLength={1} value={digit} onChange={(e) => handleTotpChange(e.target.value, i)} onKeyDown={(e) => handleTotpKeyDown(e, i)} className="w-12 h-14 text-center rounded-xl border text-xl transition-all focus:outline-none" style={{ borderColor: digit ? cn.pink : cn.border, color: cn.text, background: cn.bgInput, boxShadow: digit ? `0 0 0 2px ${cn.pinkBg}` : "none", fontSize: "20px" }} />
               ))}
             </div>
-            <div className="p-3 rounded-lg text-xs text-center mb-4" style={{ background: "#FFF5F7", color: cn.textSecondary }}>
-              Demo: use code <strong>{DEMO_TOTP}</strong>
-            </div>
+             {!USE_SUPABASE && (
+               <div className="p-3 rounded-lg text-xs text-center mb-4" style={{ background: "#FFF5F7", color: cn.textSecondary }}>
+                 Demo: use code <strong>{DEMO_TOTP}</strong>
+               </div>
+             )}
             {error && <p className="text-sm text-center mb-4 py-2 px-3 rounded-lg" style={{ color: "#EF4444", background: "rgba(239,68,68,0.08)" }}>{error}</p>}
             <button onClick={handleVerifyMfa} disabled={isLoading || totp.some((d) => !d)} className="w-full py-3.5 rounded-xl text-white flex items-center justify-center gap-2 disabled:opacity-50 transition-all cn-touch-target" style={{ background: "var(--cn-gradient-caregiver)", boxShadow: "0 4px 15px rgba(254,180,197,0.35)" }}>
               {isLoading ? <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" /> : "Verify & Sign In"}

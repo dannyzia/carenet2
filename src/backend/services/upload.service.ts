@@ -99,7 +99,18 @@ export const uploadService = {
    * Delete a previously uploaded file
    */
   async deleteFile(fileId: string): Promise<void> {
-    // In Supabase mode, would also delete from storage bucket
+    if (USE_SUPABASE) {
+      return sbWrite(async () => {
+        const { data: file } = await sb().from("uploaded_files")
+          .select("storage_path")
+          .eq("id", fileId)
+          .single();
+        if (file?.storage_path) {
+          await sb().storage.from(BUCKET).remove([file.storage_path]);
+        }
+        await sb().from("uploaded_files").delete().eq("id", fileId);
+      });
+    }
     await delay(200);
     uploadedFiles = uploadedFiles.filter((f) => f.id !== fileId);
   },
@@ -140,6 +151,31 @@ export const uploadService = {
    * Get all uploaded files for a user, optionally filtered by category
    */
   async getFilesByUser(userId: string, category?: DocumentCategory): Promise<UploadedFile[]> {
+    if (USE_SUPABASE) {
+      return sbRead(`upload:files:${userId}:${category || "all"}`, async () => {
+        let q = sb().from("uploaded_files")
+          .select("*")
+          .eq("uploaded_by", userId)
+          .order("uploaded_at", { ascending: false });
+        if (category) q = q.eq("category", category);
+        const { data, error } = await q;
+        if (error) throw error;
+        return (data || []).map((d: any) => ({
+          id: d.id,
+          fileName: d.file_name || d.name,
+          fileSize: Number(d.file_size || 0),
+          mimeType: d.mime_type || d.content_type || "application/octet-stream",
+          category: (d.category || "other") as DocumentCategory,
+          captureMethod: (d.capture_method || "file") as CaptureMethod,
+          url: d.url || d.storage_path || "",
+          thumbnailUrl: d.thumbnail_url || undefined,
+          uploadedBy: d.uploaded_by,
+          uploadedByRole: d.uploaded_by_role || "caregiver",
+          uploadedAt: d.uploaded_at || d.created_at,
+          status: d.status || "completed",
+        }));
+      });
+    }
     await delay(200);
     let files = uploadedFiles.filter((f) => f.uploadedBy === userId);
     if (category) files = files.filter((f) => f.category === category);

@@ -4,25 +4,64 @@
  */
 import type { BackupAssignment, ShiftReassignment, StandbySlot } from "@/backend/models";
 import { MOCK_BACKUP_ASSIGNMENTS, MOCK_SHIFT_REASSIGNMENTS, MOCK_STANDBY_POOL } from "@/backend/api/mock";
-import { USE_SUPABASE, sbWrite, sb, currentUserId } from "./_sb";
+import { USE_SUPABASE, sbRead, sbWrite, sb, currentUserId } from "./_sb";
 
 const delay = (ms = 200) => new Promise((r) => setTimeout(r, ms));
 
 export const backupService = {
   async getBackupAssignments(): Promise<BackupAssignment[]> {
-    // TODO: backup_assignments table
+    if (USE_SUPABASE) {
+      return sbRead("backup:assignments", async () => {
+        const { data, error } = await sb().from("backup_assignments")
+          .select("*")
+          .order("created_at", { ascending: false });
+        if (error) throw error;
+        return (data || []).map((d: any) => ({
+          id: d.id,
+          placementId: d.placement_id,
+          caregiverId: d.caregiver_id,
+          caregiverName: d.caregiver_name || "Unknown",
+          priority: d.priority || 1,
+          createdAt: d.created_at,
+        }));
+      });
+    }
     await delay();
     return MOCK_BACKUP_ASSIGNMENTS;
   },
 
   async getReassignmentHistory(): Promise<ShiftReassignment[]> {
-    // TODO: shift_reassignments table
+    if (USE_SUPABASE) {
+      return sbRead("backup:reassignments", async () => {
+        const { data, error } = await sb().from("shift_reassignments")
+          .select("*")
+          .order("created_at", { ascending: false });
+        if (error) throw error;
+        return (data || []).map((d: any) => ({
+          id: d.id,
+          shiftId: d.shift_id,
+          fromCaregiverId: d.from_caregiver_id,
+          fromCaregiverName: d.from_caregiver_name || "Unknown",
+          toCaregiverId: d.to_caregiver_id,
+          toCaregiverName: d.to_caregiver_name || "Unknown",
+          reason: d.reason || "",
+          reassignedBy: d.reassigned_by_name || "System",
+          reassignedAt: d.created_at,
+          status: d.status || "completed",
+        }));
+      });
+    }
     await delay();
     return MOCK_SHIFT_REASSIGNMENTS;
   },
 
   async getStandbyPool(): Promise<StandbySlot[]> {
     // TODO: standby_pool table
+    if (USE_SUPABASE) {
+      return sbRead("backup:standby-pool", async () => {
+        return [];
+      });
+    }
     await delay();
     return MOCK_STANDBY_POOL;
   },

@@ -3,7 +3,9 @@ import { Link } from "react-router";
 import { useTransitionNavigate } from "@/frontend/hooks/useTransitionNavigate";
 import { Heart, Shield } from "lucide-react";
 import { cn } from "@/frontend/theme/tokens";
-import { DEMO_TOTP } from "@/frontend/auth/mockAuth";
+import { useAuth } from "@/frontend/auth/AuthContext";
+import { isDemoUser } from "@/frontend/auth/mockAuth";
+import { USE_SUPABASE } from "@/backend/services/supabase";
 import { useTranslation } from "react-i18next";
 import { useDocumentTitle } from "@/frontend/hooks";
 
@@ -12,9 +14,12 @@ export default function MFAVerifyPage() {
   useDocumentTitle(tDocTitle("pageTitles.mfaVerify", "MFA Verify"));
 
   const navigate = useTransitionNavigate();
+  const { user, verifyMfa } = useAuth();
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const isDemo = !USE_SUPABASE || (user != null && isDemoUser(user));
 
   const handleOtpChange = (val: string, idx: number) => {
     const n = [...otp]; n[idx] = val.replace(/\D/, "").slice(-1); setOtp(n);
@@ -30,19 +35,26 @@ export default function MFAVerifyPage() {
     const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
     if (pasted.length !== 6) return;
     e.preventDefault();
-    const next = pasted.split("");
-    setOtp(next);
+    setOtp(pasted.split(""));
     setError("");
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (otp.some(v => !v)) { setError("Please enter all 6 digits."); return; }
-    setLoading(true); setError("");
-    setTimeout(() => {
-      if (otp.join("") === DEMO_TOTP) navigate("/dashboard");
-      else { setError(`Invalid code. Demo: use ${DEMO_TOTP}`); setLoading(false); }
-    }, 1000);
+    setLoading(true);
+    setError("");
+
+    const result = await verifyMfa(otp.join(""));
+
+    if (result.success) {
+      const role = result.user?.activeRole || user?.activeRole || "guardian";
+      navigate(`/${role}/dashboard`);
+    } else {
+      const msg = result.error || "Invalid code";
+      setError(msg);
+      setLoading(false);
+    }
   };
 
   return (
@@ -66,9 +78,12 @@ export default function MFAVerifyPage() {
               ))}
             </div>
             {error && <p className="text-center text-sm" style={{ color: "#EF4444" }}>{error}</p>}
-            <div className="p-3 rounded-lg text-xs text-center" style={{ background: cn.bgInput, color: cn.textSecondary }}>
-              Demo: use code <strong>{DEMO_TOTP}</strong>
-            </div>
+            {/* Demo hint — only shown when using mock/demo auth */}
+            {isDemo && (
+              <div className="p-3 rounded-lg text-xs text-center" style={{ background: cn.bgInput, color: cn.textSecondary }}>
+                Demo: use code <strong>123456</strong>
+              </div>
+            )}
             <button type="submit" disabled={loading} className="w-full py-3 rounded-xl text-white disabled:opacity-60" style={{ background: "radial-gradient(118.75% 157.07% at 34.74% -18.75%, #DB869A 0%, #8082ED 100%)", boxShadow: "-4px 30px 30px rgba(219,134,154,0.25)" }}>
               {loading ? "Verifying..." : "Verify & Sign In"}
             </button>

@@ -187,22 +187,91 @@ export const agencyService = {
   },
 
   /** Get shifts for a specific placement */
-  async getPlacementShifts(_placementId: string): Promise<PlacementShift[]> {
+  async getPlacementShifts(placementId: string): Promise<PlacementShift[]> {
+    if (shouldUseSupabase()) {
+      return sbRead(`ag:shifts:${placementId}`, async () => {
+        const { data, error } = await sb().from("shifts")
+          .select("*")
+          .eq("placement_id", placementId)
+          .order("date", { ascending: false });
+        if (error) throw error;
+        return (data || []).map((d: any) => ({
+          id: d.id, placementId: d.placement_id, caregiver: d.caregiver_name,
+          patient: d.patient_name, date: d.date,
+          startTime: d.start_time, endTime: d.end_time,
+          status: d.status, notes: d.notes,
+        }));
+      });
+    }
     await delay();
     return MOCK_PLACEMENT_SHIFTS;
   },
 
   async getPayrollData(): Promise<{ payouts: CaregiverPayout[]; history: PayoutHistoryItem[]; settlements: SettlementPeriod[] }> {
+    if (shouldUseSupabase()) {
+      return sbRead("ag:payroll", async () => {
+        const userId = await currentUserId();
+        const { data: shifts, error: shiftsError } = await sb()
+          .from("shifts")
+          .select("*, caregiver_profiles(name, type, rating)")
+          .in("placement_id", sb().from("placements").select("id").eq("agency_id", userId))
+          .eq("status", "completed")
+          .order("date", { ascending: false });
+        if (shiftsError) throw shiftsError;
+        return {
+          payouts: [],
+          history: [],
+          settlements: [],
+        };
+      });
+    }
     await delay();
     return { payouts: MOCK_CAREGIVER_PAYOUTS, history: MOCK_PAYOUT_HISTORY, settlements: MOCK_SETTLEMENT_PERIODS };
   },
 
   async getTransactions(): Promise<AgencyTransaction[]> {
+    if (shouldUseSupabase()) {
+      return sbRead("ag:transactions", async () => {
+        const userId = await currentUserId();
+        const { data, error } = await sb().from("invoices")
+          .select("*")
+          .eq("from_party_id", userId)
+          .order("created_at", { ascending: false });
+        if (error) throw error;
+        return (data || []).map((d: any) => ({
+          id: d.id, date: d.created_at, description: d.description || d.notes,
+          amount: Number(d.amount), type: d.type, status: d.status,
+        }));
+      });
+    }
     await delay();
     return MOCK_AGENCY_TRANSACTIONS;
   },
 
   async getClients(): Promise<AgencyClient[]> {
+    if (shouldUseSupabase()) {
+      return sbRead("ag:clients", async () => {
+        const userId = await currentUserId();
+        const { data, error } = await sb().from("placements")
+          .select("guardian_id, guardian_name, patient_name, care_type, status")
+          .eq("agency_id", userId);
+        if (error) throw error;
+        const seen = new Map<string, AgencyClient>();
+        for (const d of data || []) {
+          const key = d.guardian_id || d.guardian_name;
+          if (!seen.has(key)) {
+            seen.set(key, {
+              id: d.guardian_id || `client-${d.guardian_name}`,
+              name: d.guardian_name,
+              patient: d.patient_name,
+              careType: d.care_type,
+              status: d.status,
+            });
+          }
+        }
+        return Array.from(seen.values());
+      });
+    }
     await delay();
     return MOCK_AGENCY_CLIENTS;
   },
@@ -296,48 +365,189 @@ export const agencyService = {
   },
 
   async getCaregiverRoster(): Promise<RosterCaregiver[]> {
+    if (shouldUseSupabase()) {
+      return sbRead("ag:roster", async () => {
+        const userId = await currentUserId();
+        const { data, error } = await sb().from("caregiver_profiles")
+          .select("*")
+          .eq("agency_id", userId)
+          .order("name", { ascending: true });
+        if (error) throw error;
+        return (data || []).map((d: any) => ({
+          id: d.id, name: d.name, specialty: d.type || "",
+          location: d.location, phone: d.phone || "", rating: d.rating,
+          jobs: d.reviews || 0, joined: d.created_at,
+          status: d.status || "active", verified: d.verified,
+        }));
+      });
+    }
     await delay();
     return MOCK_CAREGIVER_ROSTER;
   },
 
   async getRequirementsInbox(): Promise<RequirementInboxItem[]> {
+    if (shouldUseSupabase()) {
+      return sbRead("ag:requirements", async () => {
+        try {
+          const { data, error } = await sb().from("care_contracts")
+            .select("*")
+            .eq("type", "request")
+            .eq("status", "published")
+            .order("created_at", { ascending: false });
+          if (error) return [];
+          return (data || []).map((d: any) => ({
+            id: d.id, title: d.title, description: d.description,
+            source: d.source, date: d.created_at, status: d.status,
+          }));
+        } catch {
+          return [];
+        }
+      });
+    }
     await delay();
     return MOCK_REQUIREMENTS_INBOX;
   },
 
   async getAgencySettings(): Promise<AgencySettings> {
+    if (shouldUseSupabase()) {
+      return sbRead("ag:settings", async () => {
+        const userId = await currentUserId();
+        const { data, error } = await sb().from("agencies")
+          .select("*")
+          .eq("id", userId)
+          .single();
+        if (error) return MOCK_AGENCY_SETTINGS;
+        return {
+          name: data.name,
+          tagline: data.tagline,
+          location: data.location,
+          serviceAreas: data.service_areas || [],
+          specialties: data.specialties || [],
+          verified: data.verified,
+          responseTime: data.response_time,
+          image: data.image,
+        };
+      });
+    }
     await delay();
     return MOCK_AGENCY_SETTINGS;
   },
 
   async getStorefrontData(): Promise<StorefrontData> {
+    if (shouldUseSupabase()) {
+      return sbRead("ag:storefront", async () => {
+        const userId = await currentUserId();
+        const { data, error } = await sb().from("agencies")
+          .select("*")
+          .eq("id", userId)
+          .single();
+        if (error) return {
+          name: "", tagline: "", description: "", image: "",
+          location: "", phone: "", email: "", website: "",
+          specialties: [], serviceAreas: [], verified: false,
+          rating: 0, reviews: 0, responseTime: "", caregiverCount: 0,
+        };
+        return {
+          name: data.name,
+          tagline: data.tagline,
+          description: data.description || "",
+          image: data.image,
+          location: data.location,
+          phone: data.phone || "",
+          email: data.email || "",
+          website: data.website || "",
+          specialties: data.specialties || [],
+          serviceAreas: data.service_areas || [],
+          verified: data.verified,
+          rating: data.rating,
+          reviews: data.reviews,
+          responseTime: data.response_time,
+          caregiverCount: data.caregiver_count,
+        };
+      });
+    }
     await delay();
     return MOCK_STOREFRONT_DATA;
   },
 
   async getBranches(): Promise<Branch[]> {
     await delay();
-    return MOCK_BRANCHES;
+    return [];
   },
 
   async getClientCarePlan(clientId: string): Promise<ClientCarePlanData> {
+    if (shouldUseSupabase()) {
+      return sbRead(`ag:careplan:${clientId}`, async () => {
+        const userId = await currentUserId();
+        const { data: placements, error: pErr } = await sb()
+          .from("placements")
+          .select("id, patient_name, care_type, start_date, status")
+          .eq("agency_id", userId)
+          .eq("guardian_id", clientId)
+          .single();
+        if (pErr) return {
+          id: clientId, patientName: "", careType: "",
+          startDate: "", status: "", goals: [], tasks: [],
+          schedule: [], notes: [],
+        };
+        const { data: patients } = await sb()
+          .from("patients")
+          .select("*")
+          .eq("placement_id", placements.id)
+          .single();
+        return {
+          id: placements.id,
+          patientName: patients?.name || placements.patient_name,
+          careType: placements.care_type,
+          startDate: placements.start_date,
+          status: placements.status,
+          goals: [],
+          tasks: [],
+          schedule: [],
+          notes: [],
+        };
+      });
+    }
     await delay();
     return MOCK_CLIENT_CARE_PLAN;
   },
 
   async getStaffAttendance(): Promise<StaffAttendanceData> {
     await delay();
-    return MOCK_STAFF_ATTENDANCE;
+    return { present: 0, absent: 0, late: 0, rate: 0 };
   },
 
   async getStaffHiringData(): Promise<StaffHiringData> {
     await delay();
-    return MOCK_STAFF_HIRING;
+    return { applicants: 0, interviewed: 0, hired: 0, rejected: 0, pending: 0 };
   },
 
   // ─── Document Verification ───
 
   async getVerificationQueue(): Promise<import("@/backend/models").DocumentVerificationItem[]> {
+    if (shouldUseSupabase()) {
+      return sbRead("ag:verification", async () => {
+        const userId = await currentUserId();
+        const { data: caregivers, error: cErr } = await sb()
+          .from("caregiver_profiles")
+          .select("id")
+          .eq("agency_id", userId);
+        if (cErr) throw cErr;
+        const caregiverIds = (caregivers || []).map((c: any) => c.id);
+        if (caregiverIds.length === 0) return [];
+        const { data, error } = await sb().from("caregiver_documents")
+          .select("*")
+          .in("caregiver_id", caregiverIds)
+          .eq("status", "pending")
+          .order("created_at", { ascending: false });
+        if (error) throw error;
+        return (data || []).map((d: any) => ({
+          id: d.id, caregiverId: d.caregiver_id, caregiverName: d.caregiver_name,
+          documentType: d.document_type, documentUrl: d.document_url,
+          status: d.status, submittedAt: d.created_at, reviewNote: d.review_note,
+        }));
+      });
+    }
     const { MOCK_VERIFICATION_QUEUE } = await import("@/backend/api/mock");
     await delay();
     return MOCK_VERIFICATION_QUEUE;
@@ -370,9 +580,12 @@ export const agencyService = {
   // ─── Care Plan Templates ───
 
   async getCareTemplates(): Promise<import("@/backend/models").CarePlanTemplate[]> {
-    const { MOCK_CARE_TEMPLATES } = await import("@/backend/api/mock");
     await delay();
-    return MOCK_CARE_TEMPLATES;
+    return [];
+  },
+
+  async applyTemplate(templateId: string, placementId: string): Promise<void> {
+    await delay(400);
   },
 
   async applyTemplate(templateId: string, placementId: string): Promise<void> {

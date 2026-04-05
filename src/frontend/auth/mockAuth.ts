@@ -19,6 +19,28 @@ export const DEMO_TOTP = "123456";
 /** @deprecated Use DEMO_TOTP */
 export const DEMO_OTP = DEMO_TOTP;
 
+const MOCK_REGISTRY_KEY = "carenet-mock-registry";
+
+interface MockRegistry {
+  emails: string[];
+  phones: string[];
+}
+
+function loadMockRegistry(): MockRegistry {
+  try {
+    const raw = localStorage.getItem(MOCK_REGISTRY_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return { emails: parsed.emails || [], phones: parsed.phones || [] };
+    }
+  } catch { /* ignore */ }
+  return { emails: [], phones: [] };
+}
+
+function saveMockRegistry(registry: MockRegistry) {
+  localStorage.setItem(MOCK_REGISTRY_KEY, JSON.stringify(registry));
+}
+
 /** Demo accounts — one per role, plus a multi-role user */
 const DEMO_USERS: User[] = [
   {
@@ -187,10 +209,28 @@ export async function mockRegister(
 ): Promise<{ success: boolean; user?: User; error?: string }> {
   await delay(1000);
 
+  // Demo accounts are login-only; registration is never permitted.
+  if (data.email.trim().toLowerCase().endsWith("@carenet.demo")) {
+    return {
+      success: false,
+      error: "Demo accounts cannot be registered. Use the demo login on the Sign In page.",
+    };
+  }
+
   const normalizedEmail = data.email.trim().toLowerCase();
+  const normalizedPhone = (data.phone || "").trim();
+
   const existing = DEMO_USERS.find((u) => u.email === normalizedEmail);
   if (existing) {
-    return { success: false, error: "Email already registered" };
+    return { success: false, error: "This email is already registered. Sign in instead." };
+  }
+
+  const registry = loadMockRegistry();
+  if (registry.emails.includes(normalizedEmail)) {
+    return { success: false, error: "This email is already registered. Sign in instead." };
+  }
+  if (normalizedPhone && registry.phones.includes(normalizedPhone)) {
+    return { success: false, error: "This phone number is already registered." };
   }
 
   const newUser: User = {
@@ -201,10 +241,14 @@ export async function mockRegister(
     roles: [data.role],
     activeRole: data.role,
     district: data.district,
-    mfaEnrolled: false, // needs to set up TOTP after registration
+    mfaEnrolled: false,
     createdAt: new Date().toISOString(),
     profile: data.roleData,
   };
+
+  registry.emails.push(normalizedEmail);
+  if (normalizedPhone) registry.phones.push(normalizedPhone);
+  saveMockRegistry(registry);
 
   return { success: true, user: newUser };
 }

@@ -42,7 +42,7 @@ export interface RegisterData {
   name: string;
   email: string;
   password: string;
-  phone?: string;
+  phone: string;
   district?: string;
   role: Role;
   /** Role-specific fields */
@@ -57,6 +57,8 @@ export interface AuthContextType {
   login: (email: string, password: string) => Promise<{ success: boolean; user?: User; needsMfa?: boolean; error?: string }>;
   /** Verify TOTP MFA code after login */
   verifyMfa: (code: string) => Promise<{ success: boolean; user?: User; error?: string }>;
+  /** Enroll TOTP MFA — returns QR data URI and plain secret for display */
+  enrollMfa: () => Promise<{ success: boolean; factorId?: string; qrCode?: string; secret?: string; error?: string }>;
   /** Register a new user */
   register: (data: RegisterData) => Promise<{ success: boolean; user?: User; error?: string }>;
   /** Request password reset email */

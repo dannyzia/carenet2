@@ -1,0 +1,115 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e5]:
+        - link "CareNet" [ref=e6] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e7]: CareNet
+        - navigation [ref=e8]:
+          - link "Marketplace" [ref=e9] [cursor=pointer]:
+            - /url: /marketplace
+            - button "Marketplace" [ref=e10]
+        - generic [ref=e11]:
+          - link "Notifications" [ref=e12] [cursor=pointer]:
+            - /url: /notifications
+            - img [ref=e13]
+          - generic [ref=e17]:
+            - combobox "Interface language" [ref=e18] [cursor=pointer]:
+              - option "አማርኛ"
+              - option "العربية"
+              - option "বাংলা"
+              - option "Dansk"
+              - option "Deutsch"
+              - option "Ελληνικά"
+              - option "English" [selected]
+              - option "Español"
+              - option "فارسی"
+              - option "Suomi"
+              - option "Français"
+              - option "ગુજરાતી"
+              - option "עברית"
+              - option "हिन्दी"
+              - option "Indonesia"
+              - option "Italiano"
+              - option "日本語"
+              - option "ಕನ್ನಡ"
+              - option "한국어"
+              - option "മലയാളം"
+              - option "मराठी"
+              - option "Melayu"
+              - option "မြန်မာ"
+              - option "नेपाली"
+              - option "Nederlands"
+              - option "Norsk"
+              - option "ਪੰਜਾਬੀ"
+              - option "Polski"
+              - option "Português"
+              - option "Русский"
+              - option "සිංහල"
+              - option "Svenska"
+              - option "Kiswahili"
+              - option "தமிழ்"
+              - option "తెలుగు"
+              - option "ไทย"
+              - option "Türkçe"
+              - option "اردو"
+              - option "Tiếng Việt"
+              - option "繁體中文"
+              - option "中文"
+              - option "isiZulu"
+            - img
+          - button "Switch to dark mode" [ref=e19]:
+            - img [ref=e20]
+          - link "Register" [ref=e23] [cursor=pointer]:
+            - /url: /auth/register
+            - button "Register" [ref=e24]
+          - link "Log In" [ref=e25] [cursor=pointer]:
+            - /url: /auth/login
+            - button "Log In" [ref=e26]:
+              - img
+              - text: Log In
+    - main [ref=e27]:
+      - generic [ref=e29]:
+        - img [ref=e32]
+        - generic [ref=e34]:
+          - img [ref=e36]
+          - heading "Two-Factor Authentication" [level=1] [ref=e38]
+          - paragraph [ref=e39]: Enter the 6-digit code from your authenticator app (Google Authenticator, Authy, etc.)
+          - generic [ref=e40]:
+            - generic [ref=e41]:
+              - textbox [ref=e42]
+              - textbox [ref=e43]
+              - textbox [ref=e44]
+              - textbox [ref=e45]
+              - textbox [ref=e46]
+              - textbox [ref=e47]
+            - button "Verify & Sign In" [ref=e48]
+          - generic [ref=e49]:
+            - paragraph [ref=e50]:
+              - link "Back to login" [ref=e51] [cursor=pointer]:
+                - /url: /auth/login
+            - paragraph [ref=e52]:
+              - text: Lost access to your authenticator?
+              - link "Reset account" [ref=e53] [cursor=pointer]:
+                - /url: /auth/forgot-password
+    - navigation [ref=e54]:
+      - generic [ref=e55]:
+        - link "Home" [ref=e56] [cursor=pointer]:
+          - /url: /
+          - img [ref=e58]
+          - generic [ref=e61]: Home
+        - button "Back" [ref=e62]:
+          - img [ref=e63]
+          - generic [ref=e65]: Back
+        - link "Search" [ref=e66] [cursor=pointer]:
+          - /url: /global-search
+          - img [ref=e68]
+          - generic [ref=e71]: Search
+        - link "Messages" [ref=e72] [cursor=pointer]:
+          - /url: /messages
+          - img [ref=e74]
+          - generic [ref=e76]: Messages
+        - button "Menu" [ref=e77]:
+          - img [ref=e78]
+          - generic [ref=e79]: Menu
+  - region "Notifications alt+T"

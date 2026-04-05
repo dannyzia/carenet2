@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link, useParams } from "react-router";
 import { useTransitionNavigate } from "@/frontend/hooks/useTransitionNavigate";
-import { Heart, ArrowLeft, Eye, EyeOff, User, Mail, Lock, Phone, CheckCircle } from "lucide-react";
+import { Heart, ArrowLeft, Eye, EyeOff, User, Mail, Lock, Phone, CheckCircle, Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useDocumentTitle } from "@/frontend/hooks";
 import { cn } from "@/frontend/theme/tokens";
@@ -25,16 +25,33 @@ export default function RegisterPage() {
   const [step, setStep] = useState<"form" | "done">("form");
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [showPwd, setShowPwd] = useState(false);
+  const [showConfirmPwd, setShowConfirmPwd] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const resolvedRole: Role = (role as Role) || "guardian";
   const config = roleConfig[resolvedRole] || roleConfig.guardian;
 
+  const password = formData.password || "";
+  const confirmPwd = formData.confirmPassword || "";
+
+  const pwdChecks = useMemo(() => [
+    { label: "At least 8 characters", met: password.length >= 8 },
+    { label: "One uppercase letter", met: /[A-Z]/.test(password) },
+    { label: "One lowercase letter", met: /[a-z]/.test(password) },
+    { label: "One number", met: /\d/.test(password) },
+    { label: "Passwords match", met: password.length > 0 && password === confirmPwd },
+  ], [password, confirmPwd]);
+
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if ((formData.password || "").length < 8) {
-      setError("Password must be at least 8 characters");
+    if ((formData.email || "").toLowerCase().endsWith("@carenet.demo")) {
+      setError("Demo accounts are pre-configured — use the demo login on the Sign In page instead.");
+      return;
+    }
+    const failed = pwdChecks.find((c) => !c.met);
+    if (failed) {
+      setError(failed.label);
       return;
     }
     setLoading(true);
@@ -102,10 +119,28 @@ export default function RegisterPage() {
               <label className="block text-sm mb-1" style={{ color: cn.text }}>Password</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: cn.textSecondary }} />
-                <input type={showPwd ? "text" : "password"} placeholder="Min. 8 characters" value={formData.password || ""} onChange={(e) => setFormData({ ...formData, password: e.target.value })} className="w-full pl-10 pr-10 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput, fontSize: "16px" }} autoComplete="new-password" required />
+                <input type={showPwd ? "text" : "password"} placeholder="Create a password" value={password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} className="w-full pl-10 pr-10 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput, fontSize: "16px" }} autoComplete="new-password" required />
                 <button type="button" onClick={() => setShowPwd(!showPwd)} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: cn.textSecondary }}>{showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button>
               </div>
             </div>
+            <div>
+              <label className="block text-sm mb-1" style={{ color: cn.text }}>Confirm Password</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: cn.textSecondary }} />
+                <input type={showConfirmPwd ? "text" : "password"} placeholder="Re-enter your password" value={confirmPwd} onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })} className="w-full pl-10 pr-10 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput, fontSize: "16px" }} autoComplete="new-password" required />
+                <button type="button" onClick={() => setShowConfirmPwd(!showConfirmPwd)} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: cn.textSecondary }}>{showConfirmPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button>
+              </div>
+            </div>
+            {(password.length > 0 || confirmPwd.length > 0) && (
+              <div className="space-y-1.5 px-1">
+                {pwdChecks.map((c) => (
+                  <div key={c.label} className="flex items-center gap-2 text-xs" style={{ color: c.met ? cn.green : cn.textSecondary }}>
+                    <Check className={c.met ? "w-3.5 h-3.5" : "w-3.5 h-3.5 opacity-30"} />
+                    <span>{c.label}</span>
+                  </div>
+                ))}
+              </div>
+            )}
             {error && <p className="text-sm text-center py-2 px-3 rounded-lg" style={{ color: "#EF4444", background: "rgba(239,68,68,0.08)" }}>{error}</p>}
             <button type="submit" disabled={loading} className="w-full py-3.5 rounded-xl text-white flex items-center justify-center gap-2 disabled:opacity-50 cn-touch-target" style={{ background: config.gradient }}>
               {loading ? <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" /> : "Create Account"}

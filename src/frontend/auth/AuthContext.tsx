@@ -65,7 +65,7 @@ function migrateAuthModeIfNeeded() {
 /**
  * Map a Supabase auth user + profile to our app User type.
  */
-function mapSupabaseUser(supaUser: any, profile?: any): User {
+function mapSupabaseUser(supaUser: any, profile?: any, mfaEnrolled?: boolean): User {
   const meta = supaUser.user_metadata || {};
   const role = profile?.role || meta.role || "guardian";
   return {
@@ -78,7 +78,7 @@ function mapSupabaseUser(supaUser: any, profile?: any): User {
     activeRole: role as Role,
     district: profile?.district || meta.district,
     createdAt: supaUser.created_at || new Date().toISOString(),
-    mfaEnrolled: false,
+    mfaEnrolled: mfaEnrolled ?? false,
     profile: profile || undefined,
   };
 }
@@ -130,7 +130,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .select("*")
           .eq("id", session.user.id)
           .single();
-        const appUser = mapSupabaseUser(session.user, profile);
+        const { data: factors } = await supabase.auth.mfa.listFactors();
+        const mfaEnrolled = (factors?.totp?.length ?? 0) > 0;
+        const appUser = mapSupabaseUser(session.user, profile, mfaEnrolled);
         setUser(appUser);
         persistUser(appUser);
         registerDeviceForPush().catch(() => {});
@@ -179,7 +181,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (USE_SUPABASE) {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) return { success: false, error: error.message };
+      if (error) {
+        if (error.message.toLowerCase().includes("email not confirmed")) {
+          return { success: false, error: "Please check your email and click the confirmation link before signing in." };
+        }
+        return { success: false, error: error.message };
+      }
       if (data.user) {
         // Check if MFA is enrolled
         const { data: factors } = await supabase.auth.mfa.listFactors();
@@ -191,7 +198,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             .select("*")
             .eq("id", data.user.id)
             .single();
-          const appUser = mapSupabaseUser(data.user, profile);
+          const appUser = mapSupabaseUser(data.user, profile, true);
           pendingMfaUser.current = appUser;
           return { success: true, needsMfa: true, user: appUser };
         }
@@ -275,20 +282,60 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { success: false, error: result.error || "Verification failed" };
   }, []);
 
+  // ─── Enroll MFA ───
+  const enrollMfa = useCallback(async () => {
+    const MOCK_SECRET = "JBSWY3DPEHPK3PXP";
+
+    if (!USE_SUPABASE || !user || isDemoUser(user)) {
+      return { success: true, factorId: "mock-factor", qrCode: undefined, secret: MOCK_SECRET };
+    }
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      return { success: false, error: "No active session. Please log in first." };
+    }
+
+    const { data, error } = await supabase.auth.mfa.enroll({ factorType: "totp" });
+    if (error) return { success: false, error: error.message };
+    const totp = data?.totp;
+    if (!totp) return { success: false, error: "No TOTP data returned" };
+    return {
+      success: true,
+      factorId: data.id,
+      qrCode: totp.qr_code,
+      secret: totp.secret,
+    };
+  }, [user]);
+
   // ─── Register ───
   const register = useCallback(async (data: RegisterData) => {
-    // Keep demo registration flows independent from Supabase availability/rate limits.
+    // Demo accounts have their own one-click login flow on the Sign In page;
+    // they must never go through the signup/registration path.
     if (data.email.toLowerCase().endsWith("@carenet.demo")) {
-      const demoRegister = await mockRegister(data);
-      if (demoRegister.success && demoRegister.user) {
-        setUser(demoRegister.user);
-        persistUser(demoRegister.user);
-        registerDeviceForPush().catch(() => {});
-      }
-      return demoRegister;
+      return {
+        success: false,
+        error:
+          "Demo accounts cannot be registered. Use the demo login on the Sign In page.",
+      };
     }
 
     if (USE_SUPABASE) {
+      const normalizedEmail = data.email.trim().toLowerCase();
+      const normalizedPhone = data.phone.trim();
+
+      const { data: existing } = await supabase
+        .from("profiles")
+        .select("id, email, phone")
+        .or(`email.eq.${normalizedEmail},phone.eq.${normalizedPhone}`)
+        .limit(1);
+
+      if (existing && existing.length > 0) {
+        if (existing.email === normalizedEmail) {
+          return { success: false, error: "This email is already registered. Sign in instead." };
+        }
+        return { success: false, error: "This phone number is already registered." };
+      }
+
       const { data: authData, error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -304,8 +351,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) return { success: false, error: error.message };
       if (authData.user) {
         const appUser = mapSupabaseUser(authData.user);
-        // Keep the newly registered user available immediately for MFA setup/skip flows.
-        // onAuthStateChange will reconcile against Supabase session lifecycle afterwards.
         setUser(appUser);
         persistUser(appUser);
         return { success: true, user: appUser };
@@ -414,6 +459,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoading,
     login,
     verifyMfa,
+    enrollMfa,
     register,
     forgotPassword,
     resetPassword,

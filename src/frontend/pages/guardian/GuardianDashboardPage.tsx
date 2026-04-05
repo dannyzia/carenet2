@@ -117,6 +117,17 @@ export default function GuardianDashboardPage() {
             <Link to="/guardian/patients" className="text-xs flex items-center gap-1 hover:underline" style={{ color: cn.green }}>Manage <ArrowRight className="w-3 h-3" /></Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {patients.length === 0 && (
+              <div className="col-span-full text-center py-8">
+                <p className="text-sm" style={{ color: cn.textSecondary }}>
+                  No patients yet.{" "}
+                  <Link to="/guardian/patient-intake" className="underline underline-offset-2" style={{ color: cn.pink }}>
+                    Add a patient
+                  </Link>{" "}
+                  to get started.
+                </p>
+              </div>
+            )}
             {patients.map(p => (
               <div key={p.id} className="p-4 rounded-xl" style={{ background: cn.bgInput }}>
                 <div className="flex items-start justify-between mb-3">

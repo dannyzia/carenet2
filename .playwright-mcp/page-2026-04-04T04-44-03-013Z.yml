@@ -1,0 +1,139 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e5]:
+        - link "CareNet" [ref=e6] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e7]: CareNet
+        - navigation [ref=e8]:
+          - link "Marketplace" [ref=e9] [cursor=pointer]:
+            - /url: /marketplace
+            - button "Marketplace" [ref=e10]
+        - generic [ref=e11]:
+          - link "Notifications" [ref=e12] [cursor=pointer]:
+            - /url: /notifications
+            - img [ref=e13]
+          - generic [ref=e17]:
+            - combobox "Interface language" [ref=e18] [cursor=pointer]:
+              - option "አማርኛ"
+              - option "العربية"
+              - option "বাংলা"
+              - option "Dansk"
+              - option "Deutsch"
+              - option "Ελληνικά"
+              - option "English" [selected]
+              - option "Español"
+              - option "فارسی"
+              - option "Suomi"
+              - option "Français"
+              - option "ગુજરાતી"
+              - option "עברית"
+              - option "हिन्दी"
+              - option "Indonesia"
+              - option "Italiano"
+              - option "日本語"
+              - option "ಕನ್ನಡ"
+              - option "한국어"
+              - option "മലയാളം"
+              - option "मराठी"
+              - option "Melayu"
+              - option "မြန်မာ"
+              - option "नेपाली"
+              - option "Nederlands"
+              - option "Norsk"
+              - option "ਪੰਜਾਬੀ"
+              - option "Polski"
+              - option "Português"
+              - option "Русский"
+              - option "සිංහල"
+              - option "Svenska"
+              - option "Kiswahili"
+              - option "தமிழ்"
+              - option "తెలుగు"
+              - option "ไทย"
+              - option "Türkçe"
+              - option "اردو"
+              - option "Tiếng Việt"
+              - option "繁體中文"
+              - option "中文"
+              - option "isiZulu"
+            - img
+          - button "Switch to dark mode" [ref=e19]:
+            - img [ref=e20]
+          - link "Register" [ref=e23] [cursor=pointer]:
+            - /url: /auth/register
+            - button "Register" [ref=e24]
+          - link "Log In" [ref=e25] [cursor=pointer]:
+            - /url: /auth/login
+            - button "Log In" [ref=e26]:
+              - img
+              - text: Log In
+    - main [ref=e27]:
+      - generic [ref=e29]:
+        - img [ref=e32]
+        - generic [ref=e34]:
+          - img [ref=e36]
+          - heading "Set Up Authenticator" [level=1] [ref=e38]
+          - paragraph [ref=e39]: Follow these steps to enable two-factor authentication
+          - generic [ref=e40]:
+            - generic [ref=e41]:
+              - generic [ref=e42]: "1"
+              - generic [ref=e43]:
+                - paragraph [ref=e44]: Open Google Authenticator on your phone
+                - paragraph [ref=e45]: Download from the App Store or Google Play if you don't have it
+            - generic [ref=e46]:
+              - generic [ref=e47]: "2"
+              - generic [ref=e48]:
+                - paragraph [ref=e49]:
+                  - text: Tap the
+                  - strong [ref=e50]: +
+                  - text: button to add a new account
+                - paragraph [ref=e51]:
+                  - text: Choose
+                  - strong [ref=e52]: "\"Scan a QR code\""
+                  - text: (recommended) or
+                  - strong [ref=e53]: "\"Enter a setup key\""
+            - generic [ref=e54]:
+              - generic [ref=e55]: "3"
+              - generic [ref=e56]:
+                - paragraph [ref=e57]: "Scan this QR code with your authenticator app:"
+                - generic [ref=e58]:
+                  - img [ref=e60]
+                  - button "Can't scan? Enter key manually" [ref=e64]:
+                    - img [ref=e65]
+                    - text: Can't scan? Enter key manually
+            - generic [ref=e67]:
+              - generic [ref=e68]: "4"
+              - generic [ref=e69]:
+                - paragraph [ref=e70]: Your authenticator will show a 6-digit code
+                - paragraph [ref=e71]: The code changes every 30 seconds — that's normal
+          - generic [ref=e72]:
+            - text: "Demo mode: use code"
+            - strong [ref=e73]: "123456"
+            - text: to verify
+          - paragraph [ref=e74]: This endpoint requires a valid Bearer token
+          - button "I've added the account — Verify" [ref=e75]
+        - paragraph [ref=e76]:
+          - link "Skip for now" [ref=e77] [cursor=pointer]:
+            - /url: /guardian/dashboard
+    - navigation [ref=e78]:
+      - generic [ref=e79]:
+        - link "Home" [ref=e80] [cursor=pointer]:
+          - /url: /
+          - img [ref=e82]
+          - generic [ref=e85]: Home
+        - button "Back" [ref=e86]:
+          - img [ref=e87]
+          - generic [ref=e89]: Back
+        - link "Search" [ref=e90] [cursor=pointer]:
+          - /url: /global-search
+          - img [ref=e92]
+          - generic [ref=e95]: Search
+        - link "Messages" [ref=e96] [cursor=pointer]:
+          - /url: /messages
+          - img [ref=e98]
+          - generic [ref=e100]: Messages
+        - button "Menu" [ref=e101]:
+          - img [ref=e102]
+          - generic [ref=e103]: Menu
+  - region "Notifications alt+T"

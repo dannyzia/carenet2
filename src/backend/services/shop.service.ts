@@ -71,6 +71,22 @@ export const shopService = {
 
   /** Get user's wishlist */
   async getWishlist(): Promise<WishlistItem[]> {
+    if (USE_SUPABASE) {
+      return sbRead("shop:wishlist", async () => {
+        const userId = await currentUserId();
+        const { data, error } = await sb().from("wishlists")
+          .select("*, shop_products(*)")
+          .eq("user_id", userId)
+          .order("created_at", { ascending: false });
+        if (error) throw error;
+        return (data || []).map((d: any) => ({
+          id: d.id,
+          product: d.shop_products ? mapProduct(d.shop_products) : undefined,
+          productId: d.product_id,
+          addedAt: d.created_at,
+        }));
+      });
+    }
     await delay();
     return MOCK_WISHLIST;
   },
@@ -151,26 +167,122 @@ export const shopService = {
 
   // ─── Analytics (aggregation — keep mock for now, will be Supabase views/RPCs) ───
   async getShopSalesData(): Promise<SalesChartDataPoint[]> {
+    if (USE_SUPABASE) {
+      return sbRead("shop:sales", async () => {
+        const { data, error } = await sb().from("shop_orders")
+          .select("created_at, total")
+          .order("created_at", { ascending: true });
+        if (error) throw error;
+        const byMonth: Record<string, number> = {};
+        (data || []).forEach((d: any) => {
+          const month = d.created_at ? String(d.created_at).slice(0, 7) : "unknown";
+          byMonth[month] = (byMonth[month] || 0) + Number(d.total || 0);
+        });
+        return Object.entries(byMonth).map(([month, total]) => ({ month, total }));
+      });
+    }
     await delay();
     return MOCK_SHOP_SALES_DATA;
   },
 
   async getShopCategoryData(): Promise<CategoryDataPoint[]> {
+    if (USE_SUPABASE) {
+      return sbRead("shop:category", async () => {
+        const { data, error } = await sb().from("shop_products")
+          .select("category, id, stock");
+        if (error) throw error;
+        const byCategory: Record<string, { count: number; stock: number }> = {};
+        (data || []).forEach((d: any) => {
+          const cat = d.category || "Other";
+          if (!byCategory[cat]) byCategory[cat] = { count: 0, stock: 0 };
+          byCategory[cat].count++;
+          byCategory[cat].stock += d.stock || 0;
+        });
+        return Object.entries(byCategory).map(([category, v]) => ({
+          category,
+          count: v.count,
+          stock: v.stock,
+        }));
+      });
+    }
     await delay();
     return MOCK_SHOP_CATEGORY_DATA;
   },
 
   async getMerchantAnalyticsData(): Promise<MerchantChartDataPoint[]> {
+    if (USE_SUPABASE) {
+      return sbRead("shop:merchant-analytics", async () => {
+        const userId = await currentUserId();
+        const { data, error } = await sb().from("shop_orders")
+          .select("created_at, total, status")
+          .eq("merchant_id", userId)
+          .order("created_at", { ascending: true });
+        if (error) throw error;
+        const byMonth: Record<string, { revenue: number; orders: number }> = {};
+        (data || []).forEach((d: any) => {
+          const month = d.created_at ? String(d.created_at).slice(0, 7) : "unknown";
+          if (!byMonth[month]) byMonth[month] = { revenue: 0, orders: 0 };
+          byMonth[month].revenue += Number(d.total || 0);
+          byMonth[month].orders++;
+        });
+        return Object.entries(byMonth).map(([month, v]) => ({
+          month,
+          revenue: v.revenue,
+          orders: v.orders,
+        }));
+      });
+    }
     await delay();
     return MOCK_MERCHANT_ANALYTICS_DATA;
   },
 
   async getShopDashboardOrders(): Promise<ShopDashboardOrder[]> {
+    if (USE_SUPABASE) {
+      return sbRead("shop:dashboard-orders", async () => {
+        const userId = await currentUserId();
+        const { data, error } = await sb().from("shop_orders")
+          .select("*")
+          .eq("merchant_id", userId)
+          .order("created_at", { ascending: false })
+          .limit(50);
+        if (error) throw error;
+        return (data || []).map((d: any) => ({
+          id: d.id,
+          customer: d.customer_name || "Customer",
+          total: d.total,
+          status: d.status,
+          date: d.created_at,
+          items: d.items_count || 0,
+        }));
+      });
+    }
     await delay();
     return MOCK_SHOP_DASHBOARD_ORDERS;
   },
 
   async getMerchantFulfillment(): Promise<MerchantFulfillmentData> {
+    if (USE_SUPABASE) {
+      return sbRead("shop:merchant-fulfillment", async () => {
+        const userId = await currentUserId();
+        const { data, error } = await sb().from("shop_orders")
+          .select("*")
+          .eq("merchant_id", userId)
+          .in("status", ["confirmed", "shipped"])
+          .order("created_at", { ascending: false });
+        if (error) throw error;
+        return {
+          orders: (data || []).map((d: any) => ({
+            id: d.id,
+            customer: d.customer_name || "Customer",
+            total: d.total,
+            status: d.status,
+            date: d.created_at,
+            items: d.items_count || 0,
+          })),
+          total: data?.length || 0,
+        };
+      });
+    }
     await delay();
     return MOCK_MERCHANT_FULFILLMENT;
   },
@@ -196,12 +308,42 @@ export const shopService = {
   },
 
   async getProductDetail(id: string): Promise<ProductDetailData> {
+    if (USE_SUPABASE) {
+      return sbRead(`shop:product-detail:${id}`, async () => {
+        const { data: product, error: pErr } = await sb().from("shop_products")
+          .select("*")
+          .eq("id", id)
+          .single();
+        if (pErr) throw pErr;
+        const { data: reviews, error: rErr } = await sb().from("product_reviews")
+          .select("*")
+          .eq("product_id", id)
+          .order("created_at", { ascending: false });
+        if (rErr) throw rErr;
+        return {
+          ...mapProduct(product),
+          reviews: (reviews || []).map((r: any) => ({
+            id: r.id,
+            userId: r.user_id,
+            userName: r.user_name || "Anonymous",
+            rating: r.rating,
+            text: r.text || "",
+            date: r.created_at,
+          })),
+        };
+      });
+    }
     await delay();
     const product = MOCK_SHOP_PRODUCTS.find(p => p.id === id) ?? MOCK_SHOP_PRODUCTS[0];
     return { ...product, reviews: MOCK_PRODUCT_REVIEWS };
   },
 
   async getCartItems(): Promise<CartItem[]> {
+    if (USE_SUPABASE) {
+      return sbRead("shop:cart", async () => {
+        return [];
+      });
+    }
     await delay();
     return MOCK_CART_ITEMS;
   },
@@ -226,6 +368,23 @@ export const shopService = {
   },
 
   async getProductReviews(productId: string): Promise<ProductReviewDetail[]> {
+    if (USE_SUPABASE) {
+      return sbRead(`shop:reviews:${productId}`, async () => {
+        const { data, error } = await sb().from("product_reviews")
+          .select("*")
+          .eq("product_id", productId)
+          .order("created_at", { ascending: false });
+        if (error) throw error;
+        return (data || []).map((r: any) => ({
+          id: r.id,
+          userId: r.user_id,
+          userName: r.user_name || "Anonymous",
+          rating: r.rating,
+          text: r.text || "",
+          date: r.created_at,
+        }));
+      });
+    }
     await delay();
     return MOCK_PRODUCT_REVIEWS;
   },

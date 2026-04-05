@@ -173,6 +173,25 @@ export const moderatorService = {
   },
 
   async getRelatedContent(itemId: number): Promise<FlaggedContent[]> {
+    if (USE_SUPABASE) {
+      return sbRead(`mod:related-content:${itemId}`, async () => {
+        const { data, error } = await sb().from("flagged_content")
+          .select("*")
+          .eq("queue_item_id", itemId)
+          .order("created_at", { ascending: false });
+        if (error) throw error;
+        return (data || []).map((d: any) => ({
+          id: d.id,
+          type: d.content_type,
+          content: d.content_snippet,
+          reporter: d.reporter_name || "System",
+          time: d.created_at,
+          severity: d.severity,
+          target: d.target_user_name || "Unknown",
+          reason: d.reason,
+        }));
+      });
+    }
     await delay();
     return MOCK_FLAGGED_CONTENT.slice(0, 2);
   },

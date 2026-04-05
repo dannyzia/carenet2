@@ -8,7 +8,7 @@ import { useTranslation } from "react-i18next";
 
 const pageGroups = [
   { category: "Public & Core", icon: Globe, color: "#3B82F6", pages: [
-    { name: "Landing Page", path: "/home" }, { name: "About", path: "/about" }, { name: "Privacy Policy", path: "/privacy" },
+    { name: "Landing Page", path: "/" }, { name: "About", path: "/about" }, { name: "Privacy Policy", path: "/privacy" },
     { name: "Terms", path: "/terms" }, { name: "Features", path: "/features" }, { name: "Pricing", path: "/pricing" },
     { name: "Contact", path: "/contact" }, { name: "Marketplace", path: "/marketplace" }, { name: "Agency Directory", path: "/agencies" },
     { name: "Global Search", path: "/search" },

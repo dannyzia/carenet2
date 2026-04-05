@@ -276,6 +276,29 @@ export const caregiverService = {
 
   /** Get a job detail by ID */
   async getJobDetailById(id: string): Promise<JobDetail | undefined> {
+    if (shouldUseSupabase()) {
+      return sbRead(`cg:job-detail:${id}`, async () => {
+        const { data, error } = await sb().from("jobs")
+          .select("*")
+          .eq("id", id)
+          .single();
+        if (error) throw error;
+        const d = data as any;
+        if (!d) return undefined;
+        return {
+          id: d.id, title: d.title, patientName: d.patient_name || "",
+          location: d.location || "", description: d.description || "",
+          salary: d.salary || "", type: d.type || "", budget: d.budget || "",
+          duration: d.duration || "", experience: d.experience || "",
+          skills: d.skills || [], requirements: d.requirements || [],
+          careType: d.care_type || "", shiftType: d.shift_type || "",
+          agencyName: d.agency_name || "", agencyRating: d.agency_rating || 0,
+          agencyVerified: d.agency_verified || false, posted: d.posted || "",
+          urgent: d.urgent || false, applicants: d.applicants || 0,
+          status: d.status || "open",
+        };
+      });
+    }
     await delay();
     return MOCK_JOB_DETAILS[id];
   },
@@ -316,6 +339,29 @@ export const caregiverService = {
   },
 
   async getMedSchedule(): Promise<MedScheduleItem[]> {
+    if (shouldUseSupabase()) {
+      return sbRead("cg:med-schedule", async () => {
+        const userId = await currentUserId();
+        const { data, error } = await sb().from("placements")
+          .select("patient_id")
+          .eq("caregiver_id", userId)
+          .eq("status", "active");
+        if (error) throw error;
+        if (!data || data.length === 0) return [];
+        const patientIds = data.map((p: any) => p.patient_id);
+        const { data: meds, error: err2 } = await sb().from("prescriptions")
+          .select("id, medicine_name, dosage, frequency, timing, start_date, end_date, status")
+          .in("patient_id", patientIds)
+          .eq("status", "active");
+        if (err2) throw error;
+        return (meds || []).map((m: any) => ({
+          id: m.id, medicine: m.medicine_name, dosage: m.dosage,
+          frequency: m.frequency, timing: m.timing || [],
+          startDate: m.start_date, endDate: m.end_date,
+          status: m.status,
+        }));
+      });
+    }
     await delay();
     return MOCK_MED_SCHEDULE;
   },
@@ -344,51 +390,147 @@ export const caregiverService = {
   },
 
   async getRecentCareLogs(): Promise<RecentCareLog[]> {
+    if (shouldUseSupabase()) {
+      return sbRead("cg:care-logs", async () => {
+        const userId = await currentUserId();
+        const { data, error } = await sb().from("care_notes")
+          .select("id, patient_name, category, title, content, date, time")
+          .eq("caregiver_id", userId)
+          .order("created_at", { ascending: false })
+          .limit(20);
+        if (error) throw error;
+        return (data || []).map((d: any) => ({
+          id: d.id, patientName: d.patient_name || "",
+          category: d.category || "", title: d.title || "",
+          content: d.content || "", date: d.date || "", time: d.time || "",
+        }));
+      });
+    }
     await delay();
     return MOCK_RECENT_CARE_LOGS;
   },
 
   async getPastPatients(): Promise<PastPatient[]> {
+    if (shouldUseSupabase()) {
+      return sbRead("cg:past-patients", async () => {
+        const userId = await currentUserId();
+        const { data, error } = await sb().from("placements")
+          .select("id, patient_name, care_type, start_date, status")
+          .eq("caregiver_id", userId)
+          .in("status", ["completed", "cancelled"])
+          .order("created_at", { ascending: false });
+        if (error) throw error;
+        return (data || []).map((d: any) => ({
+          id: d.id, name: d.patient_name || "",
+          type: d.care_type || "", period: d.start_date || "",
+        }));
+      });
+    }
     await delay();
     return MOCK_PAST_PATIENTS;
   },
 
   async getDailyEarningsDetail(): Promise<DailyEarningsDetail> {
+    if (shouldUseSupabase()) {
+      return sbRead("cg:daily-earnings", async () => {
+        // No dedicated daily earnings table — return empty default
+        return { today: 0, thisWeek: 0, thisMonth: 0, lastPayout: "", nextPayout: "" };
+      });
+    }
     await delay();
     return MOCK_DAILY_EARNINGS_DETAIL;
   },
 
   async getJobApplicationDetail(id: string): Promise<JobApplicationDetail> {
+    if (shouldUseSupabase()) {
+      return sbRead(`cg:job-app:${id}`, async () => {
+        const { data, error } = await sb().from("job_applications")
+          .select("*")
+          .eq("id", id)
+          .single();
+        if (error) throw error;
+        const d = data as any;
+        return {
+          id: d.id, name: d.name || "", rating: d.rating || 0,
+          experience: d.experience || "", specialties: d.specialties || [],
+          skills: d.skills || [], gender: d.gender || "", location: d.location || "",
+          matchScore: d.match_score || 0, appliedDate: d.applied_date || "",
+          status: d.status || "new",
+          certifications: d.certifications || [],
+          previousJobs: d.previous_jobs || 0,
+          completionRate: d.completion_rate || 0,
+        };
+      });
+    }
     await delay();
     return { ...MOCK_JOB_APPLICATION_DETAIL, id };
   },
 
   async getPayoutSettings(): Promise<PayoutSettings> {
+    if (shouldUseSupabase()) {
+      return { method: "bkash", account: "", verified: false } as PayoutSettings;
+    }
     await delay();
     return MOCK_PAYOUT_SETTINGS;
   },
 
   async getPortfolio(): Promise<CaregiverPortfolio> {
+    if (shouldUseSupabase()) {
+      return sbRead("cg:portfolio", async () => {
+        const userId = await currentUserId();
+        const { data, error } = await sb().from("caregiver_profiles")
+          .select("name, specialties, skills, bio, image")
+          .eq("id", userId)
+          .single();
+        if (error) throw error;
+        const d = data as any;
+        return { bio: d.bio || "", specialties: d.specialties || [], skills: d.skills || [], image: d.image || "" } as CaregiverPortfolio;
+      });
+    }
     await delay();
     return MOCK_CAREGIVER_PORTFOLIO;
   },
 
   async getReferences(): Promise<CaregiverReference[]> {
+    if (shouldUseSupabase()) {
+      return []; // No dedicated references table yet
+    }
     await delay();
     return MOCK_CAREGIVER_REFERENCES;
   },
 
   async getShiftDetail(id: string): Promise<ShiftDetailData> {
+    if (shouldUseSupabase()) {
+      return sbRead(`cg:shift-detail:${id}`, async () => {
+        const { data, error } = await sb().from("shifts")
+          .select("*, patients(name)")
+          .eq("id", id)
+          .single();
+        if (error) throw error;
+        const d = data as any;
+        return {
+          id: d.id, date: d.date || "", startTime: d.start_time || "",
+          endTime: d.end_time || "", status: d.status || "scheduled",
+          notes: d.notes || "", patientName: d.patients?.name || d.patient_name || "",
+        } as ShiftDetailData;
+      });
+    }
     await delay();
     return { ...MOCK_SHIFT_DETAIL, id };
   },
 
   async getSkillsAssessment(): Promise<SkillsAssessment> {
+    if (shouldUseSupabase()) {
+      return { levels: [], categories: [] } as SkillsAssessment;
+    }
     await delay();
     return MOCK_SKILLS_ASSESSMENT;
   },
 
   async getTrainingModules(): Promise<TrainingModule[]> {
+    if (shouldUseSupabase()) {
+      return []; // No training_modules table yet
+    }
     await delay();
     return MOCK_TRAINING_MODULES;
   },
@@ -445,36 +587,129 @@ export const caregiverService = {
   },
 
   async getPaymentMethods(): Promise<CaregiverPaymentMethod[]> {
+    if (shouldUseSupabase()) {
+      return []; // No payment_methods table yet
+    }
     await delay();
     return MOCK_PAYMENT_METHODS;
   },
 
   async getRecentJobs(): Promise<RecentJob[]> {
+    if (shouldUseSupabase()) {
+      return sbRead("cg:recent-jobs", async () => {
+        const userId = await currentUserId();
+        const { data, error } = await sb().from("jobs")
+          .select("id, title, location, status, created_at")
+          .eq("status", "open")
+          .order("created_at", { ascending: false })
+          .limit(10);
+        if (error) throw error;
+        return (data || []).map((d: any) => ({
+          id: d.id, title: d.title, location: d.location,
+          date: d.created_at || "", status: d.status,
+        }));
+      });
+    }
     await delay();
     return MOCK_RECENT_JOBS;
   },
 
   async getRequiredDocuments(): Promise<RequiredDocument[]> {
+    if (shouldUseSupabase()) {
+      return []; // No required_documents table
+    }
     await delay();
     return MOCK_REQUIRED_DOCUMENTS;
   },
 
   async getScheduleData(): Promise<Record<string, ScheduleBlock[]>> {
+    if (shouldUseSupabase()) {
+      return sbRead("cg:schedule", async () => {
+        const userId = await currentUserId();
+        const { data, error } = await sb().from("shifts")
+          .select("id, date, start_time, end_time, status, patient_name")
+          .eq("caregiver_id", userId)
+          .gte("date", new Date().toISOString().split("T")[0])
+          .order("date", { ascending: true })
+          .limit(30);
+        if (error) throw error;
+        const result: Record<string, ScheduleBlock[]> = {};
+        for (const d of data || []) {
+          const key = d.date;
+          if (!result[key]) result[key] = [];
+          result[key].push({
+            id: d.id,
+            time: `${d.start_time} - ${d.end_time}`,
+            patient: d.patient_name || "",
+            status: d.status || "scheduled",
+          });
+        }
+        return result;
+      });
+    }
     await delay();
     return MOCK_SCHEDULE_DATA;
   },
 
   async getTransactions(): Promise<CaregiverTransaction[]> {
+    if (shouldUseSupabase()) {
+      return sbRead("cg:transactions", async () => {
+        const userId = await currentUserId();
+        const { data, error } = await sb().from("invoices")
+          .select("*")
+          .eq("from_party_id", userId)
+          .order("created_at", { ascending: false })
+          .limit(50);
+        if (error) throw error;
+        return (data || []).map((d: any) => ({
+          id: d.id, date: d.created_at || "", description: d.description || "",
+          amount: Number(d.amount || 0), status: d.status || "pending",
+          type: d.type || "payment",
+        }));
+      });
+    }
     await delay();
     return MOCK_TRANSACTIONS;
   },
 
   async getUpcomingBookings(): Promise<UpcomingBooking[]> {
+    if (shouldUseSupabase()) {
+      return sbRead("cg:bookings", async () => {
+        const userId = await currentUserId();
+        const { data, error } = await sb().from("placements")
+          .select("*, patients!placements_patient_id_fkey(name)")
+          .eq("caregiver_id", userId)
+          .eq("status", "active");
+        if (error) throw error;
+        return (data || []).map((d: any) => ({
+          id: d.id, patientName: d.patients?.name || d.patient_name || "",
+          startDate: d.start_date || "", endDate: d.end_date || "",
+          status: d.status, careType: d.care_type || "",
+        }));
+      });
+    }
     await delay();
     return MOCK_UPCOMING_BOOKINGS;
   },
 
   async getUpcomingSchedule(): Promise<UpcomingScheduleItem[]> {
+    if (shouldUseSupabase()) {
+      return sbRead("cg:upcoming-schedule", async () => {
+        const userId = await currentUserId();
+        const today = new Date().toISOString().split("T")[0];
+        const { data, error } = await sb().from("shifts")
+          .select("id, date, start_time, end_time, status, patient_name")
+          .eq("caregiver_id", userId)
+          .gte("date", today)
+          .order("date", { ascending: true })
+          .limit(14);
+        if (error) throw error;
+        return (data || []).map((d: any) => ({
+          id: d.id, date: d.date, time: `${d.start_time} - ${d.end_time}`,
+          patient: d.patient_name || "", status: d.status || "scheduled",
+        }));
+      });
+    }
     await delay();
     return MOCK_UPCOMING_SCHEDULE;
   },
@@ -482,6 +717,19 @@ export const caregiverService = {
   // ─── Upload methods (Phase 2) ───
 
   async uploadProfilePhoto(file: File): Promise<string> {
+    if (shouldUseSupabase()) {
+      return sbWrite(async () => {
+        const userId = await currentUserId();
+        const ext = file.name.split(".").pop() || "jpg";
+        const path = `${userId}/profile.${ext}`;
+        const { error: uploadError } = await sb().storage
+          .from("avatars")
+          .upload(path, file, { upsert: true });
+        if (uploadError) throw uploadError;
+        const { data } = sb().storage.from("avatars").getPublicUrl(path);
+        return data.publicUrl;
+      });
+    }
     await delay(600);
     // In real impl: uploadService.uploadFile → Supabase Storage
     const url = await new Promise<string>((resolve, reject) => {
@@ -494,6 +742,37 @@ export const caregiverService = {
   },
 
   async uploadDocument(file: File, category: string): Promise<CaregiverDocument> {
+    if (shouldUseSupabase()) {
+      return sbWrite(async () => {
+        const userId = await currentUserId();
+        const ext = file.name.split(".").pop() || "pdf";
+        const path = `${userId}/${Date.now()}.${ext}`;
+        const { error: uploadError } = await sb().storage
+          .from("documents")
+          .upload(path, file, { upsert: false });
+        if (uploadError) throw uploadError;
+        const { data: urlData } = sb().storage.from("documents").getPublicUrl(path);
+        const { data: row, error } = await sb().from("caregiver_documents")
+          .insert({
+            caregiver_id: userId,
+            name: file.name,
+            category,
+            type: file.type.includes("pdf") ? "PDF" : "Image",
+            file_url: urlData.publicUrl,
+            file_size: `${(file.size / 1024).toFixed(0)} KB`,
+            status: "pending",
+            uploaded: new Date().toISOString().split("T")[0],
+          })
+          .select()
+          .single();
+        if (error) throw error;
+        return {
+          id: row.id, name: row.name, type: row.type, status: row.status,
+          uploaded: row.uploaded, expiry: row.expiry, file: row.file_url,
+          size: row.file_size, category: row.category, captureMethod: row.capture_method,
+        };
+      });
+    }
     await delay(800);
     return {
       id: Date.now(),
@@ -600,6 +879,21 @@ export const caregiverService = {
     shiftId: string; toCaregiverId: string; patientId: string;
     notes: string; flaggedItems: string[];
   }): Promise<{ id: string }> {
+    if (shouldUseSupabase()) {
+      return sbWrite(async () => {
+        const userId = await currentUserId();
+        const { data: row, error } = await sb().from("handoff_notes").insert({
+          shift_id: data.shiftId,
+          from_caregiver_id: userId,
+          to_caregiver_id: data.toCaregiverId,
+          patient_id: data.patientId,
+          notes: data.notes,
+          flagged_items: data.flaggedItems,
+        }).select("id").single();
+        if (error) throw error;
+        return { id: row.id };
+      });
+    }
     await delay(300);
     return { id: `ho-${crypto.randomUUID().slice(0, 8)}` };
   },
@@ -608,6 +902,20 @@ export const caregiverService = {
     id: string; fromCaregiver: string; toCaregiver: string; notes: string;
     flaggedItems: string[]; createdAt: string;
   }>> {
+    if (shouldUseSupabase()) {
+      return sbRead(`cg:handoff:${patientId}`, async () => {
+        const { data, error } = await sb().from("handoff_notes")
+          .select("*")
+          .eq("patient_id", patientId)
+          .order("created_at", { ascending: false });
+        if (error) throw error;
+        return (data || []).map((d: any) => ({
+          id: d.id, fromCaregiver: d.from_caregiver_name || "",
+          toCaregiver: d.to_caregiver_name || "", notes: d.notes || "",
+          flaggedItems: d.flagged_items || [], createdAt: d.created_at || "",
+        }));
+      });
+    }
     await delay();
     return MOCK_HANDOFF_NOTES;
   },

@@ -55,6 +55,11 @@ export const communityService = {
 
   async getCareerData(): Promise<CareerData> {
     // Career data is typically CMS-managed; no dedicated table yet
+    if (USE_SUPABASE) {
+      return sbRead("community:careers", async () => {
+        return { openings: [], benefits: [], culture: [] };
+      });
+    }
     await delay();
     return MOCK_CAREER_DATA;
   },
