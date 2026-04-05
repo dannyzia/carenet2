@@ -9,6 +9,8 @@ export interface Patient {
   dob?: string;
   location: string;
   phone?: string;
+  /** Name of emergency contact for this patient (may differ from guardian). */
+  emergencyContactName?: string;
   conditions: string[];
   status: "active" | "inactive" | "discharged";
   avatar?: string;

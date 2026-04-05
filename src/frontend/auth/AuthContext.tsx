@@ -350,10 +350,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       if (error) return { success: false, error: error.message };
       if (authData.user) {
-        const appUser = mapSupabaseUser(authData.user);
-        setUser(appUser);
-        persistUser(appUser);
-        return { success: true, user: appUser };
+        // New users must set up MFA before accessing the app
+        const { data: enrollData, error: enrollErr } = await supabase.auth.mfa.enroll({ factorType: "totp" });
+        if (enrollErr || !enrollData?.totp) {
+          // Clean up the user if MFA enrollment fails - don't leave them stuck
+          await supabase.auth.signOut();
+          return { success: false, error: "Failed to set up 2FA. Please try again." };
+        }
+        // Return MFA verification step
+        const appUser = mapSupabaseUser(authData.user, undefined, true);
+        pendingMfaUser.current = appUser;
+        return { 
+          success: true, 
+          needsMfa: true, 
+          user: appUser,
+          mfaFactorId: enrollData.id,
+          mfaQrCode: enrollData.totp.qr_code,
+          mfaSecret: enrollData.totp.secret,
+        };
       }
       return { success: false, error: "Registration failed" };
     }

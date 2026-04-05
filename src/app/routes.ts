@@ -49,6 +49,7 @@ export const router = createBrowserRouter([
 
           // Auth pages (public — no login required)
           { path: "auth/login", ...p(() => import("@/frontend/pages/auth/LoginPage")) },
+          { path: "auth/callback", ...p(() => import("@/frontend/pages/auth/OAuthCallbackPage")) },
           { path: "auth/register", ...p(() => import("@/frontend/pages/auth/RegisterPage")) },
           { path: "auth/register/:role", ...p(() => import("@/frontend/pages/auth/RegisterPage")) },
           { path: "auth/role-selection", ...p(() => import("@/frontend/pages/auth/RoleSelectionPage")) },

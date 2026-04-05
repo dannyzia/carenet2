@@ -76,10 +76,18 @@ export const guardianService = {
         return (data || []).map((d: any) => ({
           id: d.id, name: d.name, age: d.age, gender: d.gender,
           relation: d.relation, bloodGroup: d.blood_group, dob: d.dob,
-          location: d.location, phone: d.phone, conditions: d.conditions || [],
+          location: d.location, phone: d.phone,
+          emergencyContactName: d.emergency_contact_name || undefined,
+          conditions: d.conditions || [],
           status: d.status, avatar: d.avatar, color: d.color,
         }));
       });
+    }
+    // Mock mode - check localStorage first, then fallback to static mocks
+    const stored = typeof localStorage !== "undefined" ? localStorage.getItem("mock_patients") : null;
+    const storedPatients = stored ? JSON.parse(stored) : [];
+    if (storedPatients.length > 0) {
+      return storedPatients;
     }
     await delay();
     return MOCK_GUARDIAN_PATIENTS;

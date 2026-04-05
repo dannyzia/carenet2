@@ -65,14 +65,19 @@ export default function RegisterPage() {
     });
     setLoading(false);
     if (result.success) {
-      setStep("done");
+      if (result.needsMfa) {
+        // New user must verify MFA before accessing app
+        navigate("/auth/mfa-verify", { replace: true });
+      } else {
+        setStep("done");
+      }
     } else {
       setError(result.error || "Registration failed");
     }
   };
 
   const handleContinue = () => {
-    navigate("/auth/mfa-setup", { replace: true });
+    navigate("/auth/mfa-verify", { replace: true });
   };
 
   return (
