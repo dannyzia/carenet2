@@ -4,16 +4,19 @@
 import type {
   HelpCenterData, ContactInfo, RefundTransaction, RefundTimelineStep,
 } from "@/backend/models";
-import {
-  MOCK_HELP_CENTER,
-  MOCK_CONTACT_INFO,
-  MOCK_REFUND_TRANSACTIONS,
-  MOCK_TICKET_CATEGORIES,
-  MOCK_REFUND_TIMELINE,
-} from "@/backend/api/mock";
-import { USE_SUPABASE, sbRead, sbWrite, sb, currentUserId } from "./_sb";
+import { USE_SUPABASE, sbRead, sbWrite, sb, currentUserId, useInAppMockDataset } from "./_sb";
+import { demoOfflineDelayAndPick } from "./demoOfflineMock";
 
 const delay = (ms = 200) => new Promise((r) => setTimeout(r, ms));
+
+const EMPTY_HELP_CENTER: HelpCenterData = { categories: [], popularArticles: [] };
+const EMPTY_CONTACT: ContactInfo = {
+  phone: "",
+  email: "",
+  hours: "",
+  address: "",
+  social: { facebook: "", instagram: "" },
+};
 
 export const supportService = {
   async getHelpCenterData(): Promise<HelpCenterData> {
@@ -23,8 +26,7 @@ export const supportService = {
         return { faqs: [], categories: [] };
       });
     }
-    await delay();
-    return MOCK_HELP_CENTER;
+    return demoOfflineDelayAndPick(200, EMPTY_HELP_CENTER, (m) => m.MOCK_HELP_CENTER);
   },
 
   async getContactInfo(): Promise<ContactInfo> {
@@ -33,8 +35,7 @@ export const supportService = {
         return { email: "", phone: "", hours: "" };
       });
     }
-    await delay();
-    return MOCK_CONTACT_INFO;
+    return demoOfflineDelayAndPick(200, EMPTY_CONTACT, (m) => m.MOCK_CONTACT_INFO);
   },
 
   async getRefundEligibleTransactions(): Promise<RefundTransaction[]> {
@@ -55,8 +56,7 @@ export const supportService = {
         }));
       });
     }
-    await delay();
-    return MOCK_REFUND_TRANSACTIONS;
+    return demoOfflineDelayAndPick(200, [] as RefundTransaction[], (m) => m.MOCK_REFUND_TRANSACTIONS);
   },
 
   async getTicketCategories(): Promise<string[]> {
@@ -65,8 +65,7 @@ export const supportService = {
         return [];
       });
     }
-    await delay();
-    return MOCK_TICKET_CATEGORIES;
+    return demoOfflineDelayAndPick(200, [] as string[], (m) => m.MOCK_TICKET_CATEGORIES);
   },
 
   async getRefundTimeline(): Promise<RefundTimelineStep[]> {
@@ -75,8 +74,7 @@ export const supportService = {
         return [];
       });
     }
-    await delay();
-    return MOCK_REFUND_TIMELINE;
+    return demoOfflineDelayAndPick(200, [] as RefundTimelineStep[], (m) => m.MOCK_REFUND_TIMELINE);
   },
 
   async submitTicket(data: { subject: string; category: string; priority: string; message: string }): Promise<{ id: string }> {
@@ -93,6 +91,9 @@ export const supportService = {
         if (error) throw error;
         return { id: row.id };
       });
+    }
+    if (!useInAppMockDataset()) {
+      throw new Error("[CareNet] Connect Supabase or use Demo Access to submit support tickets.");
     }
     await delay(300);
     return { id: `ticket-${Date.now()}` };

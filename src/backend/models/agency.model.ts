@@ -83,6 +83,25 @@ export interface ShiftAlert { type: string; text: string; time: string; }
 // ─── Revenue ───
 export interface AgencyRevenuePoint { month: string; amount: number; }
 
+/** Agency home dashboard KPIs (service-computed; mock aggregates when offline). */
+export interface AgencyDashboardSummary {
+  activeCaregivers: number;
+  activeClients: number;
+  /** Latest month label from revenue series, e.g. "Mar" */
+  revenueMonthLabel: string;
+  /** Raw amount in BDT for the latest month in the revenue series */
+  revenueThisMonthBdt: number;
+  avgRating: number;
+  /** All marketplace packages owned by this agency (any status) */
+  marketplacePackagesTotal: number;
+  /** Subset published to the marketplace */
+  marketplacePackagesPublished: number;
+  /** Draft packages not yet published */
+  marketplacePackagesDraft: number;
+  /** Published care requests from guardians/patients in the agency inbox */
+  openCareRequirementsCount: number;
+}
+
 // ─── Job Applications ───
 export interface JobApplication {
   id: string; name: string; rating: number; experience: string;
@@ -109,24 +128,52 @@ export interface RequirementInboxItem {
   isNew: boolean;
 }
 
+export interface AgencyComplianceDocument {
+  name: string; status: "valid" | "review"; expires: string;
+}
+
 export interface AgencySettings {
   name: string; email: string; phone: string;
   address: string; license: string; established: number;
   services: string[];
   commissionRate: number; payoutSchedule: "weekly" | "biweekly" | "monthly";
+  complianceDocs?: AgencyComplianceDocument[];
+  hourlyRate?: number;
 }
 
 export interface StorefrontServiceItem {
   id: string; name: string; price: number; description: string; popular: boolean;
 }
 
+export interface StorefrontStaffMember {
+  id: string;
+  name: string;
+  role: string;
+  imageUrl: string;
+}
+
+export interface StorefrontReviewItem {
+  rating: number;
+  text: string;
+  authorName: string;
+  authorRole: string;
+  createdAt: string;
+}
+
 export interface StorefrontData {
-  agency: { name: string; rating: number; reviews: number; tagline: string };
+  agency: {
+    name: string; rating: number; reviews: number; tagline: string;
+    established?: number; successRate?: number; responseTime?: string; tier?: string;
+    location?: string;
+    caregiverCount?: number;
+  };
   services: StorefrontServiceItem[];
+  staff: StorefrontStaffMember[];
+  reviewItems: StorefrontReviewItem[];
 }
 
 export interface Branch {
-  id: string; name: string; address: string; staff: number; active: boolean;
+  id: string; name: string; address: string; city: string; staff: number; active: boolean; performance?: string;
 }
 
 export interface ClientCarePlanData {

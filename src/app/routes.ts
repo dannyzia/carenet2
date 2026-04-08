@@ -9,6 +9,7 @@ import { ShopFrontLayout } from "@/frontend/components/shell/ShopFrontLayout";
 
 // ─── Route Guards ───
 import { ProtectedRoute } from "@/frontend/components/guards/ProtectedRoute";
+import { RequireAdminRoute } from "@/frontend/components/guards/RequireRole";
 
 // ═══════════════════════════════════════════════════════════════════════
 // Helper — converts a dynamic import of a default-exported page component
@@ -55,8 +56,6 @@ export const router = createBrowserRouter([
           { path: "auth/role-selection", ...p(() => import("@/frontend/pages/auth/RoleSelectionPage")) },
           { path: "auth/forgot-password", ...p(() => import("@/frontend/pages/auth/ForgotPasswordPage")) },
           { path: "auth/reset-password", ...p(() => import("@/frontend/pages/auth/ResetPasswordPage")) },
-          { path: "auth/mfa-setup", ...p(() => import("@/frontend/pages/auth/MFASetupPage")) },
-          { path: "auth/mfa-verify", ...p(() => import("@/frontend/pages/auth/MFAVerifyPage")) },
           { path: "auth/verification-result", ...p(() => import("@/frontend/pages/auth/VerificationResultPage")) },
 
           // Support
@@ -125,7 +124,9 @@ export const router = createBrowserRouter([
               // ─── Guardian ───
       { path: "guardian/dashboard", ...p(() => import("@/frontend/pages/guardian/GuardianDashboardPage")) },
       { path: "guardian/emergency", ...p(() => import("@/frontend/pages/patient/EmergencyHubPage")) },
-      { path: "guardian/patients", ...p(() => import("@/frontend/pages/guardian/GuardianPatientsPage")) },
+              { path: "guardian/patients", ...p(() => import("@/frontend/pages/guardian/GuardianPatientsPage")) },
+              { path: "guardian/patient/:id", ...p(() => import("@/frontend/pages/guardian/GuardianPatientDetailPage")) },
+              { path: "guardian/patient/:id", ...p(() => import("@/frontend/pages/guardian/GuardianPatientDetailPage")) },
               { path: "guardian/schedule", ...p(() => import("@/frontend/pages/guardian/GuardianSchedulePage")) },
               { path: "guardian/messages", ...p(() => import("@/frontend/pages/guardian/GuardianMessagesPage")) },
               { path: "guardian/payments", ...p(() => import("@/frontend/pages/guardian/GuardianPaymentsPage")) },
@@ -156,29 +157,35 @@ export const router = createBrowserRouter([
               { path: "guardian/family-board", ...p(() => import("@/frontend/pages/guardian/GuardianFamilyBoardPage")) },
               { path: "guardian/incident-report", ...p(() => import("@/frontend/pages/guardian/GuardianIncidentReportPage")) },
 
-              // ─── Admin ───
-              { path: "admin/dashboard", ...p(() => import("@/frontend/pages/admin/AdminDashboardPage")) },
-              { path: "admin/users", ...p(() => import("@/frontend/pages/admin/AdminUsersPage")) },
-              { path: "admin/verifications", ...p(() => import("@/frontend/pages/admin/AdminVerificationsPage")) },
-              { path: "admin/payments", ...p(() => import("@/frontend/pages/admin/AdminPaymentsPage")) },
-              { path: "admin/reports", ...p(() => import("@/frontend/pages/admin/AdminReportsPage")) },
-              { path: "admin/settings", ...p(() => import("@/frontend/pages/admin/AdminSettingsPage")) },
-              { path: "admin/languages", ...p(() => import("@/frontend/pages/admin/AdminLanguageManagementPage")) },
-              { path: "admin/audit-logs", ...p(() => import("@/frontend/pages/admin/AuditLogsPage")) },
-              { path: "admin/cms", ...p(() => import("@/frontend/pages/admin/CMSManagerPage")) },
-              { path: "admin/disputes", ...p(() => import("@/frontend/pages/admin/DisputeAdjudicationPage")) },
-              { path: "admin/financial-audit", ...p(() => import("@/frontend/pages/admin/FinancialAuditPage")) },
-              { path: "admin/policy", ...p(() => import("@/frontend/pages/admin/PolicyManagerPage")) },
-              { path: "admin/promos", ...p(() => import("@/frontend/pages/admin/PromoManagementPage")) },
-              { path: "admin/sitemap", ...p(() => import("@/frontend/pages/admin/SitemapPage")) },
-              { path: "admin/support-ticket/:id", ...p(() => import("@/frontend/pages/admin/SupportTicketDetailPage")) },
-              { path: "admin/system-health", ...p(() => import("@/frontend/pages/admin/SystemHealthPage")) },
-              { path: "admin/user-inspector", ...p(() => import("@/frontend/pages/admin/UserInspectorPage")) },
-              { path: "admin/verification-case/:id", ...p(() => import("@/frontend/pages/admin/VerificationCasePage")) },
-              { path: "admin/placement-monitoring", ...p(() => import("@/frontend/pages/admin/AdminPlacementMonitoringPage")) },
-              { path: "admin/agency-approvals", ...p(() => import("@/frontend/pages/admin/AdminAgencyApprovalsPage")) },
-              { path: "admin/wallet-management", ...p(() => import("@/frontend/pages/admin/AdminWalletManagementPage")) },
-              { path: "admin/contracts", ...p(() => import("@/frontend/pages/admin/AdminContractsPage")) },
+              // ─── Admin (role guard: admin only) ───
+              {
+                path: "admin",
+                Component: RequireAdminRoute,
+                children: [
+                  { path: "dashboard", ...p(() => import("@/frontend/pages/admin/AdminDashboardPage")) },
+                  { path: "users", ...p(() => import("@/frontend/pages/admin/AdminUsersPage")) },
+                  { path: "verifications", ...p(() => import("@/frontend/pages/admin/AdminVerificationsPage")) },
+                  { path: "payments", ...p(() => import("@/frontend/pages/admin/AdminPaymentsPage")) },
+                  { path: "reports", ...p(() => import("@/frontend/pages/admin/AdminReportsPage")) },
+                  { path: "settings", ...p(() => import("@/frontend/pages/admin/AdminSettingsPage")) },
+                  { path: "languages", ...p(() => import("@/frontend/pages/admin/AdminLanguageManagementPage")) },
+                  { path: "audit-logs", ...p(() => import("@/frontend/pages/admin/AuditLogsPage")) },
+                  { path: "cms", ...p(() => import("@/frontend/pages/admin/CMSManagerPage")) },
+                  { path: "disputes", ...p(() => import("@/frontend/pages/admin/DisputeAdjudicationPage")) },
+                  { path: "financial-audit", ...p(() => import("@/frontend/pages/admin/FinancialAuditPage")) },
+                  { path: "policy", ...p(() => import("@/frontend/pages/admin/PolicyManagerPage")) },
+                  { path: "promos", ...p(() => import("@/frontend/pages/admin/PromoManagementPage")) },
+                  { path: "sitemap", ...p(() => import("@/frontend/pages/admin/SitemapPage")) },
+                  { path: "support-ticket/:id", ...p(() => import("@/frontend/pages/admin/SupportTicketDetailPage")) },
+                  { path: "system-health", ...p(() => import("@/frontend/pages/admin/SystemHealthPage")) },
+                  { path: "user-inspector", ...p(() => import("@/frontend/pages/admin/UserInspectorPage")) },
+                  { path: "verification-case/:id", ...p(() => import("@/frontend/pages/admin/VerificationCasePage")) },
+                  { path: "placement-monitoring", ...p(() => import("@/frontend/pages/admin/AdminPlacementMonitoringPage")) },
+                  { path: "agency-approvals", ...p(() => import("@/frontend/pages/admin/AdminAgencyApprovalsPage")) },
+                  { path: "wallet-management", ...p(() => import("@/frontend/pages/admin/AdminWalletManagementPage")) },
+                  { path: "contracts", ...p(() => import("@/frontend/pages/admin/AdminContractsPage")) },
+                ],
+              },
 
               // ─── Agency ───
               { path: "agency/dashboard", ...p(() => import("@/frontend/pages/agency/AgencyDashboardPage")) },

@@ -17,6 +17,9 @@ import { useAriaToast } from "@/frontend/hooks/useAriaToast";
 import { useTranslation } from "react-i18next";
 import { ConfirmDialog } from "@/frontend/components/shared/ConfirmDialog";
 import type { CareContractBid, BidComplianceSection, ComplianceStatus } from "@/backend/models";
+import { useAuth } from "@/frontend/auth/AuthContext";
+import { USE_SUPABASE } from "@/backend/services/supabase";
+import { subscribeToCareContractBids } from "@/backend/services/realtime";
 
 /** Compliance icon config — labels resolved via t() inside component */
 const complianceIconConfig: Record<ComplianceStatus, { icon: typeof CheckCircle2; color: string; labelKey: string }> = {
@@ -31,6 +34,7 @@ export default function BidReviewPage() {
   useDocumentTitle(tDocTitle("pageTitles.bidReview", "Bid Review"));
 
   const toast = useAriaToast();
+  const { user } = useAuth();
   const { id: requestId } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation("guardian");
@@ -53,6 +57,13 @@ export default function BidReviewPage() {
   const { data: bids, loading: loadingBids, refetch } = useAsyncData(() =>
     marketplaceService.getBidsForRequest(requestId || "")
   );
+
+  useEffect(() => {
+    if (!USE_SUPABASE || !user?.id || !requestId) return;
+    return subscribeToCareContractBids([requestId], user.id, () => {
+      void refetch();
+    });
+  }, [user?.id, requestId, refetch]);
 
   if (loadingReq || loadingBids) return <PageSkeleton />;
   if (!request) return <div className="text-center py-12"><p style={{ color: cn.textSecondary }}>{t("bidReview.requestNotFound")}</p></div>;

@@ -5,7 +5,7 @@ import { useAsyncData, useDocumentTitle } from "@/frontend/hooks";
 import { guardianService } from "@/backend/services";
 import { PageSkeleton } from "@/frontend/components/shared/PageSkeleton";
 import { useTranslation } from "react-i18next";
-import { USE_SUPABASE, sb, currentUserId } from "@/backend/services/_sb";
+import { USE_SUPABASE, sb } from "@/backend/services/_sb";
 
 export default function GuardianPatientsPage() {
   const { t: tDocTitle } = useTranslation("common");
@@ -25,7 +25,7 @@ export default function GuardianPatientsPage() {
 }
 
 function GuardianPatientsContent({ patients }: { patients: any[] }) {
-  const [expanded, setExpanded] = useState<number | null>(null);
+  const [expanded, setExpanded] = useState<string | null>(null);
   const [removing, setRemoving] = useState<string | null>(null);
   const navigate = useNavigate();
 
@@ -62,20 +62,69 @@ function GuardianPatientsContent({ patients }: { patients: any[] }) {
 
         {patients.map(p => (
           <div key={p.id} className="finance-card overflow-hidden">
-            <button className="w-full p-5 flex items-center justify-between text-left" onClick={() => setExpanded(expanded === p.id ? null : p.id)}>
-              <div className="flex items-center gap-4"><div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg" style={{ background: `${p.color}80` }}>{p.avatar}</div><div><p className="font-semibold" style={{ color: "#535353" }}>{p.name}</p><p className="text-sm" style={{ color: "#848484" }}>{p.relation} • Age {p.age} • {p.blood}</p></div></div>
-              <div className="flex items-center gap-3"><span className="badge-pill" style={{ background: p.status === "active" ? "#7CE57720" : "#8082ED20", color: p.status === "active" ? "#5FB865" : "#7B5EA7" }}>{p.status}</span><ChevronDown className="w-5 h-5 transition-transform" style={{ color: "#848484", transform: expanded === p.id ? "rotate(180deg)" : "" }} /></div>
-            </button>
+            <div className="w-full p-5 flex items-center justify-between text-left">
+              <Link to={`/guardian/patient/${p.id}`} className="flex items-center gap-4 no-underline flex-1 min-w-0">
+                <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg shrink-0" style={{ background: `${p.color}80` }}>{p.avatar}</div>
+                <div className="min-w-0">
+                  <p className="font-semibold" style={{ color: "#535353" }}>{p.name}</p>
+                  <p className="text-sm truncate" style={{ color: "#848484" }}>{p.relation || "No relation"}{p.age ? ` \u2022 Age ${p.age}` : ""}{p.blood ? ` \u2022 ${p.blood}` : ""}</p>
+                </div>
+              </Link>
+              <div className="flex items-center gap-3 shrink-0">
+                <span className="badge-pill" style={{ background: p.status === "active" ? "#7CE57720" : "#8082ED20", color: p.status === "active" ? "#5FB865" : "#7B5EA7" }}>{p.status}</span>
+                <button onClick={() => setExpanded(expanded === p.id ? null : p.id)} className="p-1">
+                  <ChevronDown className="w-5 h-5 transition-transform" style={{ color: "#848484", transform: expanded === p.id ? "rotate(180deg)" : "" }} />
+                </button>
+              </div>
+            </div>
             {expanded === p.id && (
               <div className="px-5 pb-5 border-t" style={{ borderColor: "#F3F4F6" }}>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
-                  <div><h3 className="text-sm font-semibold mb-2" style={{ color: "#535353" }}>Medical Conditions</h3><div className="space-y-1.5">{(p.conditions || []).length > 0 ? p.conditions.map(c => (<div key={c} className="flex items-center gap-2 text-sm"><div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: p.color || "#5FB865" }} /><span style={{ color: "#535353" }}>{c}</span></div>)) : <p className="text-sm" style={{ color: "#848484" }}>No conditions listed</p>}</div></div>
-                  <div><h3 className="text-sm font-semibold mb-2" style={{ color: "#535353" }}>Latest Vitals</h3>{p.vitals && Object.keys(p.vitals).length > 0 ? <div className="grid grid-cols-2 gap-2">{Object.entries(p.vitals).map(([key, val]) => (<div key={key} className="p-2 rounded-lg" style={{ background: "#F9FAFB" }}><p className="text-xs capitalize" style={{ color: "#848484" }}>{key}</p><p className="text-sm font-semibold mt-0.5" style={{ color: "#535353" }}>{val as string}</p></div>))}</div> : <p className="text-sm" style={{ color: "#848484" }}>No vitals recorded yet</p>}</div>
-                  <div><h3 className="text-sm font-semibold mb-2" style={{ color: "#535353" }}>Current Caregiver</h3>{p.caregiver ? <div className="p-3 rounded-xl" style={{ background: `${p.color || "#5FB865"}15` }}><p className="font-semibold text-sm" style={{ color: "#535353" }}>{p.caregiver.name}</p><p className="text-xs mt-0.5" style={{ color: "#848484" }}>★ {p.caregiver.rating} • Since {p.caregiver.since}</p></div> : <p className="text-sm" style={{ color: "#848484" }}>No caregiver assigned yet</p>}</div>
+                  <div>
+                    <h3 className="text-sm font-semibold mb-2" style={{ color: "#535353" }}>Medical Conditions</h3>
+                    {(p.conditions || []).length > 0 ? (
+                      <div className="space-y-1.5">
+                        {p.conditions.map((c: string) => (
+                          <div key={c} className="flex items-center gap-2 text-sm">
+                            <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: p.color }} />
+                            <span style={{ color: "#535353" }}>{c}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm" style={{ color: "#848484" }}>No conditions listed</p>
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold mb-2" style={{ color: "#535353" }}>Latest Vitals</h3>
+                    {p.vitals && Object.keys(p.vitals).length > 0 ? (
+                      <div className="grid grid-cols-2 gap-2">
+                        {Object.entries(p.vitals).map(([key, val]) => (
+                          <div key={key} className="p-2 rounded-lg" style={{ background: "#F9FAFB" }}>
+                            <p className="text-xs capitalize" style={{ color: "#848484" }}>{key}</p>
+                            <p className="text-sm font-semibold mt-0.5" style={{ color: "#535353" }}>{val as string}</p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm" style={{ color: "#848484" }}>No vitals recorded yet</p>
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold mb-2" style={{ color: "#535353" }}>Current Caregiver</h3>
+                    {p.caregiver ? (
+                      <div className="p-3 rounded-xl" style={{ background: `${p.color}15` }}>
+                        <p className="font-semibold text-sm" style={{ color: "#535353" }}>{p.caregiver.name}</p>
+                        <p className="text-xs mt-0.5" style={{ color: "#848484" }}>&#9733; {p.caregiver.rating} &bull; Since {p.caregiver.since}</p>
+                      </div>
+                    ) : (
+                      <p className="text-sm" style={{ color: "#848484" }}>No caregiver assigned yet</p>
+                    )}
+                  </div>
                 </div>
                 <div className="flex flex-wrap gap-2 mt-4">
-                  <a href={p.phone ? `tel:${p.phone}` : undefined} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm border hover:bg-gray-50" style={{ borderColor: "#E5E7EB", color: "#535353", opacity: p.phone ? 1 : 0.5, cursor: p.phone ? "pointer" : "not-allowed", textDecoration: "none" }}><Phone className="w-3.5 h-3.5" /> {p.phone ? "Call" : "No Phone"}</a>
-                  <button onClick={() => navigate(`/guardian/patient-intake?edit=${p.id}`)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm border hover:bg-gray-50" style={{ borderColor: "#E5E7EB", color: "#535353" }}><FileText className="w-3.5 h-3.5" /> Care Log</button>
+                  <a href={p.phone ? `tel:${p.phone}` : undefined} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm border hover:bg-gray-50 no-underline" style={{ borderColor: "#E5E7EB", color: "#535353", opacity: p.phone ? 1 : 0.5, cursor: p.phone ? "pointer" : "not-allowed", textDecoration: "none" }}><Phone className="w-3.5 h-3.5" /> {p.phone ? "Call" : "No Phone"}</a>
+                  <button onClick={() => navigate(`/guardian/patient/${p.id}`)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm border hover:bg-gray-50" style={{ borderColor: "#E5E7EB", color: "#535353" }}><FileText className="w-3.5 h-3.5" /> Care Log</button>
                   <button onClick={() => navigate(`/guardian/patient-intake?edit=${p.id}`)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm border hover:bg-gray-50" style={{ borderColor: "#E5E7EB", color: "#535353" }}><Edit3 className="w-3.5 h-3.5" /> Edit</button>
                   <button onClick={() => handleRemove(p)} disabled={removing === p.id} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm border hover:bg-red-50" style={{ borderColor: "#EF4444", color: "#EF4444" }}><Trash2 className="w-3.5 h-3.5" /> {removing === p.id ? "Removing..." : "Remove"}</button>
                 </div>

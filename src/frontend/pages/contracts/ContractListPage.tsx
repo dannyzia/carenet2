@@ -14,6 +14,8 @@ import { formatPoints, formatBDT, pointsToBDT } from "@/backend/utils/points";
 import { formatBDT as formatBDTCurrency } from "@/backend/utils/currency";
 import { useTranslation } from "react-i18next";
 import { useDocumentTitle } from "@/frontend/hooks";
+import { monetizationChannelName } from "@/backend/services/realtime";
+import { useAuth } from "@/frontend/auth/AuthContext";
 
 const STATUS_CONFIG: Record<ContractStatus, { color: string; bg: string; icon: typeof Clock; label: string }> = {
   draft: { color: "#848484", bg: "#84848420", icon: FileText, label: "Draft" },
@@ -33,10 +35,12 @@ export default function ContractListPage() {
   const [searchParams] = useSearchParams();
   const role = searchParams.get("role") || "all";
   const [filter, setFilter] = useState<"all" | ContractStatus>("all");
+  const { user } = useAuth();
 
   // Derive the channel name to match what useContracts subscribes to
-  const userId = role === "guardian" ? "guardian-1" : role === "agency" ? "agency-1" : "caregiver-1";
-  const channelId = `monetization:${userId}`;
+  const fallbackUserId = role === "guardian" ? "guardian-1" : role === "agency" ? "agency-1" : "caregiver-1";
+  const userId = user?.id || fallbackUserId;
+  const channelId = monetizationChannelName(userId);
 
   // Fire toasts on channel health degradation
   useChannelHealthToast(channelId, { channelLabel: "Contract feed" });
@@ -141,14 +145,14 @@ export default function ContractListPage() {
           </div>
         )}
         {filtered.map((contract) => (
-          <ContractCard key={contract.id} contract={contract} />
+          <ContractCard key={contract.id} contract={contract} currentUserId={userId} />
         ))}
       </div>
     </div>
   );
 }
 
-function ContractCard({ contract }: { contract: CareContract }) {
+function ContractCard({ contract, currentUserId }: { contract: CareContract; currentUserId: string }) {
   const status = STATUS_CONFIG[contract.status];
   const StatusIcon = status.icon;
   const isNegotiating = contract.status === "negotiating" || contract.status === "offered";
@@ -167,7 +171,7 @@ function ContractCard({ contract }: { contract: CareContract }) {
               <div className="flex items-center gap-1.5">
                 <p className="text-sm" style={{ color: cn.text }}>{contract.id}</p>
                 <SubscriptionHealthBadge
-                  channelId={`monetization:${contract.partyA.role === "guardian" ? "guardian-1" : "agency-1"}`}
+                  channelId={monetizationChannelName(currentUserId)}
                   compact
                   className="ml-0.5"
                 />

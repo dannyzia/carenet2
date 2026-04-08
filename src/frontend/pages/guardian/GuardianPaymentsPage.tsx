@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Plus, Wallet, ArrowUpRight, ArrowDownRight, Clock, Download, CreditCard, Building2 } from "lucide-react";
 import { useAsyncData, useDocumentTitle } from "@/frontend/hooks";
 import { guardianService } from "@/backend/services/guardian.service";
+import { getMyWallet } from "@/backend/services";
 import { PageSkeleton } from "@/frontend/components/PageSkeleton";
 
 export default function GuardianPaymentsPage() {
@@ -16,21 +17,63 @@ export default function GuardianPaymentsPage() {
 
   const { data: transactions, loading: l1 } = useAsyncData(() => guardianService.getPaymentTransactions());
   const { data: invoices, loading: l2 } = useAsyncData(() => guardianService.getInvoices());
+  const { data: wallet, loading: l3 } = useAsyncData(() => getMyWallet("guardian"));
+  const { data: profile, loading: l4 } = useAsyncData(() => guardianService.getGuardianProfile());
 
-  if (l1 || l2 || !transactions || !invoices) return <PageSkeleton cards={4} />;
+  if (l1 || l2 || l3 || l4 || !transactions || !invoices || !wallet || !profile) return <PageSkeleton cards={4} />;
+
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+  const thisMonthSpent = transactions
+    .filter((tx) => tx.type === "debit")
+    .filter((tx) => {
+      const ts = Date.parse(tx.date);
+      return Number.isFinite(ts) ? ts >= monthStart : false;
+    })
+    .reduce((sum, tx) => sum + Number(tx.amount || 0), 0);
+  const pendingPayments = invoices.reduce((sum, inv) => {
+    if (inv.status === "paid") return sum;
+    const value = Number((inv as any).total ?? inv.amount ?? 0);
+    return sum + (Number.isFinite(value) ? value : 0);
+  }, 0);
+  const agencyCount = new Set(
+    invoices
+      .map((inv) => (inv as any).agency || (inv as any).from?.name || "")
+      .filter(Boolean)
+  ).size;
+  const pendingCount = invoices.filter((inv) => inv.status !== "paid").length;
+  const thisMonthLabel = now.toLocaleString(isBangla ? "bn-BD" : "en-US", { month: "short", year: "numeric" });
+  const paymentMethods = profile.phone
+    ? [{ name: "Primary", number: profile.phone, color: "#00897B", primary: true }]
+    : [];
+
+  const exportTransactions = () => {
+    const header = ["ID", "Description", "Patient", "Amount", "Type", "Status", "Date"];
+    const rows = transactions.map((t) => [t.id, t.desc, t.patient, String(t.amount), t.type, t.status, t.date]);
+    const csv = [header, ...rows]
+      .map((row) => row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "guardian-payments.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div><h1 className="text-2xl" style={{ color: cn.text }}>Payments</h1><p className="text-sm" style={{ color: cn.textSecondary }}>Active Placement Billing \u2014 payments to agencies</p></div>
-        <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm cn-touch-target" style={{ background: "var(--cn-gradient-guardian)" }}><Plus className="w-4 h-4" /> Add Funds</button>
+        <Link to="/wallet?role=guardian" className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm cn-touch-target no-underline" style={{ background: "var(--cn-gradient-guardian)" }}><Plus className="w-4 h-4" /> Add Funds</Link>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
-          { label: "Wallet Balance", value: formatBDT(8400, bdtOpts), icon: Wallet, color: cn.green, bg: cn.greenBg, sub: "Available" },
-          { label: "This Month Spent", value: formatBDT(30200, bdtOpts), icon: ArrowUpRight, color: "#EF4444", bg: "rgba(239,68,68,0.08)", sub: "Mar 2026 \u00b7 2 agencies" },
-          { label: "Pending Payments", value: formatBDT(9600, bdtOpts), icon: Clock, color: cn.amber, bg: cn.amberBg, sub: "1 agency pending" },
+          { label: "Wallet Balance", value: formatBDT(wallet.balance, bdtOpts), icon: Wallet, color: cn.green, bg: cn.greenBg, sub: "Available" },
+          { label: "This Month Spent", value: formatBDT(thisMonthSpent, bdtOpts), icon: ArrowUpRight, color: "#EF4444", bg: "rgba(239,68,68,0.08)", sub: `${thisMonthLabel} \u00b7 ${agencyCount} agencies` },
+          { label: "Pending Payments", value: formatBDT(pendingPayments, bdtOpts), icon: Clock, color: cn.amber, bg: cn.amberBg, sub: `${pendingCount} agency pending` },
         ].map(s => {
           const Icon = s.icon;
           return (<div key={s.label} className="finance-card p-5 flex items-center gap-4"><div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ background: s.bg }}><Icon className="w-6 h-6" style={{ color: s.color }} /></div><div><p className="text-xs" style={{ color: cn.textSecondary }}>{s.label}</p><p className="text-xl" style={{ color: cn.text }}>{s.value}</p><p className="text-xs" style={{ color: s.color }}>{s.sub}</p></div></div>);
@@ -39,7 +82,7 @@ export default function GuardianPaymentsPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="finance-card p-5 lg:col-span-2">
-          <div className="flex items-center justify-between mb-4"><h2 style={{ color: cn.text }}>Transaction History</h2><button className="flex items-center gap-1 text-xs hover:underline" style={{ color: cn.green }}><Download className="w-3.5 h-3.5" /> Export</button></div>
+          <div className="flex items-center justify-between mb-4"><h2 style={{ color: cn.text }}>Transaction History</h2><button onClick={exportTransactions} className="flex items-center gap-1 text-xs hover:underline cn-touch-target" style={{ color: cn.green }}><Download className="w-3.5 h-3.5" /> Export</button></div>
           <div className="space-y-2">
             {transactions.map(t => (
               <div key={t.id} className="flex items-center justify-between py-3 border-b last:border-0" style={{ borderColor: cn.borderLight }}>
@@ -79,13 +122,16 @@ export default function GuardianPaymentsPage() {
           </div>
           <div className="mt-5">
             <h3 className="text-sm mb-3" style={{ color: cn.text }}>Payment Methods</h3>
-            {[{ name: "bKash", number: "0171X-XXXXXX", color: "#D12053", bg: "rgba(209,32,83,0.08)", primary: true }, { name: "Nagad", number: "0181X-XXXXXX", color: "#ED6E1B", bg: "rgba(237,110,27,0.08)", primary: false }].map(m => (
+            {paymentMethods.map(m => (
               <div key={m.name} className="flex items-center gap-2 p-2.5 rounded-lg border mb-2 cn-touch-target" style={{ borderColor: m.primary ? m.color : cn.border }}>
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs text-white" style={{ background: m.color }}>{m.name.charAt(0)}</div>
                 <div className="flex-1"><p className="text-xs" style={{ color: cn.text }}>{m.name}</p><p className="text-xs" style={{ color: cn.textSecondary }}>{m.number}</p></div>
                 {m.primary && (<span className="px-2 py-0.5 rounded-full text-[10px]" style={{ background: cn.greenBg, color: cn.green }}>Primary</span>)}
               </div>
             ))}
+            {paymentMethods.length === 0 && (
+              <p className="text-xs mb-2" style={{ color: cn.textSecondary }}>No payment methods on file</p>
+            )}
             <button className="w-full mt-2 py-2.5 rounded-lg border text-xs flex items-center justify-center gap-1.5 cn-touch-target" style={{ borderColor: cn.border, color: cn.textSecondary, borderStyle: "dashed" }}><CreditCard className="w-3.5 h-3.5" /> Add Payment Method</button>
           </div>
         </div>

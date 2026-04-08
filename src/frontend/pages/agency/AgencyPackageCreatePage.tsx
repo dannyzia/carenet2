@@ -11,9 +11,29 @@ import {
 import { cn } from "@/frontend/theme/tokens";
 import { marketplaceService } from "@/backend/services";
 import { useAriaToast } from "@/frontend/hooks/useAriaToast";
-import type { CareCategory, StaffLevel, ShiftType, PricingModel, HoursPerDay } from "@/backend/models";
+import type {
+  CareCategory,
+  StaffLevel,
+  ShiftType,
+  PricingModel,
+  HoursPerDay,
+  UCCFCareNeeds,
+  UCCFEquipment,
+  UCCFLogistics,
+  UCCFMedical,
+} from "@/backend/models";
 import { useTranslation } from "react-i18next";
 import { useDocumentTitle } from "@/frontend/hooks";
+import { useAuth } from "@/frontend/auth/AuthContext";
+import {
+  UCCFValidationError,
+  UCCF_SERVICE_OPTIONS,
+  UCCF_EXCLUSION_OPTIONS,
+  UCCF_ADD_ON_OPTIONS,
+  UCCF_EQUIPMENT_SLUGS,
+  UCCF_MEDICAL_DEVICES,
+  UCCF_MEDICAL_PROCEDURES,
+} from "@/backend/domain/uccf";
 
 const steps = [
   { id: 1, name: "Package Info", icon: FileText },
@@ -33,23 +53,14 @@ const categories: { id: CareCategory; label: string; emoji: string }[] = [
   { id: "disability", label: "Disability", emoji: "\u267F" },
 ];
 
-const serviceOptions = {
-  personal_care: ["bathing", "grooming", "toileting"],
-  medical_support: ["medication", "vitals", "wound_care"],
-  household_support: ["patient_laundry", "meal_prep"],
-  advanced_care: ["NG_tube", "suction", "oxygen"],
-  coordination: ["doctor_visit", "hospital_support"],
-};
-
-const exclusionOptions = ["heavy_household_work", "non_patient_tasks", "high_risk_procedures"];
-const addOnOptions = ["doctor_visit", "physiotherapy", "ambulance", "diagnostics"];
-
 export default function AgencyPackageCreatePage() {
   const { t: tDocTitle } = useTranslation("common");
+  const { t: tg } = useTranslation("guardian");
   useDocumentTitle(tDocTitle("pageTitles.agencyPackageCreate", "Agency Package Create"));
 
   const toast = useAriaToast();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [step, setStep] = useState(1);
 
   const [form, setForm] = useState({
@@ -58,7 +69,29 @@ export default function AgencyPackageCreatePage() {
     city: "Dhaka",
     serviceAreas: ["Gulshan"] as string[],
     newArea: "",
-    durationRype: "monthly" as "short" | "monthly" | "long_term",
+    durationType: "monthly" as "short" | "monthly" | "long_term",
+    targetAge: "",
+    targetGender: "" as "" | "male" | "female" | "other",
+    targetCondition: "",
+    locationType: "" as "" | "home" | "hospital",
+    accommodationProvided: false,
+    foodProvided: false,
+    travelDistanceKm: "",
+    adlBathing: false,
+    feedingOral: false,
+    feedingTube: false,
+    toiletingAssisted: false,
+    toiletingFull: false,
+    adlMobility: false,
+    monitorVitals: false,
+    monitorSupervision: false,
+    companionship: false,
+    diagnosis: "",
+    medicationComplexity: "" as "" | "low" | "medium" | "high",
+    devices: [] as string[],
+    procedures: [] as string[],
+    equipmentSlugs: [] as string[],
+    equipmentProvider: "" as "" | "patient" | "agency" | "mixed",
     // Staffing
     caregiverCount: 1,
     nurseCount: 0,
@@ -100,25 +133,103 @@ export default function AgencyPackageCreatePage() {
   const toggleArray = (arr: string[], item: string) =>
     arr.includes(item) ? arr.filter((a) => a !== item) : [...arr, item];
 
+  const toggleFormStringArray = (key: "devices" | "procedures" | "equipmentSlugs", item: string) => {
+    setForm((f) => ({ ...f, [key]: toggleArray(f[key], item) }));
+  };
+
   const next = () => setStep((s) => Math.min(s + 1, 6));
   const prev = () => setStep((s) => Math.max(s - 1, 1));
 
   const handlePublish = async () => {
+    if (form.title.trim().length < 5) {
+      toast.error(tg("wizard.agencyTitleTooShort"));
+      return;
+    }
+    if (form.categories.length === 0) {
+      toast.error(tg("wizard.agencyCategoriesRequired"));
+      return;
+    }
+    const phone = user?.phone?.trim();
+    if (!phone) {
+      toast.error(tg("wizard.agencyPhoneRequired"));
+      return;
+    }
+    const agencyName = user?.name?.trim() || "Agency";
+
+    const adl: NonNullable<UCCFCareNeeds["ADL"]> = {};
+    if (form.adlBathing) adl.bathing = true;
+    if (form.feedingTube) adl.feeding = "tube";
+    else if (form.feedingOral) adl.feeding = "oral";
+    if (form.toiletingFull) adl.toileting = "full";
+    else if (form.toiletingAssisted) adl.toileting = "assisted";
+    if (form.adlMobility) adl.mobility_support = true;
+    const monitoring: NonNullable<UCCFCareNeeds["monitoring"]> = {};
+    if (form.monitorVitals) monitoring.vitals = true;
+    if (form.monitorSupervision) monitoring.continuous_supervision = true;
+    const care_needs: UCCFCareNeeds = {};
+    if (Object.keys(adl).length) care_needs.ADL = adl;
+    if (Object.keys(monitoring).length) care_needs.monitoring = monitoring;
+    if (form.companionship) care_needs.companionship = true;
+
+    const medical: UCCFMedical | undefined =
+      form.diagnosis.trim() || form.medicationComplexity || form.devices.length || form.procedures.length
+        ? {
+            diagnosis: form.diagnosis.trim() || undefined,
+            medication_complexity: form.medicationComplexity || undefined,
+            devices: form.devices.length ? (form.devices as UCCFMedical["devices"]) : undefined,
+            procedures_required: form.procedures.length
+              ? (form.procedures as UCCFMedical["procedures_required"])
+              : undefined,
+          }
+        : undefined;
+
+    const logistics: UCCFLogistics | undefined =
+      form.locationType || form.accommodationProvided || form.foodProvided || form.travelDistanceKm
+        ? {
+            location_type: form.locationType || undefined,
+            accommodation_provided: form.accommodationProvided || undefined,
+            food_provided: form.foodProvided || undefined,
+            travel_distance_km: form.travelDistanceKm ? parseInt(form.travelDistanceKm, 10) : undefined,
+          }
+        : undefined;
+
+    const equipment: UCCFEquipment | undefined =
+      form.equipmentSlugs.length > 0 || form.equipmentProvider
+        ? { required: form.equipmentSlugs, provider: form.equipmentProvider || undefined }
+        : undefined;
+
+    const targetAgeNum = parseInt(form.targetAge, 10);
+    const care_subject =
+      form.targetAge || form.targetGender || form.targetCondition.trim()
+        ? {
+            age: !Number.isNaN(targetAgeNum) && targetAgeNum > 0 ? targetAgeNum : 0,
+            gender: form.targetGender || undefined,
+            condition_summary: form.targetCondition.trim() || undefined,
+            mobility: "assisted" as const,
+          }
+        : undefined;
+
+    try {
     const pkg = await marketplaceService.createAgencyPackage({
       meta: {
         type: "offer",
-        title: form.title,
+        title: form.title.trim(),
         category: form.categories,
         location: { city: form.city },
-        duration_type: form.durationRype,
+        duration_type: form.durationType,
       },
       party: {
         role: "agency",
-        name: "My Agency",
-        contact_phone: "+880 1700-000000",
-        organization_name: "My Agency",
+        name: agencyName,
+        contact_phone: phone,
+        organization_name: agencyName,
         service_area: form.serviceAreas,
       },
+      care_subject,
+      medical,
+      care_needs,
+      logistics,
+      equipment,
       staffing: {
         caregiver_count: form.caregiverCount,
         nurse_count: form.nurseCount,
@@ -160,14 +271,21 @@ export default function AgencyPackageCreatePage() {
       },
       exclusions: form.exclusions,
       add_ons: form.addOns,
-      agency_id: "agency-current",
-      agency_name: "My Agency",
+      agency_name: agencyName,
       agency_verified: true,
-    } as any);
+    });
 
     await marketplaceService.publishPackage(pkg.id);
     toast.success("Package published to marketplace!");
     navigate("/agency/marketplace-browse");
+    } catch (e) {
+      if (e instanceof UCCFValidationError) {
+        toast.error(e.issues.join(" "));
+      } else {
+        console.error(e);
+        toast.error(tg("wizard.agencyPublishFailed"));
+      }
+    }
   };
 
   const InputField = ({ label, children }: { label: string; children: React.ReactNode }) => (
@@ -227,7 +345,7 @@ export default function AgencyPackageCreatePage() {
                     <input type="text" value={form.city} onChange={(e) => update({ city: e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={inputStyle} />
                   </InputField>
                   <InputField label="Duration Type">
-                    <select value={form.durationRype} onChange={(e) => update({ durationRype: e.target.value as any })} className="w-full px-4 py-3 rounded-xl border text-sm" style={inputStyle}>
+                    <select value={form.durationType} onChange={(e) => update({ durationType: e.target.value as typeof form.durationType })} className="w-full px-4 py-3 rounded-xl border text-sm" style={inputStyle}>
                       <option value="short">Short Term</option>
                       <option value="monthly">Monthly</option>
                       <option value="long_term">Long Term</option>
@@ -238,15 +356,57 @@ export default function AgencyPackageCreatePage() {
                   <div className="flex flex-wrap gap-2 mb-2">
                     {form.serviceAreas.map((a) => (
                       <span key={a} className="px-3 py-1 rounded-lg text-xs flex items-center gap-1" style={{ background: cn.tealBg, color: cn.teal }}>
-                        {a} <button onClick={() => update({ serviceAreas: form.serviceAreas.filter((x) => x !== a) })}><X className="w-3 h-3" /></button>
+                        {a}{" "}
+                        <button type="button" onClick={() => update({ serviceAreas: form.serviceAreas.filter((x) => x !== a) })}>
+                          <X className="w-3 h-3" />
+                        </button>
                       </span>
                     ))}
                   </div>
                   <div className="flex gap-2">
                     <input type="text" value={form.newArea} onChange={(e) => update({ newArea: e.target.value })} className="flex-1 px-4 py-2.5 rounded-xl border text-sm" style={inputStyle} placeholder="Add area..." />
-                    <button onClick={() => { if (form.newArea.trim()) { update({ serviceAreas: [...form.serviceAreas, form.newArea.trim()], newArea: "" }); } }} className="px-4 py-2.5 rounded-xl text-white text-sm" style={{ background: "var(--cn-gradient-agency)" }}>Add</button>
+                    <button type="button" onClick={() => { if (form.newArea.trim()) { update({ serviceAreas: [...form.serviceAreas, form.newArea.trim()], newArea: "" }); } }} className="px-4 py-2.5 rounded-xl text-white text-sm" style={{ background: "var(--cn-gradient-agency)" }}>Add</button>
                   </div>
                 </InputField>
+                <div className="pt-2 space-y-3" style={{ borderTop: `1px solid ${cn.borderLight}` }}>
+                  <p className="text-sm font-medium" style={{ color: cn.text }}>Typical client profile (optional)</p>
+                  <div className="grid grid-cols-3 gap-3">
+                    <InputField label={tg("wizard.age")}>
+                      <input type="number" min={0} value={form.targetAge} onChange={(e) => update({ targetAge: e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={inputStyle} />
+                    </InputField>
+                    <InputField label={tg("wizard.gender")}>
+                      <select value={form.targetGender} onChange={(e) => update({ targetGender: e.target.value as typeof form.targetGender })} className="w-full px-4 py-3 rounded-xl border text-sm" style={inputStyle}>
+                        <option value="">{tg("wizard.preferNotSay")}</option>
+                        <option value="male">{tg("wizard.genderMale")}</option>
+                        <option value="female">{tg("wizard.genderFemale")}</option>
+                        <option value="other">{tg("wizard.genderOther")}</option>
+                      </select>
+                    </InputField>
+                    <InputField label={tg("wizard.medicalConditions")}>
+                      <input type="text" value={form.targetCondition} onChange={(e) => update({ targetCondition: e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={inputStyle} placeholder={tg("wizard.medicalConditionsPlaceholder")} />
+                    </InputField>
+                  </div>
+                  <InputField label={tg("wizard.locationType")}>
+                    <select value={form.locationType} onChange={(e) => update({ locationType: e.target.value as typeof form.locationType })} className="w-full px-4 py-3 rounded-xl border text-sm" style={inputStyle}>
+                      <option value="">{tg("wizard.preferNotSay")}</option>
+                      <option value="home">{tg("wizard.locationHome")}</option>
+                      <option value="hospital">{tg("wizard.locationHospital")}</option>
+                    </select>
+                  </InputField>
+                  <div className="flex flex-wrap gap-3">
+                    <label className="flex items-center gap-2 text-sm cursor-pointer" style={{ color: cn.text }}>
+                      <input type="checkbox" checked={form.accommodationProvided} onChange={(e) => update({ accommodationProvided: e.target.checked })} className="rounded" />
+                      {tg("wizard.accommodationProvided")}
+                    </label>
+                    <label className="flex items-center gap-2 text-sm cursor-pointer" style={{ color: cn.text }}>
+                      <input type="checkbox" checked={form.foodProvided} onChange={(e) => update({ foodProvided: e.target.checked })} className="rounded" />
+                      {tg("wizard.foodProvided")}
+                    </label>
+                  </div>
+                  <InputField label={tg("wizard.travelDistanceKm")}>
+                    <input type="number" min={0} value={form.travelDistanceKm} onChange={(e) => update({ travelDistanceKm: e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={inputStyle} />
+                  </InputField>
+                </div>
               </div>
             )}
 
@@ -293,27 +453,107 @@ export default function AgencyPackageCreatePage() {
             {step === 3 && (
               <div className="space-y-5">
                 <h2 className="text-xl" style={{ color: cn.text }}>Services Included</h2>
-                {Object.entries(serviceOptions).map(([key, options]) => (
-                  <InputField key={key} label={key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}>
-                    <div className="flex flex-wrap gap-2">
-                      {options.map((opt) => {
-                        const selected = (form as any)[key]?.includes(opt);
-                        return (
-                          <button key={opt} onClick={() => update({ [key]: toggleArray((form as any)[key] || [], opt) })} className="px-3 py-2 rounded-xl border text-sm cn-touch-target" style={{ borderColor: selected ? cn.teal : cn.border, background: selected ? cn.tealBg : "transparent", color: selected ? cn.teal : cn.textSecondary }}>
-                            {selected && <CheckCircle2 className="w-3 h-3 inline mr-1" />}
-                            {opt.replace(/_/g, " ")}
-                          </button>
-                        );
-                      })}
-                    </div>
+                <div className="space-y-3 p-4 rounded-xl" style={{ background: cn.bgInput, border: `1px solid ${cn.borderLight}` }}>
+                  <p className="text-sm font-medium" style={{ color: cn.text }}>{tg("wizard.dailyLiving")}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { key: "adlBathing" as const, label: tg("wizard.needBathing") },
+                      { key: "feedingOral" as const, label: tg("wizard.needFeedingOral") },
+                      { key: "feedingTube" as const, label: tg("wizard.needFeedingTube") },
+                      { key: "toiletingAssisted" as const, label: tg("wizard.needToiletingAssisted") },
+                      { key: "toiletingFull" as const, label: tg("wizard.needToiletingFull") },
+                      { key: "adlMobility" as const, label: tg("wizard.needMobilitySupport") },
+                    ].map(({ key, label }) => (
+                      <button key={key} type="button" onClick={() => update({ [key]: !form[key] } as any)} className="px-3 py-2 rounded-xl border text-xs cn-touch-target" style={{ borderColor: form[key] ? cn.teal : cn.border, background: form[key] ? cn.tealBg : "transparent", color: form[key] ? cn.teal : cn.textSecondary }}>{label}</button>
+                    ))}
+                  </div>
+                  <p className="text-sm font-medium pt-2" style={{ color: cn.text }}>{tg("wizard.monitoringCompanionship")}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { key: "monitorVitals" as const, label: tg("wizard.monitorVitals") },
+                      { key: "monitorSupervision" as const, label: tg("wizard.continuousSupervision") },
+                      { key: "companionship" as const, label: tg("wizard.companionship") },
+                    ].map(({ key, label }) => (
+                      <button key={key} type="button" onClick={() => update({ [key]: !form[key] } as any)} className="px-3 py-2 rounded-xl border text-xs cn-touch-target" style={{ borderColor: form[key] ? cn.teal : cn.border, background: form[key] ? cn.tealBg : "transparent", color: form[key] ? cn.teal : cn.textSecondary }}>{label}</button>
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-3 p-4 rounded-xl" style={{ background: cn.bgInput, border: `1px solid ${cn.borderLight}` }}>
+                  <p className="text-sm font-medium" style={{ color: cn.text }}>{tg("wizard.medicalOptional")}</p>
+                  <InputField label={tg("wizard.diagnosis")}>
+                    <input type="text" value={form.diagnosis} onChange={(e) => update({ diagnosis: e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={inputStyle} />
                   </InputField>
-                ))}
+                  <InputField label={tg("wizard.medicationComplexity")}>
+                    <select value={form.medicationComplexity} onChange={(e) => update({ medicationComplexity: e.target.value as typeof form.medicationComplexity })} className="w-full px-4 py-3 rounded-xl border text-sm" style={inputStyle}>
+                      <option value="">{tg("wizard.preferNotSay")}</option>
+                      <option value="low">{tg("wizard.medLow")}</option>
+                      <option value="medium">{tg("wizard.medMedium")}</option>
+                      <option value="high">{tg("wizard.medHigh")}</option>
+                    </select>
+                  </InputField>
+                  <p className="text-xs" style={{ color: cn.textSecondary }}>{tg("wizard.devices")}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {UCCF_MEDICAL_DEVICES.map((d) => {
+                      const selected = form.devices.includes(d);
+                      return (
+                        <button key={d} type="button" onClick={() => toggleFormStringArray("devices", d)} className="px-3 py-2 rounded-xl border text-xs cn-touch-target" style={{ borderColor: selected ? cn.teal : cn.border, background: selected ? cn.tealBg : "transparent", color: selected ? cn.teal : cn.textSecondary }}>{d}</button>
+                      );
+                    })}
+                  </div>
+                  <p className="text-xs" style={{ color: cn.textSecondary }}>{tg("wizard.procedures")}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {UCCF_MEDICAL_PROCEDURES.map((p) => {
+                      const selected = form.procedures.includes(p);
+                      return (
+                        <button key={p} type="button" onClick={() => toggleFormStringArray("procedures", p)} className="px-3 py-2 rounded-xl border text-xs cn-touch-target" style={{ borderColor: selected ? cn.teal : cn.border, background: selected ? cn.tealBg : "transparent", color: selected ? cn.teal : cn.textSecondary }}>{p.replace(/_/g, " ")}</button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium" style={{ color: cn.text }}>{tg("wizard.equipment")}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {UCCF_EQUIPMENT_SLUGS.map((slug) => {
+                      const selected = form.equipmentSlugs.includes(slug);
+                      return (
+                        <button key={slug} type="button" onClick={() => toggleFormStringArray("equipmentSlugs", slug)} className="px-3 py-2 rounded-xl border text-xs cn-touch-target" style={{ borderColor: selected ? cn.pink : cn.border, background: selected ? cn.pinkBg : "transparent", color: selected ? cn.pink : cn.textSecondary }}>{slug.replace(/_/g, " ")}</button>
+                      );
+                    })}
+                  </div>
+                  <InputField label={tg("wizard.equipmentProvider")}>
+                    <select value={form.equipmentProvider} onChange={(e) => update({ equipmentProvider: e.target.value as typeof form.equipmentProvider })} className="w-full px-4 py-3 rounded-xl border text-sm" style={inputStyle}>
+                      <option value="">{tg("wizard.preferNotSay")}</option>
+                      <option value="patient">{tg("wizard.providerPatient")}</option>
+                      <option value="agency">{tg("wizard.providerAgency")}</option>
+                      <option value="mixed">{tg("wizard.providerMixed")}</option>
+                    </select>
+                  </InputField>
+                </div>
+                {(Object.keys(UCCF_SERVICE_OPTIONS) as Array<keyof typeof UCCF_SERVICE_OPTIONS>).map((key) => {
+                  const options = UCCF_SERVICE_OPTIONS[key];
+                  const list = form[key];
+                  return (
+                    <InputField key={key} label={key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}>
+                      <div className="flex flex-wrap gap-2">
+                        {options.map((opt) => {
+                          const selected = list.includes(opt);
+                          return (
+                            <button key={opt} type="button" onClick={() => update({ [key]: toggleArray(list, opt) })} className="px-3 py-2 rounded-xl border text-sm cn-touch-target" style={{ borderColor: selected ? cn.teal : cn.border, background: selected ? cn.tealBg : "transparent", color: selected ? cn.teal : cn.textSecondary }}>
+                              {selected && <CheckCircle2 className="w-3 h-3 inline mr-1" />}
+                              {opt.replace(/_/g, " ")}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </InputField>
+                  );
+                })}
                 <InputField label="Exclusions">
                   <div className="flex flex-wrap gap-2">
-                    {exclusionOptions.map((opt) => {
+                    {UCCF_EXCLUSION_OPTIONS.map((opt) => {
                       const selected = form.exclusions.includes(opt);
                       return (
-                        <button key={opt} onClick={() => update({ exclusions: toggleArray(form.exclusions, opt) })} className="px-3 py-2 rounded-xl border text-sm cn-touch-target" style={{ borderColor: selected ? "#EF4444" : cn.border, background: selected ? "rgba(239,68,68,0.08)" : "transparent", color: selected ? "#EF4444" : cn.textSecondary }}>
+                        <button key={opt} type="button" onClick={() => update({ exclusions: toggleArray(form.exclusions, opt) })} className="px-3 py-2 rounded-xl border text-sm cn-touch-target" style={{ borderColor: selected ? "#EF4444" : cn.border, background: selected ? "rgba(239,68,68,0.08)" : "transparent", color: selected ? "#EF4444" : cn.textSecondary }}>
                           {opt.replace(/_/g, " ")}
                         </button>
                       );
@@ -322,10 +562,10 @@ export default function AgencyPackageCreatePage() {
                 </InputField>
                 <InputField label="Add-Ons">
                   <div className="flex flex-wrap gap-2">
-                    {addOnOptions.map((opt) => {
+                    {UCCF_ADD_ON_OPTIONS.map((opt) => {
                       const selected = form.addOns.includes(opt);
                       return (
-                        <button key={opt} onClick={() => update({ addOns: toggleArray(form.addOns, opt) })} className="px-3 py-2 rounded-xl border text-sm cn-touch-target" style={{ borderColor: selected ? cn.amber : cn.border, background: selected ? cn.amberBg : "transparent", color: selected ? cn.amber : cn.textSecondary }}>
+                        <button key={opt} type="button" onClick={() => update({ addOns: toggleArray(form.addOns, opt) })} className="px-3 py-2 rounded-xl border text-sm cn-touch-target" style={{ borderColor: selected ? cn.amber : cn.border, background: selected ? cn.amberBg : "transparent", color: selected ? cn.amber : cn.textSecondary }}>
                           {opt.replace(/_/g, " ")}
                         </button>
                       );

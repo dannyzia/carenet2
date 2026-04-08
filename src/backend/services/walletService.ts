@@ -6,6 +6,7 @@
  */
 
 import { USE_SUPABASE, getSupabaseClient } from "./supabase";
+import { sbData, isDemoSession } from "./_sb";
 import { MOCK_WALLETS, MOCK_POINT_TRANSACTIONS } from "@/backend/utils/contracts";
 import type { WalletSummary, PointTransaction } from "@/backend/utils/points";
 import { withRetry } from "@/backend/utils/retry";
@@ -16,28 +17,8 @@ const READ_RETRY = { maxRetries: 3, baseDelayMs: 800, onRetry: (_e: unknown, a: 
 // Retry config for write operations (fewer retries, user is waiting)
 const WRITE_RETRY = { maxRetries: 2, baseDelayMs: 500 };
 
-function isDemoAuthMode(): boolean {
-  if (typeof window === "undefined") return false;
-
-  try {
-    const mode = window.localStorage.getItem("carenet-auth-mode");
-    if (mode === "demo") return true;
-
-    const rawUser = window.localStorage.getItem("carenet-auth");
-    if (!rawUser) return false;
-    const parsed = JSON.parse(rawUser) as { id?: string; email?: string };
-    return (
-      typeof parsed.id === "string" && parsed.id.startsWith("demo-")
-    ) || (
-      typeof parsed.email === "string" && parsed.email.endsWith("@carenet.demo")
-    );
-  } catch {
-    return false;
-  }
-}
-
 function shouldUseSupabase(): boolean {
-  return USE_SUPABASE && !isDemoAuthMode();
+  return USE_SUPABASE;
 }
 
 // ─── Get wallet for current user (by role) ───
@@ -48,12 +29,11 @@ export async function getMyWallet(role: string): Promise<WalletSummary | null> {
     return w || null;
   }
 
-  return dedup(`wallet:${role}`, () => withRetry(async () => {
-    const sb = getSupabaseClient();
-    const { data: { user } } = await sb.auth.getUser();
+  return dedup(`wallet:${role}:${isDemoSession() ? "demo" : "pub"}`, () => withRetry(async () => {
+    const { data: { user } } = await getSupabaseClient().auth.getUser();
     if (!user) return null;
 
-    const { data, error } = await sb.from("wallets")
+    const { data, error } = await sbData().from("wallets")
       .select("*")
       .eq("user_id", user.id)
       .single();
@@ -102,7 +82,7 @@ export async function getWalletTransactions(
 
   const dedupKey = `wallet-tx:${walletUserId}:${opts?.type || "all"}:${opts?.limit || 50}:${opts?.offset || 0}`;
   return dedup(dedupKey, () => withRetry(async () => {
-    const sb = getSupabaseClient();
+    const sb = sbData();
     let query = sb.from("wallet_transactions")
       .select("*")
       .eq("wallet_id", walletUserId)
@@ -146,8 +126,7 @@ export async function buyPoints(
   }
 
   return withRetry(async () => {
-    const sb = getSupabaseClient();
-    const { error } = await sb.rpc("buy_points", {
+    const { error } = await getSupabaseClient().rpc("buy_points", {
       p_package_id: packageId,
       p_payment_method: paymentMethod,
     });
@@ -169,8 +148,7 @@ export async function withdrawPoints(
   }
 
   return withRetry(async () => {
-    const sb = getSupabaseClient();
-    const { error } = await sb.rpc("withdraw_points", {
+    const { error } = await getSupabaseClient().rpc("withdraw_points", {
       p_amount: amount,
       p_payment_method: paymentMethod,
       p_account_number: accountNumber,
@@ -191,7 +169,7 @@ export async function getAllWallets(): Promise<WalletSummary[]> {
   }
 
   return dedup("admin:all-wallets", () => withRetry(async () => {
-    const sb = getSupabaseClient();
+    const sb = sbData();
     return new Promise<WalletSummary[]>((resolve, reject) => {
       sb.from("wallets")
         .select("*")
@@ -232,11 +210,10 @@ export async function adminCreditPoints(
   }
 
   return withRetry(async () => {
-    const sb = getSupabaseClient();
-    const { data: { user } } = await sb.auth.getUser();
+    const { data: { user } } = await getSupabaseClient().auth.getUser();
     if (!user) return { success: false, error: "Not authenticated" };
 
-    const { error } = await sb.rpc("admin_credit_points", {
+    const { error } = await getSupabaseClient().rpc("admin_credit_points", {
       p_admin_id: user.id,
       p_wallet_id: walletId,
       p_amount: amount,
@@ -263,11 +240,10 @@ export async function adminDebitPoints(
   }
 
   return withRetry(async () => {
-    const sb = getSupabaseClient();
-    const { data: { user } } = await sb.auth.getUser();
+    const { data: { user } } = await getSupabaseClient().auth.getUser();
     if (!user) return { success: false, error: "Not authenticated" };
 
-    const { error } = await sb.rpc("admin_debit_points", {
+    const { error } = await getSupabaseClient().rpc("admin_debit_points", {
       p_admin_id: user.id,
       p_wallet_id: walletId,
       p_amount: amount,
@@ -293,11 +269,10 @@ export async function adminToggleWalletFreeze(
   }
 
   return withRetry(async () => {
-    const sb = getSupabaseClient();
-    const { data: { user } } = await sb.auth.getUser();
+    const { data: { user } } = await getSupabaseClient().auth.getUser();
     if (!user) return { success: false, error: "Not authenticated" };
 
-    const { error } = await sb.rpc("admin_toggle_wallet_freeze", {
+    const { error } = await getSupabaseClient().rpc("admin_toggle_wallet_freeze", {
       p_admin_id: user.id,
       p_wallet_id: walletId,
       p_freeze: freeze,
@@ -321,7 +296,7 @@ export async function adminUpdateFeeConfig(
   }
 
   return withRetry(async () => {
-    const sb = getSupabaseClient();
+    const sb = sbData();
     const { error } = await sb.from("wallets")
       .update({ fee_percent: feePercent, commission_percent: commissionPercent })
       .eq("id", walletId)

@@ -2,12 +2,22 @@
  * Schedule Service — daily task management across all roles (Phase 4)
  */
 import type { DailyTask } from "@/backend/models";
-import { MOCK_DAILY_TASKS } from "@/backend/api/mock";
-import { USE_SUPABASE, sbRead, sbWrite, sb, currentUserId } from "./_sb";
+import { loadMockBarrel } from "@/backend/api/mock/loadMockBarrel";
+import { USE_SUPABASE, sbRead, sbWrite, sb, currentUserId, useInAppMockDataset } from "./_sb";
 
 const delay = (ms = 200) => new Promise((r) => setTimeout(r, ms));
 
-let tasks = [...MOCK_DAILY_TASKS];
+let tasks: DailyTask[] | null = null;
+
+async function ensureScheduleMock() {
+  if (tasks !== null) return;
+  if (!useInAppMockDataset()) {
+    tasks = [];
+    return;
+  }
+  const m = await loadMockBarrel();
+  tasks = [...m.MOCK_DAILY_TASKS];
+}
 
 function mapTask(d: any): DailyTask {
   return {
@@ -49,8 +59,9 @@ export const scheduleService = {
       });
     }
     await delay();
-    if (date) return tasks.filter((t) => t.date === date);
-    return tasks;
+    await ensureScheduleMock();
+    if (date) return tasks!.filter((t) => t.date === date);
+    return tasks!;
   },
 
   async completeTask(taskId: string, note?: string, photoUrl?: string): Promise<void> {
@@ -65,8 +76,12 @@ export const scheduleService = {
         if (error) throw error;
       });
     }
+    if (!useInAppMockDataset()) {
+      throw new Error("[CareNet] Connect Supabase or use Demo Access for task updates.");
+    }
     await delay(300);
-    tasks = tasks.map((t) =>
+    await ensureScheduleMock();
+    tasks = tasks!.map((t) =>
       t.id === taskId
         ? { ...t, status: "completed" as const, completedAt: new Date().toISOString(), completionNote: note, completionPhotoUrl: photoUrl }
         : t
@@ -96,13 +111,17 @@ export const scheduleService = {
         return mapTask(data);
       });
     }
+    if (!useInAppMockDataset()) {
+      throw new Error("[CareNet] Connect Supabase or use Demo Access for task updates.");
+    }
     await delay(300);
+    await ensureScheduleMock();
     const created: DailyTask = {
       ...task,
       id: `task-${crypto.randomUUID().slice(0, 8)}`,
       createdAt: new Date().toISOString(),
     };
-    tasks.push(created);
+    tasks!.push(created);
     return created;
   },
 
@@ -113,8 +132,12 @@ export const scheduleService = {
         if (error) throw error;
       });
     }
+    if (!useInAppMockDataset()) {
+      throw new Error("[CareNet] Connect Supabase or use Demo Access for task updates.");
+    }
     await delay(200);
-    tasks = tasks.map((t) =>
+    await ensureScheduleMock();
+    tasks = tasks!.map((t) =>
       t.id === taskId ? { ...t, status: "cancelled" as const } : t
     );
   },

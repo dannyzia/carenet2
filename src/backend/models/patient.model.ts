@@ -78,6 +78,8 @@ export interface UpcomingEvent { date: string; title: string; time: string; type
 
 // ─── Dashboard ───
 export interface PatientDashboardVital {
+  /** i18n key under `dashboard.patient.vitals` when set; otherwise `label` is shown as-is */
+  vitalKey?: "bloodPressure" | "bloodGlucose" | "pulseRate";
   label: string; value: string; unit: string; color: string; status: string; trend: string;
 }
 

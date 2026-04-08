@@ -60,7 +60,13 @@ export interface AuthContextType {
   /** Enroll TOTP MFA — returns QR data URI and plain secret for display */
   enrollMfa: () => Promise<{ success: boolean; factorId?: string; qrCode?: string; secret?: string; error?: string }>;
   /** Register a new user */
-  register: (data: RegisterData) => Promise<{ success: boolean; user?: User; error?: string }>;
+  register: (data: RegisterData) => Promise<{
+    success: boolean;
+    user?: User;
+    error?: string;
+    /** Supabase returned a session (email confirmation disabled or already confirmed). */
+    signedInWithoutEmailConfirmation?: boolean;
+  }>;
   /** Request password reset email */
   forgotPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
   /** Reset password (after clicking email link) */
@@ -78,5 +84,9 @@ export interface AuthContextType {
   /** @deprecated Use login() + verifyMfa() instead */
   verifyOtp: (phone: string, code: string) => Promise<{ success: boolean; user?: User; error?: string }>;
   /** @deprecated Alias for register() */
-  registerUser: (data: any) => Promise<{ success: boolean; error?: string }>;
+  registerUser: (data: any) => Promise<{
+    success: boolean;
+    error?: string;
+    signedInWithoutEmailConfirmation?: boolean;
+  }>;
 }

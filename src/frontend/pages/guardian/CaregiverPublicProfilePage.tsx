@@ -2,7 +2,7 @@
 import React from "react";
 import { Star, MapPin, ShieldCheck, Clock, Award, Calendar, MessageCircle, Phone, ArrowLeft, ChevronRight, CheckCircle2, Heart, Building2, Shield } from "lucide-react";
 import { Button } from "@/frontend/components/ui/button";
-import { Link, useParams } from "react-router";
+import { Link, useParams, useLocation } from "react-router";
 import { PageHero } from "@/frontend/components/PageHero";
 import { cn } from "@/frontend/theme/tokens";
 import { useAsyncData, useDocumentTitle, useCareSeekerBasePath } from "@/frontend/hooks";
@@ -15,6 +15,7 @@ export default function CaregiverPublicProfilePage() {
   useDocumentTitle(tDocTitle("pageTitles.caregiverPublicProfile", "Caregiver Public Profile"));
 
   const base = useCareSeekerBasePath();
+  const location = useLocation();
   const { id } = useParams();
   const { data: caregiver, loading } = useAsyncData(() => guardianService.getCaregiverPublicProfile(id ?? "c1"), [id]);
 
@@ -39,7 +40,12 @@ export default function CaregiverPublicProfilePage() {
               </div>
             </div>
             <div className="flex flex-col gap-3">
-              <Link to={`${base}/care-requirement-wizard?agency=${caregiver.agency.id}`}><Button className="w-full h-14 rounded-2xl shadow-lg text-lg font-bold" style={{ background: "var(--cn-gradient-guardian)" }}>Submit Care Requirement</Button></Link>
+              <Link
+                to={`${base}/care-requirement-wizard?agency=${caregiver.agency.id}`}
+                state={{ wizardReturnTo: `${location.pathname}${location.search}` }}
+              >
+                <Button className="w-full h-14 rounded-2xl shadow-lg text-lg font-bold" style={{ background: "var(--cn-gradient-guardian)" }}>Submit Care Requirement</Button>
+              </Link>
               <Link to={`${base}/agency/${caregiver.agency.id}`}><Button variant="outline" className="w-full h-12 rounded-xl" style={{ borderColor: cn.teal, color: cn.teal }}><Building2 className="w-5 h-5 mr-2" /> Contact Agency</Button></Link>
             </div>
           </div>

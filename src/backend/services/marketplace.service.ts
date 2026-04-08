@@ -17,15 +17,24 @@ import type {
   BidComplianceItem,
   Job,
 } from "@/backend/models";
+import { loadMockBarrel } from "@/backend/api/mock/loadMockBarrel";
+import { USE_SUPABASE, sbRead, sbWrite, sbData, currentUserId, dataCacheScope, withDemoExpiry, useInAppMockDataset } from "./_sb";
 import {
-  MOCK_MARKETPLACE_JOBS,
-  MOCK_CARE_REQUESTS,
-  MOCK_AGENCY_PACKAGES,
-  MOCK_BIDS,
-} from "@/backend/api/mock";
-import { USE_SUPABASE, sbRead, sbWrite, sb, currentUserId } from "./_sb";
+  careContractToSupabaseRow,
+  mapSupabaseContractRow,
+  assertUCCFRequest,
+  assertUCCFOffer,
+} from "@/backend/domain/uccf";
+import { getSubscriptionDefaultParty } from "@/config/bookingPresentation";
+import { assertTransition, type LifecycleState } from "@/backend/domain/lifecycle/contractLifecycle";
+import { billingService } from "./billing.service";
 
 const delay = (ms = 200) => new Promise((r) => setTimeout(r, ms));
+
+/** Demo / in-memory packages use ids like `pkg-001`. With Supabase enabled, these must never be loaded or subscribed as if they were DB rows. */
+function isMockStylePackageId(id: string): boolean {
+  return /^pkg-/i.test(String(id).trim());
+}
 
 /** Default max expiry for care requests: 15 days from publish */
 const MAX_EXPIRY_DAYS = 15;
@@ -35,9 +44,23 @@ const MAX_EXPIRY_MS = MAX_EXPIRY_DAYS * 24 * 3600 * 1000;
 const TAKEN_STATUSES = ["locked", "booked", "active", "completed", "rated", "cancelled"];
 
 // In-memory stores
-let careRequests = [...MOCK_CARE_REQUESTS];
-let agencyPackages = [...MOCK_AGENCY_PACKAGES];
-let bids = [...MOCK_BIDS];
+let careRequests: CareContract[] | null = null;
+let agencyPackages: AgencyPackage[] | null = null;
+let bids: CareContractBid[] | null = null;
+
+async function ensureMkMock() {
+  if (careRequests !== null) return;
+  if (!useInAppMockDataset()) {
+    careRequests = [];
+    agencyPackages = [];
+    bids = [];
+    return;
+  }
+  const m = await loadMockBarrel();
+  careRequests = [...m.MOCK_CARE_REQUESTS];
+  agencyPackages = [...m.MOCK_AGENCY_PACKAGES];
+  bids = [...m.MOCK_BIDS];
+}
 
 /** Enforce expiry on requests — mutates in place, returns true if expired */
 function enforceExpiry(req: CareContract): boolean {
@@ -56,7 +79,7 @@ function enforceExpiry(req: CareContract): boolean {
   if (Date.now() > new Date(req.expires_at).getTime()) {
     req.status = "cancelled";
     // Expire all pending bids for this request
-    bids.filter(b => b.contract_id === req.id && b.status === "pending")
+    (bids ?? []).filter(b => b.contract_id === req.id && b.status === "pending")
       .forEach(b => { b.status = "expired"; });
     return true;
   }
@@ -101,63 +124,6 @@ function mapSupabaseJobRow(d: Record<string, unknown>): Job {
     experience: (d.experience as string) ?? "",
     skills,
     agency,
-  };
-}
-
-/** Map Supabase `care_contracts` row → `CareContract` */
-function mapSupabaseContractRow(d: Record<string, unknown>): CareContract {
-  const parseJson = (key: string) => {
-    const v = d[key];
-    if (v == null) return undefined;
-    if (typeof v === "object") return v;
-    try { return JSON.parse(String(v)); } catch { return undefined; }
-  };
-  const parseStringArray = (key: string): string[] => {
-    const v = d[key];
-    if (Array.isArray(v)) return v as string[];
-    if (typeof v === "string") {
-      try { return JSON.parse(v); } catch { return [v]; }
-    }
-    return [];
-  };
-  return {
-    id: String(d.id ?? ""),
-    meta: {
-      type: (d.type as any) ?? "request",
-      title: (d.title as string) ?? "",
-      category: parseStringArray("categories") as any,
-      location: {
-        city: (d.city as string) ?? "",
-        area: (d.area as string) ?? "",
-        address_optional: (d.address as string) ?? undefined,
-      },
-      duration_type: (d.duration_type as any) ?? "long_term",
-    },
-    party: {
-      role: (d.party_role as any) ?? "patient",
-      name: (d.party_name as string) ?? "",
-      contact_phone: (d.party_phone as string) ?? "",
-    },
-    care_subject: parseJson("care_subject"),
-    medical: parseJson("medical"),
-    care_needs: parseJson("care_needs"),
-    staffing: (parseJson("staffing") ?? { required_level: "L1" }) as any,
-    schedule: parseJson("schedule"),
-    services: parseJson("services"),
-    logistics: parseJson("logistics"),
-    equipment: parseJson("equipment"),
-    pricing: (parseJson("pricing") ?? { budget_max: 0 }) as any,
-    sla: parseJson("sla"),
-    compliance: parseJson("compliance"),
-    exclusions: parseStringArray("exclusions"),
-    add_ons: parseStringArray("add_ons"),
-    status: (d.status as any) ?? "draft",
-    created_at: (d.created_at as string) ?? new Date().toISOString(),
-    updated_at: (d.updated_at as string) ?? undefined,
-    published_at: (d.published_at as string) ?? undefined,
-    expires_at: (d.expires_at as string) ?? undefined,
-    bid_count: (d.bid_count as number) ?? 0,
-    match_score: (d.match_score as number) ?? undefined,
   };
 }
 
@@ -207,8 +173,8 @@ export const marketplaceService = {
   // ─── Legacy (caregiver job board) ───
   async getJobs(): Promise<Job[]> {
     if (USE_SUPABASE) {
-      return sbRead("marketplace:jobs", async () => {
-        const { data, error } = await sb().from("jobs")
+      return sbRead(`marketplace:jobs:${dataCacheScope()}`, async () => {
+        const { data, error } = await sbData().from("jobs")
           .select("*")
           .order("created_at", { ascending: false });
         if (error) throw error;
@@ -216,14 +182,15 @@ export const marketplaceService = {
       });
     }
     await delay();
-    return MOCK_MARKETPLACE_JOBS;
+    if (!useInAppMockDataset()) return [];
+    return (await loadMockBarrel()).MOCK_MARKETPLACE_JOBS;
   },
   async searchJobs(query: string): Promise<Job[]> {
     if (USE_SUPABASE) {
       if (!query.trim()) return this.getJobs();
-      return sbRead(`marketplace:jobs:${query}`, async () => {
+      return sbRead(`marketplace:jobs:${dataCacheScope()}:${query}`, async () => {
         const pattern = `%${query}%`;
-        const { data, error } = await sb().from("jobs")
+        const { data, error } = await sbData().from("jobs")
           .select("*")
           .or(`title.ilike.${pattern},location.ilike.${pattern}`)
           .order("created_at", { ascending: false });
@@ -232,9 +199,10 @@ export const marketplaceService = {
       });
     }
     await delay(300);
-    if (!query.trim()) return MOCK_MARKETPLACE_JOBS;
+    if (!useInAppMockDataset()) return [];
+    if (!query.trim()) return (await loadMockBarrel()).MOCK_MARKETPLACE_JOBS;
     const q = query.toLowerCase();
-    return MOCK_MARKETPLACE_JOBS.filter(
+    return (await loadMockBarrel()).MOCK_MARKETPLACE_JOBS.filter(
       (j) =>
         j.title.toLowerCase().includes(q) ||
         j.location.toLowerCase().includes(q)
@@ -248,8 +216,8 @@ export const marketplaceService = {
    */
   async getCareRequests(filters?: MarketplaceFilters): Promise<CareContract[]> {
     if (USE_SUPABASE) {
-      return sbRead("marketplace:care-requests", async () => {
-        let q = sb().from("care_contracts").select("*").in("status", ["published", "bidding", "matched"]).eq("type", "request");
+      return sbRead(`marketplace:care-requests:${dataCacheScope()}`, async () => {
+        let q = sbData().from("care_contracts").select("*").in("status", ["published", "bidding", "matched"]).eq("type", "request");
         if (filters?.categories?.length) {
           q = q.overlaps("categories", filters.categories);
         }
@@ -263,10 +231,11 @@ export const marketplaceService = {
       });
     }
     await delay();
+    await ensureMkMock();
     // Enforce expiry on all requests
-    careRequests.forEach(enforceExpiry);
+    (careRequests!).forEach(enforceExpiry);
     // Only show published/bidding (not taken, not expired, not draft)
-    let results = careRequests.filter(
+    let results = (careRequests!).filter(
       (r) => r.meta.type === "request" && !TAKEN_STATUSES.includes(r.status) && r.status !== "draft"
     );
     if (filters?.categories?.length) {
@@ -293,8 +262,8 @@ export const marketplaceService = {
 
   async getCareRequestById(id: string): Promise<CareContract | null> {
     if (USE_SUPABASE) {
-      return sbRead(`marketplace:care-request:${id}`, async () => {
-        const { data, error } = await sb().from("care_contracts").select("*").eq("id", id).single();
+      return sbRead(`marketplace:care-request:${dataCacheScope()}:${id}`, async () => {
+        const { data, error } = await sbData().from("care_contracts").select("*").eq("id", id).single();
         if (error) {
           if ((error as any).code === "PGRST116") return null;
           throw error;
@@ -303,68 +272,60 @@ export const marketplaceService = {
       });
     }
     await delay();
-    return careRequests.find((r) => r.id === id) || null;
+    await ensureMkMock();
+    return (careRequests!).find((r) => r.id === id) || null;
   },
 
   /**
    * Get ALL of a guardian's requests (including taken/expired).
    * Guardian can see everything they posted — for re-posting or reference.
    */
-  async getMyRequests(userId: string): Promise<CareContract[]> {
+  /** Pass `userId` only for tests; with Supabase the signed-in user is always used (RLS + real UUID). */
+  async getMyRequests(userId?: string): Promise<CareContract[]> {
     if (USE_SUPABASE) {
-      return sbRead(`marketplace:my-requests:${userId}`, async () => {
-        const { data, error } = await sb().from("care_contracts").select("*").eq("owner_id", userId).eq("type", "request").order("created_at", { ascending: false });
+      const uid = userId && !userId.endsWith("-current") ? userId : await currentUserId();
+      return sbRead(`marketplace:my-requests:${dataCacheScope()}:${uid}`, async () => {
+        const { data, error } = await sbData().from("care_contracts").select("*").eq("owner_id", uid).eq("type", "request").order("created_at", { ascending: false });
         if (error) throw error;
         return (data || []).map(mapSupabaseContractRow);
       });
     }
     await delay();
+    await ensureMkMock();
     // Enforce expiry but still return all
-    careRequests.forEach(enforceExpiry);
-    return careRequests.filter((r) => r.meta.type === "request");
+    (careRequests!).forEach(enforceExpiry);
+    return (careRequests!).filter((r) => r.meta.type === "request");
   },
 
   async createCareRequest(data: Partial<CareContract>): Promise<CareContract> {
+    assertUCCFRequest(data);
     if (USE_SUPABASE) {
       return sbWrite(async () => {
+        const ownerId = await currentUserId();
         const now = new Date().toISOString();
         const expiresAt = data.expires_at
           ? new Date(Math.min(new Date(data.expires_at).getTime(), Date.now() + MAX_EXPIRY_MS)).toISOString()
           : new Date(Date.now() + MAX_EXPIRY_MS).toISOString();
-        const payload: Record<string, unknown> = {
-          type: "request",
+
+        const payload = careContractToSupabaseRow(data, {
+          kind: "request",
+          ownerId,
+          createdAtIso: now,
+          expiresAtIso: expiresAt,
           status: "draft",
-          created_at: now,
-          expires_at: expiresAt,
-          bid_count: 0,
-          title: data.meta?.title,
-          categories: data.meta?.category,
-          city: data.meta?.location?.city,
-          area: data.meta?.location?.area,
-          address: data.meta?.location?.address_optional,
-          party_role: data.party?.role,
-          party_name: data.party?.name,
-          party_phone: data.party?.contact_phone,
-          staffing: data.staffing ? JSON.stringify(data.staffing) : undefined,
-          schedule: data.schedule ? JSON.stringify(data.schedule) : undefined,
-          services: data.services ? JSON.stringify(data.services) : undefined,
-          logistics: data.logistics ? JSON.stringify(data.logistics) : undefined,
-          equipment: data.equipment ? JSON.stringify(data.equipment) : undefined,
-          pricing: data.pricing ? JSON.stringify(data.pricing) : undefined,
-          sla: data.sla ? JSON.stringify(data.sla) : undefined,
-          compliance: data.compliance ? JSON.stringify(data.compliance) : undefined,
-          care_subject: data.care_subject ? JSON.stringify(data.care_subject) : undefined,
-          medical: data.medical ? JSON.stringify(data.medical) : undefined,
-          care_needs: data.care_needs ? JSON.stringify(data.care_needs) : undefined,
-          exclusions: data.exclusions ? JSON.stringify(data.exclusions) : undefined,
-          add_ons: data.add_ons ? JSON.stringify(data.add_ons) : undefined,
-        };
-        const { data: inserted, error } = await sb().from("care_contracts").insert(payload).select().single();
+          bidCount: 0,
+        });
+
+        const { data: inserted, error } = await sbData().from("care_contracts")
+          .insert(withDemoExpiry(payload as unknown as Record<string, unknown>) as typeof payload)
+          .select()
+          .single();
         if (error) throw error;
         return mapSupabaseContractRow(inserted as Record<string, unknown>);
       });
     }
     await delay(400);
+    await ensureMkMock();
     const now = new Date();
     const expiresAt = data.expires_at
       ? new Date(Math.min(new Date(data.expires_at).getTime(), now.getTime() + MAX_EXPIRY_MS)).toISOString()
@@ -377,7 +338,7 @@ export const marketplaceService = {
       expires_at: expiresAt,
       bid_count: 0,
     };
-    careRequests.push(newReq);
+    (careRequests!).push(newReq);
     return newReq;
   },
 
@@ -385,7 +346,7 @@ export const marketplaceService = {
     if (USE_SUPABASE) {
       return sbWrite(async () => {
         const now = new Date().toISOString();
-        const { data, error } = await sb().from("care_contracts")
+        const { data, error } = await sbData().from("care_contracts")
           .update({ status: "published", published_at: now, expires_at: new Date(Date.now() + MAX_EXPIRY_MS).toISOString() })
           .eq("id", id)
           .select()
@@ -395,7 +356,8 @@ export const marketplaceService = {
       });
     }
     await delay(300);
-    const req = careRequests.find((r) => r.id === id);
+    await ensureMkMock();
+    const req = (careRequests!).find((r) => r.id === id);
     if (req) {
       req.status = "published";
       req.published_at = new Date().toISOString();
@@ -416,7 +378,7 @@ export const marketplaceService = {
     if (USE_SUPABASE) {
       return sbWrite(async () => {
         const now = new Date().toISOString();
-        const { data, error } = await sb().from("care_contracts")
+        const { data, error } = await sbData().from("care_contracts")
           .update({ status: "published", published_at: now, expires_at: new Date(Date.now() + MAX_EXPIRY_MS).toISOString(), bid_count: 0 })
           .eq("id", id)
           .select()
@@ -426,7 +388,8 @@ export const marketplaceService = {
       });
     }
     await delay(400);
-    const req = careRequests.find((r) => r.id === id);
+    await ensureMkMock();
+    const req = (careRequests!).find((r) => r.id === id);
     if (!req) throw new Error("Request not found");
     req.status = "published";
     req.published_at = new Date().toISOString();
@@ -438,8 +401,8 @@ export const marketplaceService = {
   // ─── Agency Packages ───
   async getAgencyPackages(filters?: MarketplaceFilters): Promise<AgencyPackage[]> {
     if (USE_SUPABASE) {
-      return sbRead("marketplace:agency-packages", async () => {
-        let q = sb().from("care_contracts").select("*").eq("type", "offer").eq("status", "published");
+      return sbRead(`marketplace:agency-packages:${dataCacheScope()}`, async () => {
+        let q = sbData().from("care_contracts").select("*").eq("type", "offer").eq("status", "published");
         if (filters?.categories?.length) {
           q = q.overlaps("categories", filters.categories);
         }
@@ -453,7 +416,8 @@ export const marketplaceService = {
       });
     }
     await delay();
-    let results = [...agencyPackages];
+    await ensureMkMock();
+    let results = [...(agencyPackages!)];
     if (filters?.categories?.length) {
       results = results.filter((p) =>
         p.meta.category.some((c) => filters.categories!.includes(c))
@@ -475,8 +439,9 @@ export const marketplaceService = {
 
   async getAgencyPackageById(id: string): Promise<AgencyPackage | null> {
     if (USE_SUPABASE) {
-      return sbRead(`marketplace:agency-package:${id}`, async () => {
-        const { data, error } = await sb().from("care_contracts").select("*").eq("id", id).eq("type", "offer").single();
+      if (isMockStylePackageId(id)) return null;
+      return sbRead(`marketplace:agency-package:${dataCacheScope()}:${id}`, async () => {
+        const { data, error } = await sbData().from("care_contracts").select("*").eq("id", id).eq("type", "offer").single();
         if (error) {
           if ((error as any).code === "PGRST116") return null;
           throw error;
@@ -485,65 +450,67 @@ export const marketplaceService = {
       });
     }
     await delay();
-    return agencyPackages.find((p) => p.id === id) || null;
+    await ensureMkMock();
+    return (agencyPackages!).find((p) => p.id === id) || null;
   },
 
   async getMyPackages(agencyId: string): Promise<AgencyPackage[]> {
     if (USE_SUPABASE) {
-      return sbRead(`marketplace:my-packages:${agencyId}`, async () => {
-        const { data, error } = await sb().from("care_contracts").select("*").eq("agency_id", agencyId).eq("type", "offer").order("created_at", { ascending: false });
+      return sbRead(`marketplace:my-packages:${dataCacheScope()}:${agencyId}`, async () => {
+        const { data, error } = await sbData().from("care_contracts").select("*").eq("agency_id", agencyId).eq("type", "offer").order("created_at", { ascending: false });
         if (error) throw error;
         return (data || []).map(mapSupabasePackageRow);
       });
     }
     await delay();
-    return agencyPackages.filter((p) => p.agency_id === agencyId);
+    await ensureMkMock();
+    return (agencyPackages!).filter((p) => p.agency_id === agencyId);
   },
 
   async createAgencyPackage(data: Partial<AgencyPackage>): Promise<AgencyPackage> {
+    assertUCCFOffer(data);
     if (USE_SUPABASE) {
       return sbWrite(async () => {
+        const ownerId = await currentUserId();
         const now = new Date().toISOString();
-        const payload: Record<string, unknown> = {
-          type: "offer",
+        const agencyId =
+          data.agency_id && !String(data.agency_id).endsWith("-current")
+            ? String(data.agency_id)
+            : ownerId;
+        const payload = careContractToSupabaseRow(data, {
+          kind: "offer",
+          ownerId,
+          createdAtIso: now,
           status: "draft",
-          created_at: now,
-          title: data.meta?.title,
-          categories: data.meta?.category,
-          city: data.meta?.location?.city,
-          area: data.meta?.location?.area,
-          address: data.meta?.location?.address_optional,
-          party_role: data.party?.role,
-          party_name: data.party?.name,
-          party_phone: data.party?.contact_phone,
-          agency_id: data.agency_id,
-          agency_name: data.agency_name,
-          agency_rating: data.agency_rating,
-          agency_verified: data.agency_verified,
-          subscribers: data.subscribers,
-          featured: data.featured,
-          staffing: data.staffing ? JSON.stringify(data.staffing) : undefined,
-          schedule: data.schedule ? JSON.stringify(data.schedule) : undefined,
-          services: data.services ? JSON.stringify(data.services) : undefined,
-          logistics: data.logistics ? JSON.stringify(data.logistics) : undefined,
-          equipment: data.equipment ? JSON.stringify(data.equipment) : undefined,
-          pricing: data.pricing ? JSON.stringify(data.pricing) : undefined,
-          sla: data.sla ? JSON.stringify(data.sla) : undefined,
-          compliance: data.compliance ? JSON.stringify(data.compliance) : undefined,
-        };
-        const { data: inserted, error } = await sb().from("care_contracts").insert(payload).select().single();
+          bidCount: 0,
+          agency: {
+            id: agencyId,
+            name: data.agency_name ?? data.party?.name ?? "",
+            rating: data.agency_rating,
+            verified: data.agency_verified,
+            subscribers: data.subscribers,
+            featured: data.featured,
+          },
+        });
+        const { data: inserted, error } = await sbData().from("care_contracts")
+          .insert(withDemoExpiry(payload as unknown as Record<string, unknown>) as typeof payload)
+          .select()
+          .single();
         if (error) throw error;
         return mapSupabasePackageRow(inserted as Record<string, unknown>);
       });
     }
     await delay(400);
+    await ensureMkMock();
+    const incoming = data as AgencyPackage;
     const pkg: AgencyPackage = {
-      ...data as AgencyPackage,
+      ...incoming,
       id: `pkg-${Date.now()}`,
       status: "draft",
       created_at: new Date().toISOString(),
+      agency_id: incoming.agency_id || "agency-current",
     };
-    agencyPackages.push(pkg);
+    (agencyPackages!).push(pkg);
     return pkg;
   },
 
@@ -551,7 +518,7 @@ export const marketplaceService = {
     if (USE_SUPABASE) {
       return sbWrite(async () => {
         const now = new Date().toISOString();
-        const { data, error } = await sb().from("care_contracts")
+        const { data, error } = await sbData().from("care_contracts")
           .update({ status: "published", published_at: now })
           .eq("id", id)
           .select()
@@ -561,7 +528,8 @@ export const marketplaceService = {
       });
     }
     await delay(300);
-    const pkg = agencyPackages.find((p) => p.id === id);
+    await ensureMkMock();
+    const pkg = (agencyPackages!).find((p) => p.id === id);
     if (pkg) {
       pkg.status = "published";
       pkg.published_at = new Date().toISOString();
@@ -572,14 +540,15 @@ export const marketplaceService = {
   // ─── Bids ───
   async getBidsForRequest(requestId: string): Promise<CareContractBid[]> {
     if (USE_SUPABASE) {
-      return sbRead(`marketplace:bids:${requestId}`, async () => {
-        const { data, error } = await sb().from("care_contract_bids").select("*").eq("contract_id", requestId).order("created_at", { ascending: false });
+      return sbRead(`marketplace:bids:${dataCacheScope()}:${requestId}`, async () => {
+        const { data, error } = await sbData().from("care_contract_bids").select("*").eq("contract_id", requestId).order("created_at", { ascending: false });
         if (error) throw error;
         return (data || []).map(mapSupabaseBidRow);
       });
     }
     await delay();
-    const requestBids = bids.filter((b) => b.contract_id === requestId);
+    await ensureMkMock();
+    const requestBids = (bids ?? []).filter((b) => b.contract_id === requestId);
     // Enforce expiry on access
     requestBids.forEach(enforceBidExpiry);
     return requestBids;
@@ -587,8 +556,8 @@ export const marketplaceService = {
 
   async getBidById(bidId: string): Promise<CareContractBid | null> {
     if (USE_SUPABASE) {
-      return sbRead(`marketplace:bid:${bidId}`, async () => {
-        const { data, error } = await sb().from("care_contract_bids").select("*").eq("id", bidId).single();
+      return sbRead(`marketplace:bid:${dataCacheScope()}:${bidId}`, async () => {
+        const { data, error } = await sbData().from("care_contract_bids").select("*").eq("id", bidId).single();
         if (error) {
           if ((error as any).code === "PGRST116") return null;
           throw error;
@@ -597,21 +566,32 @@ export const marketplaceService = {
       });
     }
     await delay();
-    const bid = bids.find((b) => b.id === bidId);
+    await ensureMkMock();
+    const bid = (bids ?? []).find((b) => b.id === bidId);
     if (bid) enforceBidExpiry(bid);
     return bid || null;
   },
 
   async getMyBids(agencyId: string): Promise<CareContractBid[]> {
     if (USE_SUPABASE) {
-      return sbRead(`marketplace:my-bids:${agencyId}`, async () => {
-        const { data, error } = await sb().from("care_contract_bids").select("*").eq("agency_id", agencyId).order("created_at", { ascending: false });
+      return sbRead(`marketplace:my-bids:${dataCacheScope()}:${agencyId}`, async () => {
+        let aid = agencyId;
+        if (agencyId === "agency-current") {
+          aid = await currentUserId();
+        }
+        if (!aid) return [];
+        const { data, error } = await sb()
+          .from("care_contract_bids")
+          .select("*")
+          .eq("agency_id", aid)
+          .order("created_at", { ascending: false });
         if (error) throw error;
         return (data || []).map(mapSupabaseBidRow);
       });
     }
     await delay();
-    const agencyBids = bids.filter((b) => b.agency_id === agencyId);
+    await ensureMkMock();
+    const agencyBids = (bids ?? []).filter((b) => b.agency_id === agencyId);
     agencyBids.forEach(enforceBidExpiry);
     return agencyBids;
   },
@@ -648,13 +628,17 @@ export const marketplaceService = {
           created_at: now,
           expires_at: expiresAt,
         };
-        const { data: inserted, error } = await sb().from("care_contract_bids").insert(payload).select().single();
+        const { data: inserted, error } = await sbData().from("care_contract_bids")
+          .insert(withDemoExpiry(payload))
+          .select()
+          .single();
         if (error) throw error;
         return mapSupabaseBidRow(inserted as Record<string, unknown>);
       });
     }
     await delay(500);
-    const request = careRequests.find((r) => r.id === data.contract_id);
+    await ensureMkMock();
+    const request = (careRequests!).find((r) => r.id === data.contract_id);
     const compliance = this.calculateCompliance(request!, data);
 
     const bid: CareContractBid = {
@@ -667,7 +651,7 @@ export const marketplaceService = {
       created_at: new Date().toISOString(),
       expires_at: new Date(Date.now() + 48 * 3600 * 1000).toISOString(),
     };
-    bids.push(bid);
+    (bids!).push(bid);
 
     // Update request bid count
     if (request) {
@@ -680,27 +664,28 @@ export const marketplaceService = {
   async acceptBid(bidId: string): Promise<CareContractBid> {
     if (USE_SUPABASE) {
       return sbWrite(async () => {
-        const { data: bid, error: bidErr } = await sb().from("care_contract_bids").select("*").eq("id", bidId).single();
+        const { data: bid, error: bidErr } = await sbData().from("care_contract_bids").select("*").eq("id", bidId).single();
         if (bidErr) throw bidErr;
         const bidRow = bid as Record<string, unknown>;
         const contractId = String(bidRow.contract_id ?? "");
-        await sb().from("care_contract_bids").update({ status: "rejected" }).eq("contract_id", contractId).neq("id", bidId);
-        await sb().from("care_contract_bids").update({ status: "accepted" }).eq("id", bidId);
-        await sb().from("care_contracts").update({ status: "locked" }).eq("id", contractId);
-        const { data: updated, error: updateErr } = await sb().from("care_contract_bids").select("*").eq("id", bidId).single();
+        await sbData().from("care_contract_bids").update({ status: "rejected" }).eq("contract_id", contractId).neq("id", bidId);
+        await sbData().from("care_contract_bids").update({ status: "accepted" }).eq("id", bidId);
+        await sbData().from("care_contracts").update({ status: "locked" }).eq("id", contractId);
+        const { data: updated, error: updateErr } = await sbData().from("care_contract_bids").select("*").eq("id", bidId).single();
         if (updateErr) throw updateErr;
         return mapSupabaseBidRow(updated as Record<string, unknown>);
       });
     }
     await delay(300);
-    const bid = bids.find((b) => b.id === bidId);
+    await ensureMkMock();
+    const bid = (bids ?? []).find((b) => b.id === bidId);
     if (bid) {
       bid.status = "accepted";
       // Reject other bids for same request
-      bids.filter((b) => b.contract_id === bid.contract_id && b.id !== bidId)
+      (bids ?? []).filter((b) => b.contract_id === bid.contract_id && b.id !== bidId)
         .forEach((b) => { b.status = "rejected"; });
       // Lock contract
-      const req = careRequests.find((r) => r.id === bid.contract_id);
+      const req = (careRequests!).find((r) => r.id === bid.contract_id);
       if (req) req.status = "locked";
     }
     return bid!;
@@ -709,13 +694,14 @@ export const marketplaceService = {
   async rejectBid(bidId: string): Promise<CareContractBid> {
     if (USE_SUPABASE) {
       return sbWrite(async () => {
-        const { data, error } = await sb().from("care_contract_bids").update({ status: "rejected" }).eq("id", bidId).select().single();
+        const { data, error } = await sbData().from("care_contract_bids").update({ status: "rejected" }).eq("id", bidId).select().single();
         if (error) throw error;
         return mapSupabaseBidRow(data as Record<string, unknown>);
       });
     }
     await delay(200);
-    const bid = bids.find((b) => b.id === bidId);
+    await ensureMkMock();
+    const bid = (bids ?? []).find((b) => b.id === bidId);
     if (bid) bid.status = "rejected";
     return bid!;
   },
@@ -723,26 +709,27 @@ export const marketplaceService = {
   async withdrawBid(bidId: string): Promise<CareContractBid> {
     if (USE_SUPABASE) {
       return sbWrite(async () => {
-        const { data: bid, error: fetchErr } = await sb().from("care_contract_bids").select("*").eq("id", bidId).single();
+        const { data: bid, error: fetchErr } = await sbData().from("care_contract_bids").select("*").eq("id", bidId).single();
         if (fetchErr) throw fetchErr;
         const status = (bid as Record<string, unknown>).status as string;
         if (status !== "pending" && status !== "countered") {
           throw new Error("Only pending or countered bids can be withdrawn");
         }
-        const { data, error } = await sb().from("care_contract_bids").update({ status: "withdrawn" }).eq("id", bidId).select().single();
+        const { data, error } = await sbData().from("care_contract_bids").update({ status: "withdrawn" }).eq("id", bidId).select().single();
         if (error) throw error;
         return mapSupabaseBidRow(data as Record<string, unknown>);
       });
     }
     await delay(200);
-    const bid = bids.find((b) => b.id === bidId);
+    await ensureMkMock();
+    const bid = (bids ?? []).find((b) => b.id === bidId);
     if (!bid) throw new Error("Bid not found");
     if (bid.status !== "pending" && bid.status !== "countered") {
       throw new Error("Only pending or countered bids can be withdrawn");
     }
     bid.status = "withdrawn";
     // Decrement bid count on the parent request
-    const req = careRequests.find((r) => r.id === bid.contract_id);
+    const req = (careRequests!).find((r) => r.id === bid.contract_id);
     if (req && req.bid_count && req.bid_count > 0) {
       req.bid_count -= 1;
     }
@@ -758,7 +745,7 @@ export const marketplaceService = {
           pricing,
           created_at: new Date().toISOString(),
         });
-        const { data, error } = await sb().from("care_contract_bids")
+        const { data, error } = await sbData().from("care_contract_bids")
           .update({ status: "countered", counter_offer: counterOffer })
           .eq("id", bidId)
           .select()
@@ -768,7 +755,8 @@ export const marketplaceService = {
       });
     }
     await delay(300);
-    const bid = bids.find((b) => b.id === bidId);
+    await ensureMkMock();
+    const bid = (bids ?? []).find((b) => b.id === bidId);
     if (bid) {
       bid.status = "countered";
       bid.counter_offer = {
@@ -789,17 +777,17 @@ export const marketplaceService = {
   ): Promise<CareContractBid> {
     if (USE_SUPABASE) {
       return sbWrite(async () => {
-        const { data: bid, error: fetchErr } = await sb().from("care_contract_bids").select("*").eq("id", bidId).single();
+        const { data: bid, error: fetchErr } = await sbData().from("care_contract_bids").select("*").eq("id", bidId).single();
         if (fetchErr) throw new Error("Bid not found");
         const bidRow = bid as Record<string, unknown>;
         const contractId = String(bidRow.contract_id ?? "");
 
         if (action === "accept") {
-          await sb().from("care_contract_bids").update({ status: "accepted" }).eq("id", bidId);
-          await sb().from("care_contract_bids").update({ status: "rejected" }).eq("contract_id", contractId).neq("id", bidId);
-          await sb().from("care_contracts").update({ status: "locked" }).eq("id", contractId);
+          await sbData().from("care_contract_bids").update({ status: "accepted" }).eq("id", bidId);
+          await sbData().from("care_contract_bids").update({ status: "rejected" }).eq("contract_id", contractId).neq("id", bidId);
+          await sbData().from("care_contracts").update({ status: "locked" }).eq("id", contractId);
         } else if (action === "reject") {
-          await sb().from("care_contract_bids").update({ status: "withdrawn" }).eq("id", bidId);
+          await sbData().from("care_contract_bids").update({ status: "withdrawn" }).eq("id", bidId);
         } else if (action === "counter") {
           const counterOffer = JSON.stringify({
             from: "agency",
@@ -807,16 +795,17 @@ export const marketplaceService = {
             pricing: data?.pricing,
             created_at: new Date().toISOString(),
           });
-          await sb().from("care_contract_bids").update({ status: "countered", counter_offer: counterOffer }).eq("id", bidId);
+          await sbData().from("care_contract_bids").update({ status: "countered", counter_offer: counterOffer }).eq("id", bidId);
         }
 
-        const { data: updated, error } = await sb().from("care_contract_bids").select("*").eq("id", bidId).single();
+        const { data: updated, error } = await sbData().from("care_contract_bids").select("*").eq("id", bidId).single();
         if (error) throw error;
         return mapSupabaseBidRow(updated as Record<string, unknown>);
       });
     }
     await delay(300);
-    const bid = bids.find((b) => b.id === bidId);
+    await ensureMkMock();
+    const bid = (bids ?? []).find((b) => b.id === bidId);
     if (!bid) throw new Error("Bid not found");
 
     if (action === "accept") {
@@ -826,11 +815,11 @@ export const marketplaceService = {
         bid.proposed_pricing = bid.counter_offer.pricing;
       }
       // Reject other bids for same request
-      bids
+      (bids!)
         .filter((b) => b.contract_id === bid.contract_id && b.id !== bidId)
         .forEach((b) => { b.status = "rejected"; });
       // Lock the contract
-      const req = careRequests.find((r) => r.id === bid.contract_id);
+      const req = (careRequests!).find((r) => r.id === bid.contract_id);
       if (req) req.status = "locked";
     } else if (action === "reject") {
       // Agency rejects the counter — bid is withdrawn
@@ -853,14 +842,19 @@ export const marketplaceService = {
   async subscribeToPackage(
     packageId: string,
     guardianId: string,
-    patientId?: string
+    _patientId?: string,
+    party?: { name: string; phone?: string }
   ): Promise<CareContract> {
     if (USE_SUPABASE) {
+      if (isMockStylePackageId(packageId)) throw new Error("Package not found");
       return sbWrite(async () => {
-        const { data: pkg, error: pkgErr } = await sb().from("care_contracts").select("*").eq("id", packageId).eq("type", "offer").single();
+        const { data: pkg, error: pkgErr } = await sbData().from("care_contracts").select("*").eq("id", packageId).eq("type", "offer").single();
         if (pkgErr) throw new Error("Package not found");
         const pkgRow = pkg as Record<string, unknown>;
         const now = new Date().toISOString();
+        const fallback = getSubscriptionDefaultParty();
+        const partyName = party?.name?.trim() || fallback.name;
+        const partyPhone = party?.phone?.trim() || fallback.phone;
         const payload: Record<string, unknown> = {
           type: "request",
           status: "booked",
@@ -873,8 +867,8 @@ export const marketplaceService = {
           area: pkgRow.area,
           address: pkgRow.address,
           party_role: "patient",
-          party_name: "Guardian User",
-          party_phone: "+880-1700-000000",
+          party_name: partyName,
+          party_phone: partyPhone,
           agency_id: pkgRow.agency_id,
           agency_name: pkgRow.agency_name,
           staffing: pkgRow.staffing,
@@ -886,25 +880,29 @@ export const marketplaceService = {
           sla: pkgRow.sla,
           compliance: pkgRow.compliance,
         };
-        const { data: inserted, error } = await sb().from("care_contracts").insert(payload).select().single();
+        const { data: inserted, error } = await sbData().from("care_contracts").insert(withDemoExpiry(payload)).select().single();
         if (error) throw error;
         // Increment subscribers
         const subs = ((pkgRow.subscribers as number) ?? 0) + 1;
-        await sb().from("care_contracts").update({ subscribers: subs }).eq("id", packageId);
+        await sbData().from("care_contracts").update({ subscribers: subs }).eq("id", packageId);
         return mapSupabaseContractRow(inserted as Record<string, unknown>);
       });
     }
     await delay(500);
-    const pkg = agencyPackages.find((p) => p.id === packageId);
+    await ensureMkMock();
+    const pkg = (agencyPackages!).find((p) => p.id === packageId);
     if (!pkg) throw new Error("Package not found");
 
+    const fallback = getSubscriptionDefaultParty();
+    const partyName = party?.name?.trim() || fallback.name;
+    const partyPhone = party?.phone?.trim() || fallback.phone;
     const contract: CareContract = {
       id: `contract-${Date.now()}`,
       meta: { ...pkg.meta, type: "request" },
       party: {
         role: "patient",
-        name: "Guardian User",
-        contact_phone: "+880-1700-000000",
+        name: partyName,
+        contact_phone: partyPhone,
       },
       care_subject: undefined,
       staffing: pkg.staffing,
@@ -920,7 +918,7 @@ export const marketplaceService = {
       published_at: new Date().toISOString(),
     };
 
-    careRequests.push(contract);
+    (careRequests!).push(contract);
 
     // Increment subscribers on the package
     if (pkg.subscribers != null) {
@@ -954,6 +952,35 @@ export const marketplaceService = {
       remainingDays: Math.ceil(remainingMs / (24 * 3600 * 1000)),
       expiresAt,
     };
+  },
+
+  /**
+   * Mark an active care engagement complete (guardian or agency). Creates a final invoice when using Supabase.
+   */
+  async markCareContractCompleted(contractId: string): Promise<void> {
+    if (USE_SUPABASE) {
+      return sbWrite(async () => {
+        const userId = await currentUserId();
+        const { data: row, error } = await sbData().from("care_contracts").select("*").eq("id", contractId).maybeSingle();
+        if (error) throw error;
+        if (!row) throw new Error("Contract not found");
+        const ownerId = row.owner_id as string;
+        const agId = row.agency_id as string | null;
+        if (userId !== ownerId && userId !== agId) throw new Error("Not authorized");
+        const st = row.status as LifecycleState;
+        assertTransition(st, "completed");
+        const { error: upErr } = await sbData().from("care_contracts").update({ status: "completed" }).eq("id", contractId);
+        if (upErr) throw upErr;
+        await billingService.ensureInvoiceForCompletedCareContract(contractId);
+      });
+    }
+    await delay(300);
+    await ensureMkMock();
+    const req = (careRequests!).find((r) => r.id === contractId);
+    if (req) {
+      assertTransition(req.status as LifecycleState, "completed");
+      req.status = "completed";
+    }
   },
 
   /** Get remaining time info for a bid's expiry */

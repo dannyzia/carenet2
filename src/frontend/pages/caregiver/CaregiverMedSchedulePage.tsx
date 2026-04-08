@@ -151,7 +151,7 @@ export default function CaregiverMedSchedulePage() {
         <div className="finance-card p-5 overflow-x-auto">
           <div className="flex items-center justify-between mb-4">
             <button className="p-2 rounded-lg"><ChevronLeft className="w-5 h-5" style={{ color: cn.textSecondary }} /></button>
-            <h3 style={{ color: cn.text }}>March 10-16, 2026</h3>
+            <h3 style={{ color: cn.text }}>This Week</h3>
             <button className="p-2 rounded-lg"><ChevronRight className="w-5 h-5" style={{ color: cn.textSecondary }} /></button>
           </div>
           <div className="min-w-[500px]">
@@ -159,25 +159,15 @@ export default function CaregiverMedSchedulePage() {
               <div className="text-xs" style={{ color: cn.textSecondary }}>Medicine</div>
               {weekDays.map(d => <div key={d} className="text-center text-xs" style={{ color: cn.text }}>{d}</div>)}
             </div>
-            {[
-              { name: "Amlodipine 5mg", patient: "Mr. Abdul Rahman", pattern: [true, true, true, true, true, true, true] },
-              { name: "Metformin 500mg (AM)", patient: "Mr. Abdul Rahman", pattern: [true, true, true, true, true, true, true] },
-              { name: "Metformin 500mg (PM)", patient: "Mr. Abdul Rahman", pattern: [true, true, true, true, true, true, true] },
-              { name: "Insulin 10u", patient: "Mr. Abdul Rahman", pattern: [true, true, true, true, true, true, true] },
-              { name: "Baclofen 2.5mg (x3)", patient: "Baby Arif", pattern: [false, true, true, true, true, true, false] },
-            ].map((med, i) => (
+            {schedule.map((med, i) => (
               <div key={i} className="grid grid-cols-8 gap-1 border-t py-2" style={{ borderColor: cn.borderLight }}>
                 <div className="pr-2">
-                  <p className="text-xs truncate" style={{ color: cn.text }}>{med.name}</p>
-                  <p className="text-[10px] truncate" style={{ color: cn.textSecondary }}>{med.patient}</p>
+                  <p className="text-xs truncate" style={{ color: cn.text }}>{med.medicineName} {med.dosage}</p>
+                  <p className="text-[10px] truncate" style={{ color: cn.textSecondary }}>{med.patientName}</p>
                 </div>
-                {med.pattern.map((scheduled, j) => (
+                {weekDays.map((_, j) => (
                   <div key={j} className="flex items-center justify-center">
-                    {scheduled ? (
-                      <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: cn.greenBg }}><CheckCircle2 className="w-3.5 h-3.5" style={{ color: cn.green }} /></div>
-                    ) : (
-                      <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: cn.bgInput }}><span className="text-xs" style={{ color: cn.textSecondary }}>-</span></div>
-                    )}
+                    <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: cn.greenBg }}><CheckCircle2 className="w-3.5 h-3.5" style={{ color: cn.green }} /></div>
                   </div>
                 ))}
               </div>
@@ -196,7 +186,7 @@ export default function CaregiverMedSchedulePage() {
             <div className="finance-card p-5 space-y-4" style={{ borderLeft: `3px solid ${cn.pink}` }}>
               <h3 className="text-sm flex items-center gap-2" style={{ color: cn.pink }}><Bell className="w-4 h-4" /> New Medication Schedule</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div><label className="text-xs mb-1.5 block" style={{ color: cn.textSecondary }}>Patient</label><select value={newSched.patientName} onChange={e => setNewSched({ ...newSched, patientName: e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={{ background: cn.bgInput, borderColor: cn.border, color: cn.text }}><option value="">Select patient</option><option value="Mr. Abdul Rahman">Mr. Abdul Rahman</option><option value="Baby Arif">Baby Arif</option></select></div>
+                <div><label className="text-xs mb-1.5 block" style={{ color: cn.textSecondary }}>Patient</label><select value={newSched.patientName} onChange={e => setNewSched({ ...newSched, patientName: e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={{ background: cn.bgInput, borderColor: cn.border, color: cn.text }}><option value="">Select patient</option>{[...new Set(schedule.map(s => s.patientName))].map(p => <option key={p} value={p}>{p}</option>)}</select></div>
                 <div><label className="text-xs mb-1.5 block" style={{ color: cn.textSecondary }}>Medicine</label><MedicineSearchCombobox value={newSched.medicineName} genericLabel={newSched.genericName} onChange={({ name, generic }) => setNewSched({ ...newSched, medicineName: name, genericName: generic })} placeholder="Search BD medicine…" /></div>
                 <div><label className="text-xs mb-1.5 block" style={{ color: cn.textSecondary }}>Dosage</label><input type="text" value={newSched.dosage} onChange={e => setNewSched({ ...newSched, dosage: e.target.value })} placeholder="e.g., 500mg" className="w-full px-4 py-3 rounded-xl border text-sm" style={{ background: cn.bgInput, borderColor: cn.border, color: cn.text }} /></div>
                 <div><label className="text-xs mb-1.5 block" style={{ color: cn.textSecondary }}>Scheduled Time</label><input type="time" value={newSched.time} onChange={e => setNewSched({ ...newSched, time: e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={{ background: cn.bgInput, borderColor: cn.border, color: cn.text }} /></div>
@@ -213,25 +203,21 @@ export default function CaregiverMedSchedulePage() {
 
           <div className="space-y-3">
             <h3 className="text-sm" style={{ color: cn.text }}>Active Recurring Schedules</h3>
-            {[
-              { med: "Amlodipine 5mg", patient: "Mr. Abdul Rahman", time: "08:00 AM", days: "Daily", reminder: "15 min" },
-              { med: "Metformin 500mg", patient: "Mr. Abdul Rahman", time: "08:30 AM & 07:00 PM", days: "Daily", reminder: "15 min" },
-              { med: "Insulin Glargine 10u", patient: "Mr. Abdul Rahman", time: "10:00 PM", days: "Daily", reminder: "30 min" },
-              { med: "Baclofen 2.5mg", patient: "Baby Arif", time: "09:00 AM, 02:00 PM, 09:00 PM", days: "Mon-Sat", reminder: "10 min" },
-            ].map((s, i) => (
+            {schedule.map((s, i) => (
               <div key={i} className="finance-card p-4 flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: cn.pinkBg }}><Repeat className="w-5 h-5" style={{ color: cn.pink }} /></div>
                 <div className="flex-1">
-                  <p className="text-sm" style={{ color: cn.text }}>{s.med}</p>
+                  <p className="text-sm" style={{ color: cn.text }}>{s.medicineName} {s.dosage}</p>
                   <div className="flex flex-wrap gap-3 text-xs" style={{ color: cn.textSecondary }}>
-                    <span className="flex items-center gap-1"><User className="w-3 h-3" /> {s.patient}</span>
-                    <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {s.time}</span>
-                    <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {s.days}</span>
-                    <span className="flex items-center gap-1"><Bell className="w-3 h-3" /> {s.reminder}</span>
+                    <span className="flex items-center gap-1"><User className="w-3 h-3" /> {s.patientName}</span>
+                    <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {s.scheduledTime}</span>
+                    <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> Daily</span>
+                    {s.instructions && <span className="flex items-center gap-1"><Bell className="w-3 h-3" /> {s.instructions}</span>}
                   </div>
                 </div>
               </div>
             ))}
+            {schedule.length === 0 && <p className="text-xs text-center py-4" style={{ color: cn.textSecondary }}>No recurring schedules yet. Add one above.</p>}
           </div>
         </div>
       )}

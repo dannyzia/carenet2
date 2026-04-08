@@ -1,11 +1,13 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useParams, Link } from "react-router";
 import { cn } from "@/frontend/theme/tokens";
 import { Camera, MapPin, Clock, CheckCircle, AlertTriangle, Navigation } from "lucide-react";
 import { useAsyncData, useDocumentTitle } from "@/frontend/hooks";
 import { caregiverService } from "@/backend/services";
 import { PageSkeleton } from "@/frontend/components/shared/PageSkeleton";
-import { MOCK_SHIFT_CHECKIN_DATA } from "@/backend/api/mock";
+import { loadMockBarrel } from "@/backend/api/mock/loadMockBarrel";
+import { useInAppMockDataset } from "@/backend/services/_sb";
+import { CARE_SITE_GEOFENCE_MAX_M, metersBetween } from "@/frontend/utils/shiftSiteGeofence";
 import { useTranslation } from "react-i18next";
 
 function canCheckOut(dbStatus?: string): boolean {
@@ -85,8 +87,31 @@ function ShiftCheckOutContent({
   const [gpsError, setGpsError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const cameraRef = useRef<HTMLInputElement>(null);
+  const [geoMode, setGeoMode] = useState<"init" | "mock" | "live">("init");
+  const [mockSite, setMockSite] = useState<{ lat: number; lng: number; address: string } | null>(null);
 
-  const expected = MOCK_SHIFT_CHECKIN_DATA.expectedLocation;
+  useEffect(() => {
+    if (!useInAppMockDataset()) {
+      setGeoMode("live");
+      return;
+    }
+    let cancelled = false;
+    void loadMockBarrel().then((m) => {
+      if (!cancelled) {
+        setMockSite(m.MOCK_SHIFT_CHECKIN_DATA.expectedLocation);
+        setGeoMode("mock");
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (geoMode === "init") {
+    return <PageSkeleton cards={2} />;
+  }
+
+  const liveGeo = geoMode === "live";
 
   const handleCaptureSelfie = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -101,14 +126,33 @@ function ShiftCheckOutContent({
 
   const handleGetLocation = () => {
     if (!navigator.geolocation) {
-      const mockGps = { lat: expected.lat + (Math.random() - 0.5) * 0.001, lng: expected.lng + (Math.random() - 0.5) * 0.001 };
+      if (liveGeo || !mockSite) {
+        setGpsError(
+          t("shiftCheckout.geolocationRequired", {
+            defaultValue: "Turn on location services or use a browser that supports GPS.",
+          }),
+        );
+        return;
+      }
+      const mockGps = {
+        lat: mockSite.lat + (Math.random() - 0.5) * 0.001,
+        lng: mockSite.lng + (Math.random() - 0.5) * 0.001,
+      };
       setGps(mockGps);
       return;
     }
     navigator.geolocation.getCurrentPosition(
       (pos) => setGps({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
       () => {
-        setGps({ lat: expected.lat + 0.0005, lng: expected.lng + 0.0003 });
+        if (liveGeo || !mockSite) {
+          setGpsError(
+            t("shiftCheckout.gpsUnavailable", {
+              defaultValue: "Could not read GPS. Enable location and try again.",
+            }),
+          );
+          return;
+        }
+        setGps({ lat: mockSite.lat + 0.0005, lng: mockSite.lng + 0.0003 });
         setGpsError(t("shiftCheckout.gpsFallback"));
       },
       { enableHighAccuracy: true, timeout: 10000 },
@@ -127,15 +171,8 @@ function ShiftCheckOutContent({
     }
   };
 
-  const distanceMeters = gps
-    ? Math.round(
-        Math.sqrt(
-          Math.pow((gps.lat - expected.lat) * 111320, 2) +
-            Math.pow((gps.lng - expected.lng) * 111320 * Math.cos((expected.lat * Math.PI) / 180), 2),
-        ),
-      )
-    : null;
-  const withinRange = distanceMeters !== null && distanceMeters <= MOCK_SHIFT_CHECKIN_DATA.maxDistanceMeters;
+  const distanceMeters = !liveGeo && gps && mockSite ? metersBetween(gps, mockSite) : null;
+  const withinRange = liveGeo ? gps !== null : distanceMeters !== null && distanceMeters <= CARE_SITE_GEOFENCE_MAX_M;
 
   return (
     <div className="space-y-5 max-w-lg mx-auto">
@@ -188,7 +225,13 @@ function ShiftCheckOutContent({
           <div className="text-xs p-3 rounded-xl" style={{ background: cn.bgInput, color: cn.textSecondary }}>
             <div className="flex items-center gap-2">
               <MapPin className="w-4 h-4" style={{ color: cn.green }} />
-              <span>{expected.address}</span>
+              <span>
+                {liveGeo
+                  ? t("shiftCheckout.liveAddressHint", {
+                      defaultValue: "You will confirm GPS at the care site in the next step.",
+                    })
+                  : mockSite!.address}
+              </span>
             </div>
           </div>
           <button
@@ -253,7 +296,12 @@ function ShiftCheckOutContent({
             <div>
               <p style={{ color: cn.textHeading }}>{t("shiftCheckout.gpsTitle")}</p>
               <p className="text-xs" style={{ color: cn.textSecondary }}>
-                {t("shiftCheckout.gpsHint", { meters: MOCK_SHIFT_CHECKIN_DATA.maxDistanceMeters, address: expected.address })}
+                {liveGeo
+                  ? t("shiftCheckout.liveGpsOnly", { defaultValue: "Capture your GPS at the care location." })
+                  : t("shiftCheckout.gpsHint", {
+                      meters: CARE_SITE_GEOFENCE_MAX_M,
+                      address: mockSite!.address,
+                    })}
               </p>
             </div>
           </div>
@@ -273,9 +321,11 @@ function ShiftCheckOutContent({
                 <div className="flex items-center gap-2">
                   {withinRange ? <CheckCircle className="w-5 h-5 text-green-600" /> : <AlertTriangle className="w-5 h-5 text-red-500" />}
                   <span style={{ color: withinRange ? cn.green : "var(--cn-red)" }}>
-                    {withinRange
-                      ? t("shiftCheckout.withinRange", { m: distanceMeters })
-                      : t("shiftCheckout.outOfRange", { m: distanceMeters, max: MOCK_SHIFT_CHECKIN_DATA.maxDistanceMeters })}
+                    {liveGeo
+                      ? t("shiftCheckout.gpsCaptured", { defaultValue: "Location captured" })
+                      : withinRange
+                        ? t("shiftCheckout.withinRange", { m: distanceMeters })
+                        : t("shiftCheckout.outOfRange", { m: distanceMeters, max: CARE_SITE_GEOFENCE_MAX_M })}
                   </span>
                 </div>
               </div>

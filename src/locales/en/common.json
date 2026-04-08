@@ -68,6 +68,7 @@
     "bidExpiredAnnounce": "Bid on contract #{{id}} has expired",
     "bidOnContract": "Bid on Contract #{{id}}",
     "bidStatusChangedAnnounce": "Bid #{{id}} status changed to {{status}}",
+    "bidStatusUpdated": "Bid status updated",
     "bidWithdrawn": "Bid withdrawn",
     "browseRequests": "Browse Requests",
     "cancel": "Cancel",
@@ -331,6 +332,17 @@
     "noMessages": "No messages yet",
     "noNotifications": "No notifications",
     "noResults": "No results found"
+  },
+  "agencyStorefrontPage": {
+    "agencyCoverAlt": "Agency cover image",
+    "bookInstitutionalCare": "Book Institutional Care",
+    "getPersonalizedQuote": "Get Personalized Quote"
+  },
+  "trainingPortalUi": {
+    "leaderboardComingSoon": "Leaderboard rankings are not available yet. This section will use live data when connected."
+  },
+  "systemHealthUi": {
+    "noPerfSamples": "No performance samples recorded yet. Charts will populate when telemetry is available."
   },
   "error": {
     "forbidden": "You don't have permission to access this page",

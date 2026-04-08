@@ -45,7 +45,7 @@ function saveMockRegistry(registry: MockRegistry) {
 const DEMO_USERS: User[] = [
   {
     id: "demo-caregiver-1",
-    name: "Karim Uddin",
+    name: "Mock_Karim Uddin",
     email: "caregiver@carenet.demo",
     phone: "01712345678",
     roles: ["caregiver"],
@@ -57,7 +57,7 @@ const DEMO_USERS: User[] = [
   },
   {
     id: "demo-guardian-1",
-    name: "Rashed Hossain",
+    name: "Mock_Rashed Hossain",
     email: "guardian@carenet.demo",
     phone: "01812345678",
     roles: ["guardian"],
@@ -68,7 +68,7 @@ const DEMO_USERS: User[] = [
   },
   {
     id: "demo-patient-1",
-    name: "Amina Begum",
+    name: "Mock_Amina Begum",
     email: "patient@carenet.demo",
     phone: "01912345678",
     roles: ["patient"],
@@ -79,7 +79,7 @@ const DEMO_USERS: User[] = [
   },
   {
     id: "demo-agency-1",
-    name: "CareFirst Agency",
+    name: "Mock_CareFirst Agency",
     email: "agency@carenet.demo",
     phone: "01612345678",
     roles: ["agency"],
@@ -87,11 +87,11 @@ const DEMO_USERS: User[] = [
     district: "Dhaka",
     createdAt: "2024-01-05",
     mfaEnrolled: true,
-    profile: { agencyName: "CareFirst BD", license: "BD-AGN-2024-001" },
+    profile: { agencyName: "Mock_CareFirst BD", license: "BD-AGN-2024-001" },
   },
   {
     id: "demo-admin-1",
-    name: "Admin User",
+    name: "Mock_Admin User",
     email: "admin@carenet.demo",
     phone: "01512345678",
     roles: ["admin"],
@@ -102,7 +102,7 @@ const DEMO_USERS: User[] = [
   },
   {
     id: "demo-moderator-1",
-    name: "Mod User",
+    name: "Mock_Mod User",
     email: "moderator@carenet.demo",
     phone: "01412345678",
     roles: ["moderator"],
@@ -113,7 +113,7 @@ const DEMO_USERS: User[] = [
   },
   {
     id: "demo-shop-1",
-    name: "MediMart Store",
+    name: "Mock_MediMart Store",
     email: "shop@carenet.demo",
     phone: "01312345678",
     roles: ["shop"],
@@ -121,11 +121,11 @@ const DEMO_USERS: User[] = [
     district: "Dhaka",
     createdAt: "2024-04-15",
     mfaEnrolled: true,
-    profile: { shopName: "MediMart", category: "Medicines" },
+    profile: { shopName: "Mock_MediMart", category: "Medicines" },
   },
   {
     id: "demo-multi-1",
-    name: "Multi-Role Demo",
+    name: "Mock_Multi-Role Demo",
     email: "multi@carenet.demo",
     phone: "01011111111",
     roles: ["guardian", "caregiver", "admin"],
@@ -138,13 +138,13 @@ const DEMO_USERS: User[] = [
 
 /** Role -> demo email mapping (for quick-login buttons) */
 export const DEMO_ACCOUNTS: { role: Role; email: string; name: string }[] = [
-  { role: "caregiver", email: "caregiver@carenet.demo", name: "Karim Uddin" },
-  { role: "guardian", email: "guardian@carenet.demo", name: "Rashed Hossain" },
-  { role: "patient", email: "patient@carenet.demo", name: "Amina Begum" },
-  { role: "agency", email: "agency@carenet.demo", name: "CareFirst Agency" },
-  { role: "admin", email: "admin@carenet.demo", name: "Admin User" },
-  { role: "moderator", email: "moderator@carenet.demo", name: "Mod User" },
-  { role: "shop", email: "shop@carenet.demo", name: "MediMart Store" },
+  { role: "caregiver", email: "caregiver@carenet.demo", name: "Mock_Karim Uddin" },
+  { role: "guardian", email: "guardian@carenet.demo", name: "Mock_Rashed Hossain" },
+  { role: "patient", email: "patient@carenet.demo", name: "Mock_Amina Begum" },
+  { role: "agency", email: "agency@carenet.demo", name: "Mock_CareFirst Agency" },
+  { role: "admin", email: "admin@carenet.demo", name: "Mock_Admin User" },
+  { role: "moderator", email: "moderator@carenet.demo", name: "Mock_Mod User" },
+  { role: "shop", email: "shop@carenet.demo", name: "Mock_MediMart Store" },
 ];
 
 /**

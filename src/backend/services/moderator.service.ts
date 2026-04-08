@@ -9,21 +9,24 @@ import type {
   ModeratorReview,
   ModeratorReport,
   ModerationQueueItem,
+  ModeratorDashboardStats,
   FlaggedContent,
   ModeratorSanction,
   ModeratorEscalation,
 } from "@/backend/models";
-import {
-  MOCK_MODERATOR_REVIEWS,
-  MOCK_MODERATOR_REPORTS,
-  MOCK_MODERATION_QUEUE,
-  MOCK_FLAGGED_CONTENT,
-  MOCK_MODERATOR_SANCTIONS,
-  MOCK_MODERATOR_ESCALATIONS,
-} from "@/backend/api/mock";
-import { USE_SUPABASE, sbRead, sbWrite, sb, currentUserId } from "./_sb";
+import { loadMockBarrel } from "@/backend/api/mock/loadMockBarrel";
+import { USE_SUPABASE, sbRead, sbWrite, sb, currentUserId, useInAppMockDataset } from "./_sb";
+import { EMPTY_MODERATOR_DASHBOARD_STATS } from "./liveEmptyDefaults";
+import { demoOfflineDelayAndPick } from "./demoOfflineMock";
 
 const delay = (ms = 200) => new Promise((r) => setTimeout(r, ms));
+
+type MockApi = typeof import("@/backend/api/mock");
+let moderatorMockApi: MockApi | null = null;
+async function moderatorMock(): Promise<MockApi> {
+  if (!moderatorMockApi) moderatorMockApi = await loadMockBarrel();
+  return moderatorMockApi;
+}
 
 export const moderatorService = {
   async getReviews(): Promise<ModeratorReview[]> {
@@ -46,8 +49,7 @@ export const moderatorService = {
         }));
       });
     }
-    await delay();
-    return MOCK_MODERATOR_REVIEWS;
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_MODERATOR_REVIEWS);
   },
 
   async getReports(): Promise<ModeratorReport[]> {
@@ -70,8 +72,7 @@ export const moderatorService = {
         }));
       });
     }
-    await delay();
-    return MOCK_MODERATOR_REPORTS;
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_MODERATOR_REPORTS);
   },
 
   async getDashboardQueue(): Promise<ModerationQueueItem[]> {
@@ -95,11 +96,40 @@ export const moderatorService = {
       } catch (error) {
         console.warn("[Moderator Service] Supabase moderation_queue failed, using mock queue:", error);
         await delay();
-        return MOCK_MODERATION_QUEUE;
+        return useInAppMockDataset()
+          ? (await moderatorMock()).MOCK_MODERATION_QUEUE
+          : [];
       }
     }
-    await delay();
-    return MOCK_MODERATION_QUEUE;
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_MODERATION_QUEUE);
+  },
+
+  async getDashboardStats(): Promise<ModeratorDashboardStats> {
+    if (USE_SUPABASE) {
+      try {
+        return await sbRead("mod:dashboard-stats", async () => {
+          const demoFallback = (await moderatorMock()).MOCK_MODERATOR_DASHBOARD_STATS;
+          const client = sb();
+          const [qRes, fRes] = await Promise.all([
+            client.from("moderation_queue").select("id", { count: "exact", head: true }).in("status", ["pending", "in_review"]),
+            client.from("flagged_content").select("id", { count: "exact", head: true }).in("status", ["pending", "confirmed"]),
+          ]);
+          const live = !useInAppMockDataset();
+          return {
+            pendingReviews: qRes.count ?? (live ? 0 : demoFallback.pendingReviews),
+            openReports: fRes.count ?? (live ? 0 : demoFallback.openReports),
+            contentFlags: fRes.count ?? (live ? 0 : demoFallback.contentFlags),
+            resolvedToday: live ? 0 : demoFallback.resolvedToday,
+          };
+        });
+      } catch {
+        await delay();
+        return useInAppMockDataset()
+          ? (await moderatorMock()).MOCK_MODERATOR_DASHBOARD_STATS
+          : EMPTY_MODERATOR_DASHBOARD_STATS;
+      }
+    }
+    return demoOfflineDelayAndPick(200, EMPTY_MODERATOR_DASHBOARD_STATS, (m) => m.MOCK_MODERATOR_DASHBOARD_STATS);
   },
 
   async getFlaggedContent(): Promise<FlaggedContent[]> {
@@ -122,8 +152,7 @@ export const moderatorService = {
         }));
       });
     }
-    await delay();
-    return MOCK_FLAGGED_CONTENT;
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_FLAGGED_CONTENT);
   },
 
   async getQueueItem(id: number): Promise<ModerationQueueItem | null> {
@@ -144,8 +173,9 @@ export const moderatorService = {
         };
       });
     }
-    await delay();
-    return MOCK_MODERATION_QUEUE.find((q) => q.id === id) ?? null;
+    return demoOfflineDelayAndPick(200, null as ModerationQueueItem | null, (m) =>
+      m.MOCK_MODERATION_QUEUE.find((q) => q.id === id) ?? null,
+    );
   },
 
   async getRelatedReports(itemId: number): Promise<ModeratorReport[]> {
@@ -168,8 +198,7 @@ export const moderatorService = {
         }));
       });
     }
-    await delay();
-    return MOCK_MODERATOR_REPORTS.slice(0, 2);
+    return demoOfflineDelayAndPick(200, [] as ModeratorReport[], (m) => m.MOCK_MODERATOR_REPORTS.slice(0, 2));
   },
 
   async getRelatedContent(itemId: number): Promise<FlaggedContent[]> {
@@ -193,7 +222,7 @@ export const moderatorService = {
       });
     }
     await delay();
-    return MOCK_FLAGGED_CONTENT.slice(0, 2);
+    return (await moderatorMock()).MOCK_FLAGGED_CONTENT.slice(0, 2);
   },
 
   async getSanctions(): Promise<ModeratorSanction[]> {
@@ -218,8 +247,7 @@ export const moderatorService = {
         }));
       });
     }
-    await delay();
-    return MOCK_MODERATOR_SANCTIONS;
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_MODERATOR_SANCTIONS);
   },
 
   async getEscalations(): Promise<ModeratorEscalation[]> {
@@ -245,8 +273,7 @@ export const moderatorService = {
         }));
       });
     }
-    await delay();
-    return MOCK_MODERATOR_ESCALATIONS;
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_MODERATOR_ESCALATIONS);
   },
 
   // ─── Write Operations ───
@@ -264,6 +291,9 @@ export const moderatorService = {
         if (error) throw error;
       });
     }
+    if (!useInAppMockDataset()) {
+      throw new Error("[CareNet] Connect Supabase or use Demo Access for moderation actions.");
+    }
     await delay(300);
   },
 
@@ -279,6 +309,9 @@ export const moderatorService = {
         }).eq("id", id);
         if (error) throw error;
       });
+    }
+    if (!useInAppMockDataset()) {
+      throw new Error("[CareNet] Connect Supabase or use Demo Access for moderation actions.");
     }
     await delay(200);
   },
@@ -325,6 +358,9 @@ export const moderatorService = {
         if (error) throw error;
       });
     }
+    if (!useInAppMockDataset()) {
+      throw new Error("[CareNet] Connect Supabase or use Demo Access for moderation actions.");
+    }
     await delay(300);
   },
 
@@ -349,6 +385,9 @@ export const moderatorService = {
         if (error) throw error;
         return { id: row.id };
       });
+    }
+    if (!useInAppMockDataset()) {
+      throw new Error("[CareNet] Connect Supabase or use Demo Access for moderation actions.");
     }
     await delay(400);
     return { id: `esc-${Date.now()}` };
@@ -379,6 +418,9 @@ export const moderatorService = {
         if (error) throw error;
         return { id: row.id };
       });
+    }
+    if (!useInAppMockDataset()) {
+      throw new Error("[CareNet] Connect Supabase or use Demo Access for moderation actions.");
     }
     await delay(300);
     return { id: Date.now() };

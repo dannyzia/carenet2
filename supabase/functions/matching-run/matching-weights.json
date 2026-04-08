@@ -1,0 +1,6 @@
+{
+  "city_match": 40,
+  "category_overlap": 35,
+  "price_fit": 25,
+  "price_overshoot_ratio": 0.2
+}

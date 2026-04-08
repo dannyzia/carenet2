@@ -3,54 +3,49 @@
  */
 import type { ConversationItem, ChatMessage } from "@/backend/models";
 import type { Role } from "@/frontend/auth/types";
-import {
-  MOCK_AGENCY_CONVERSATIONS,
-  MOCK_AGENCY_MESSAGES,
-  MOCK_CAREGIVER_CONVERSATIONS_UNIFIED,
-  MOCK_GUARDIAN_CONVERSATIONS_UNIFIED,
-  MOCK_PATIENT_CONVERSATIONS,
-  MOCK_MODERATOR_CONVERSATIONS,
-  MOCK_ADMIN_CONVERSATIONS,
-  MOCK_MESSAGES_BY_CONVO,
-} from "@/backend/api/mock";
-import { USE_SUPABASE, sbRead, sbWrite, sb, currentUserId } from "./_sb";
+import { loadMockBarrel } from "@/backend/api/mock/loadMockBarrel";
+import { USE_SUPABASE, sbRead, sbWrite, sb, currentUserId, useInAppMockDataset } from "./_sb";
+import { demoOfflineDelayAndPick } from "./demoOfflineMock";
 
 const delay = (ms = 200) => new Promise((r) => setTimeout(r, ms));
 
-function isDemoAuthMode(): boolean {
-  if (typeof window === "undefined") return false;
+let conversationsByRole: Record<string, ConversationItem[]> | null = null;
+let messagesByConvo: Record<string, ChatMessage[]> | null = null;
 
-  try {
-    const mode = window.localStorage.getItem("carenet-auth-mode");
-    if (mode === "demo") return true;
+type MockApi = typeof import("@/backend/api/mock");
+let messageMockApi: MockApi | null = null;
+async function msgMock(): Promise<MockApi> {
+  if (!messageMockApi) messageMockApi = await loadMockBarrel();
+  return messageMockApi;
+}
 
-    const rawUser = window.localStorage.getItem("carenet-auth");
-    if (!rawUser) return false;
-    const parsed = JSON.parse(rawUser) as { id?: string; email?: string };
-    return (
-      typeof parsed.id === "string" && parsed.id.startsWith("demo-")
-    ) || (
-      typeof parsed.email === "string" && parsed.email.endsWith("@carenet.demo")
-    );
-  } catch {
-    return false;
+async function ensureMessageMock() {
+  if (conversationsByRole) return;
+  if (!useInAppMockDataset()) {
+    conversationsByRole = {
+      agency: [],
+      caregiver: [],
+      guardian: [],
+      patient: [],
+      moderator: [],
+      admin: [],
+      shop: [],
+    };
+    messagesByConvo = {};
+    return;
   }
+  const m = await msgMock();
+  conversationsByRole = {
+    agency: m.MOCK_AGENCY_CONVERSATIONS,
+    caregiver: m.MOCK_CAREGIVER_CONVERSATIONS_UNIFIED,
+    guardian: m.MOCK_GUARDIAN_CONVERSATIONS_UNIFIED,
+    patient: m.MOCK_PATIENT_CONVERSATIONS,
+    moderator: m.MOCK_MODERATOR_CONVERSATIONS,
+    admin: m.MOCK_ADMIN_CONVERSATIONS,
+    shop: [],
+  };
+  messagesByConvo = { ...m.MOCK_MESSAGES_BY_CONVO };
 }
-
-function shouldUseSupabase(): boolean {
-  return USE_SUPABASE && !isDemoAuthMode();
-}
-
-// ─── Mock data lookup by role ───────────────────────────────
-const CONVERSATIONS_BY_ROLE: Record<string, ConversationItem[]> = {
-  agency: MOCK_AGENCY_CONVERSATIONS,
-  caregiver: MOCK_CAREGIVER_CONVERSATIONS_UNIFIED,
-  guardian: MOCK_GUARDIAN_CONVERSATIONS_UNIFIED,
-  patient: MOCK_PATIENT_CONVERSATIONS,
-  moderator: MOCK_MODERATOR_CONVERSATIONS,
-  admin: MOCK_ADMIN_CONVERSATIONS,
-  shop: [], // shop role doesn't have messaging yet
-};
 
 // ─── Supabase helpers ───────────────────────────────────────
 
@@ -120,31 +115,33 @@ export const messageService = {
 
   // ─── Generic: get conversations for any role ───────────────
   async getConversations(role?: Role): Promise<ConversationItem[]> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       return sbRead(`convos:${role || "all"}`, async () => {
         const myId = await currentUserId();
         return fetchConversations(myId);
       });
     }
     await delay();
-    return CONVERSATIONS_BY_ROLE[role || "guardian"] || [];
+    await ensureMessageMock();
+    return conversationsByRole![role || "guardian"] || [];
   },
 
   // ─── Generic: get messages for a conversation ─────────────
   async getMessages(conversationId: string): Promise<ChatMessage[]> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       return sbRead(`msgs:${conversationId}`, async () => {
         const myId = await currentUserId();
         return fetchMessages(conversationId, myId);
       });
     }
     await delay();
-    return MOCK_MESSAGES_BY_CONVO[conversationId] || [];
+    await ensureMessageMock();
+    return messagesByConvo![conversationId] || [];
   },
 
   // ─── Get or create a conversation with a specific user ────
   async getOrCreateConversation(otherUserId: string): Promise<string> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       const myId = await currentUserId();
       // Check if conversation already exists
       const { data: existing } = await sb().from("conversations")
@@ -167,14 +164,16 @@ export const messageService = {
       if (error) throw error;
       return created!.id;
     }
-    // Mock: return a fake conversation ID
+    if (!useInAppMockDataset()) {
+      throw new Error("[CareNet] Connect Supabase or use Demo Access for messaging.");
+    }
     await delay(100);
     return `mock-convo-${otherUserId}`;
   },
 
   // ─── Send a message ────────────────────────────────────────
   async sendMessage(conversationId: string, text: string): Promise<ChatMessage> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       return sbWrite(async () => {
         const myId = await currentUserId();
         const { data: profile } = await sb().from("profiles").select("name").eq("id", myId).single();
@@ -201,6 +200,9 @@ export const messageService = {
         };
       });
     }
+    if (!useInAppMockDataset()) {
+      throw new Error("[CareNet] Connect Supabase or use Demo Access for messaging.");
+    }
     await delay(100);
     // Mock: return an optimistic message
     const mockMsg: ChatMessage = {
@@ -220,15 +222,14 @@ export const messageService = {
     return this.getConversations("agency");
   },
   async getAgencyMessages(conversationId: string) {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       const msgs = await this.getMessages(conversationId);
       return msgs.map((m) => ({
         ...m,
         sender: m.sender === "self" ? ("me" as const) : ("other" as const),
       }));
     }
-    await delay();
-    return MOCK_AGENCY_MESSAGES;
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_AGENCY_MESSAGES);
   },
   async getPatientConversations(): Promise<ConversationItem[]> {
     return this.getConversations("patient");
@@ -236,7 +237,7 @@ export const messageService = {
 
   // ─── Mark all messages in a conversation as read ───────────
   async markConversationRead(conversationId: string): Promise<void> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       const myId = await currentUserId();
       // Set read=true on all messages in this conversation that were NOT sent by me
       const { error } = await sb()

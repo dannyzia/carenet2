@@ -1,7 +1,7 @@
 /**
  * CareNet Real-time Subscription Manager
  * ───────────────────────────────────────
- * Provides real-time updates for wallet balances and contract offers.
+ * Provides real-time updates for wallet balances, care contracts, and bids.
  *
  * When USE_SUPABASE is true:
  *   Uses Supabase Realtime channels (postgres_changes)
@@ -15,14 +15,30 @@
  */
 
 import { USE_SUPABASE, getSupabaseClient } from "./supabase";
+import { isDemoSession } from "./_sb";
 import { isOnline, onOnlineChange } from "@/backend/utils/onlineState";
+
+/** Postgres schema used for realtime `postgres_changes` (matches `sbData()` routing). */
+export function getRealtimeDataSchema(): "public" | "demo" {
+  return isDemoSession() ? "demo" : "public";
+}
+
+/** Channel name for `subscribeToMonetization` (keep UI health hooks in sync). */
+export function monetizationChannelName(userId: string): string {
+  return `monetization:${getRealtimeDataSchema()}:${userId}`;
+}
+
+/** Channel name for `subscribeToAllMonetization`. */
+export function adminMonetizationChannelName(): string {
+  return `admin:monetization:${getRealtimeDataSchema()}`;
+}
 
 // ─── Event types ───
 export type RealtimeEvent =
   | { table: "wallets"; type: "UPDATE"; payload: Record<string, unknown> }
   | { table: "wallet_transactions"; type: "INSERT"; payload: Record<string, unknown> }
-  | { table: "contracts"; type: "UPDATE"; payload: Record<string, unknown> }
-  | { table: "contract_offers"; type: "INSERT"; payload: Record<string, unknown> };
+  | { table: "care_contracts"; type: "UPDATE"; payload: Record<string, unknown> }
+  | { table: "care_contract_bids"; type: "INSERT"; payload: Record<string, unknown> };
 
 type Listener = (event: RealtimeEvent) => void;
 
@@ -461,56 +477,163 @@ export function subscribeToMonetization(
   }
 
   const sb = getSupabaseClient();
+  const schema = getRealtimeDataSchema();
+  const channelName = `monetization:${schema}:${userId}`;
 
-  const channel = sb.channel(`monetization:${userId}`)
+  const channel = sb.channel(channelName)
     .on("postgres_changes", {
       event: "UPDATE",
-      schema: "public",
+      schema,
       table: "wallets",
       filter: `user_id=eq.${userId}`,
     }, (payload) => {
-      recordMessageReceived(`monetization:${userId}`);
+      recordMessageReceived(channelName);
       onEvent({ table: "wallets", type: "UPDATE", payload: payload.new });
     })
     .on("postgres_changes", {
       event: "INSERT",
-      schema: "public",
+      schema,
       table: "wallet_transactions",
     }, (payload) => {
-      recordMessageReceived(`monetization:${userId}`);
+      recordMessageReceived(channelName);
       onEvent({ table: "wallet_transactions", type: "INSERT", payload: payload.new });
     })
     .on("postgres_changes", {
       event: "UPDATE",
-      schema: "public",
-      table: "contracts",
-      filter: `party_a_id=eq.${userId}`,
+      schema,
+      table: "care_contracts",
+      filter: `owner_id=eq.${userId}`,
     }, (payload) => {
-      recordMessageReceived(`monetization:${userId}`);
-      onEvent({ table: "contracts", type: "UPDATE", payload: payload.new });
-    })
-    .on("postgres_changes", {
-      event: "UPDATE",
-      schema: "public",
-      table: "contracts",
-      filter: `party_b_id=eq.${userId}`,
-    }, (payload) => {
-      recordMessageReceived(`monetization:${userId}`);
-      onEvent({ table: "contracts", type: "UPDATE", payload: payload.new });
+      recordMessageReceived(channelName);
+      onEvent({ table: "care_contracts", type: "UPDATE", payload: payload.new });
     })
     .on("postgres_changes", {
       event: "INSERT",
-      schema: "public",
-      table: "contract_offers",
+      schema,
+      table: "care_contract_bids",
     }, (payload) => {
-      recordMessageReceived(`monetization:${userId}`);
-      onEvent({ table: "contract_offers", type: "INSERT", payload: payload.new });
+      recordMessageReceived(channelName);
+      onEvent({ table: "care_contract_bids", type: "INSERT", payload: payload.new });
     })
     .subscribe();
-
-  const channelName = `monetization:${userId}`;
   trackChannelConnected();
   _registerChannel(channelName, CHANNEL_STALE_PRESETS.wallet);
+
+  return () => {
+    sb.removeChannel(channel);
+    trackChannelDisconnected();
+    _unregisterChannel(channelName);
+  };
+}
+
+export type CareContractBidChangePayload = {
+  eventType: "INSERT" | "UPDATE" | "DELETE";
+  newRecord: Record<string, unknown> | null;
+  oldRecord: Record<string, unknown> | null;
+};
+
+/**
+ * Supabase Realtime: `care_contract_bids` rows for the given request contract IDs.
+ * Requires `care_contract_bids` in `supabase_realtime` publication (see base migration).
+ */
+export function subscribeToCareContractBids(
+  contractIds: string[],
+  channelKey: string,
+  onChange: (payload: CareContractBidChangePayload) => void
+): () => void {
+  if (!USE_SUPABASE || contractIds.length === 0) {
+    return () => {};
+  }
+
+  const sb = getSupabaseClient();
+  const schema = getRealtimeDataSchema();
+  const filter =
+    contractIds.length === 1
+      ? `contract_id=eq.${contractIds[0]}`
+      : `contract_id=in.(${contractIds.join(",")})`;
+
+  const channelName = `bids:contracts:${schema}:${channelKey}`;
+  const channel = sb
+    .channel(channelName)
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema,
+        table: "care_contract_bids",
+        filter,
+      },
+      (payload) => {
+        recordMessageReceived(channelName);
+        onChange({
+          eventType: payload.eventType as "INSERT" | "UPDATE" | "DELETE",
+          newRecord: (payload.new as Record<string, unknown>) ?? null,
+          oldRecord: (payload.old as Record<string, unknown>) ?? null,
+        });
+      }
+    )
+    .subscribe();
+
+  trackChannelConnected();
+  _registerChannel(channelName, CHANNEL_STALE_PRESETS.contract);
+
+  return () => {
+    sb.removeChannel(channel);
+    trackChannelDisconnected();
+    _unregisterChannel(channelName);
+  };
+}
+
+/**
+ * Invoices + payment_proofs affecting the current user (payer or receiver).
+ * Tables must be in `supabase_realtime` publication.
+ */
+export function subscribeToBillingForUser(userId: string, onChange: () => void): () => void {
+  if (!USE_SUPABASE || !userId) {
+    return () => {};
+  }
+
+  const sb = getSupabaseClient();
+  const schema = getRealtimeDataSchema();
+  const channelName = `billing:user:${schema}:${userId}`;
+  const channel = sb
+    .channel(channelName)
+    .on(
+      "postgres_changes",
+      { event: "*", schema, table: "invoices", filter: `from_party_id=eq.${userId}` },
+      () => {
+        recordMessageReceived(channelName);
+        onChange();
+      }
+    )
+    .on(
+      "postgres_changes",
+      { event: "*", schema, table: "invoices", filter: `to_party_id=eq.${userId}` },
+      () => {
+        recordMessageReceived(channelName);
+        onChange();
+      }
+    )
+    .on(
+      "postgres_changes",
+      { event: "*", schema, table: "payment_proofs", filter: `submitted_by_id=eq.${userId}` },
+      () => {
+        recordMessageReceived(channelName);
+        onChange();
+      }
+    )
+    .on(
+      "postgres_changes",
+      { event: "*", schema, table: "payment_proofs", filter: `received_by_id=eq.${userId}` },
+      () => {
+        recordMessageReceived(channelName);
+        onChange();
+      }
+    )
+    .subscribe();
+
+  trackChannelConnected();
+  _registerChannel(channelName, CHANNEL_STALE_PRESETS.contract);
 
   return () => {
     sb.removeChannel(channel);
@@ -528,12 +651,12 @@ export function subscribeToAllMonetization(
   }
 
   const sb = getSupabaseClient();
-
-  const adminChannelName = "admin:monetization";
+  const schema = getRealtimeDataSchema();
+  const adminChannelName = `admin:monetization:${schema}`;
   const channel = sb.channel(adminChannelName)
     .on("postgres_changes", {
       event: "*",
-      schema: "public",
+      schema,
       table: "wallets",
     }, (payload) => {
       recordMessageReceived(adminChannelName);
@@ -541,7 +664,7 @@ export function subscribeToAllMonetization(
     })
     .on("postgres_changes", {
       event: "INSERT",
-      schema: "public",
+      schema,
       table: "wallet_transactions",
     }, (payload) => {
       recordMessageReceived(adminChannelName);
@@ -549,19 +672,19 @@ export function subscribeToAllMonetization(
     })
     .on("postgres_changes", {
       event: "*",
-      schema: "public",
-      table: "contracts",
+      schema,
+      table: "care_contracts",
     }, (payload) => {
       recordMessageReceived(adminChannelName);
-      onEvent({ table: "contracts", type: "UPDATE", payload: payload.new });
+      onEvent({ table: "care_contracts", type: "UPDATE", payload: payload.new });
     })
     .on("postgres_changes", {
       event: "INSERT",
-      schema: "public",
-      table: "contract_offers",
+      schema,
+      table: "care_contract_bids",
     }, (payload) => {
       recordMessageReceived(adminChannelName);
-      onEvent({ table: "contract_offers", type: "INSERT", payload: payload.new });
+      onEvent({ table: "care_contract_bids", type: "INSERT", payload: payload.new });
     })
     .subscribe();
 
@@ -586,11 +709,11 @@ export function simulateNewTransaction(txData: Record<string, unknown>) {
 }
 
 export function simulateContractUpdate(contractData: Record<string, unknown>) {
-  emit({ table: "contracts", type: "UPDATE", payload: contractData });
+  emit({ table: "care_contracts", type: "UPDATE", payload: contractData });
 }
 
 export function simulateNewOffer(offerData: Record<string, unknown>) {
-  emit({ table: "contract_offers", type: "INSERT", payload: offerData });
+  emit({ table: "care_contract_bids", type: "INSERT", payload: offerData });
 }
 
 // ─── Auto-simulation for demo ───
@@ -613,7 +736,7 @@ export function startDemoSimulation() {
     }),
     () => simulateNewOffer({
       contract_id: "CTR-2026-0002",
-      offered_by_name: "CareFirst Agency",
+      offered_by_name: "Mock_CareFirst Agency",
       points_per_day: 6800,
       status: "pending",
     }),

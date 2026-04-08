@@ -2,7 +2,7 @@ import type {
   ShopProduct, WishlistItem,
   MerchantProduct, MerchantOrder, ShopFrontProduct, CustomerOrder,
   SalesChartDataPoint, CategoryDataPoint, MerchantChartDataPoint,
-  ShopDashboardOrder, MerchantFulfillmentData, InventoryItem,
+  ShopDashboardOrder, ShopDashboardStats, MerchantFulfillmentData, InventoryItem,
   CartItem, OrderTrackingData, ProductReviewDetail,
 } from "@/backend/models";
 
@@ -76,6 +76,21 @@ export const MOCK_MERCHANT_ANALYTICS_DATA: MerchantChartDataPoint[] = [
   { day: "Fri", sales: 35000 }, { day: "Sat", sales: 45000 },
   { day: "Sun", sales: 38000 },
 ];
+
+export const MOCK_SHOP_DASHBOARD_STATS: ShopDashboardStats = {
+  totalSalesBdt: 124_500,
+  activeProducts: 48,
+  newOrders: 12,
+  totalCustomers: 850,
+  salesChangeLabel: "+12.5%",
+  salesChangePositive: true,
+  productsChangeLabel: "+2",
+  productsChangePositive: true,
+  ordersChangeLabel: "-5%",
+  ordersChangePositive: false,
+  customersChangeLabel: "+18%",
+  customersChangePositive: true,
+};
 
 // ─── Shop Dashboard Orders ───
 export const MOCK_SHOP_DASHBOARD_ORDERS: ShopDashboardOrder[] = [

@@ -1,22 +1,41 @@
 import { useState } from "react";
 import { cn } from "@/frontend/theme/tokens";
-import { Star, MessageSquare, CheckCircle, Clock, User, ThumbsUp } from "lucide-react";
+import { Star, User } from "lucide-react";
 import { useAriaToast } from "@/frontend/hooks/useAriaToast";
 import { useTranslation } from "react-i18next";
-import { useDocumentTitle } from "@/frontend/hooks";
-
-const MOCK_RECENT_SHIFTS = [
-  { id: "sh-1", caregiver: "Fatema Akter", date: "Mar 18, 2026", time: "7:00 AM – 3:00 PM", patient: "Rashida Begum", rated: false },
-  { id: "sh-2", caregiver: "Karim Uddin", date: "Mar 17, 2026", time: "3:00 PM – 11:00 PM", patient: "Rashida Begum", rated: true, rating: 5 },
-  { id: "sh-3", caregiver: "Fatema Akter", date: "Mar 17, 2026", time: "7:00 AM – 3:00 PM", patient: "Rashida Begum", rated: true, rating: 4 },
-];
+import { useAsyncData, useDocumentTitle } from "@/frontend/hooks";
+import { guardianService } from "@/backend/services/guardian.service";
+import { PageSkeleton } from "@/frontend/components/shared/PageSkeleton";
 
 export default function ShiftRatingPage() {
   const { t: tDocTitle } = useTranslation("common");
   useDocumentTitle(tDocTitle("pageTitles.shiftRating", "Shift Rating"));
 
   const toast = useAriaToast();
-  const [shifts, setShifts] = useState(MOCK_RECENT_SHIFTS);
+  const { data: placementDetail, loading } = useAsyncData(() => guardianService.getPlacementDetail("current"));
+
+  const initialShifts = (placementDetail?.shiftHistory ?? [])
+    .filter(s => s.status === "completed" || s.status === "late")
+    .slice(0, 5)
+    .map((s, i) => ({
+      id: `sh-${i}`,
+      caregiver: s.caregiver,
+      date: s.date,
+      time: s.time,
+      patient: "Your Patient",
+      rated: false as boolean,
+      rating: undefined as number | undefined,
+    }));
+
+  const [shifts, setShifts] = useState<typeof initialShifts>([]);
+  const [initialized, setInitialized] = useState(false);
+
+  if (loading) return <PageSkeleton />;
+
+  if (!initialized && initialShifts.length > 0) {
+    setShifts(initialShifts);
+    setInitialized(true);
+  }
   const [ratingShiftId, setRatingShiftId] = useState<string | null>(null);
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
@@ -32,7 +51,7 @@ export default function ShiftRatingPage() {
   };
 
   const ratedCount = shifts.filter(s => s.rated).length;
-  const avgRating = shifts.filter(s => s.rated && s.rating).reduce((acc, s) => acc + (s.rating || 0), 0) / (ratedCount || 1);
+  const avgRating = shifts.filter(s => s.rated && s.rating != null).reduce((acc, s) => acc + (s.rating ?? 0), 0) / (ratedCount || 1);
 
   return (
     <div className="space-y-5">
@@ -77,7 +96,7 @@ export default function ShiftRatingPage() {
               {shift.rated ? (
                 <div className="flex items-center gap-1 px-3 py-1.5 rounded-full" style={{ background: "rgba(95,184,101,0.1)" }}>
                   {Array.from({ length: 5 }).map((_, i) => (
-                    <Star key={i} className="w-3.5 h-3.5" style={{ color: i < (shift.rating || 0) ? "var(--cn-amber)" : cn.border, fill: i < (shift.rating || 0) ? "var(--cn-amber)" : "none" }} />
+                    <Star key={i} className="w-3.5 h-3.5" style={{ color: i < (shift.rating ?? 0) ? "var(--cn-amber)" : cn.border, fill: i < (shift.rating ?? 0) ? "var(--cn-amber)" : "none" }} />
                   ))}
                 </div>
               ) : (

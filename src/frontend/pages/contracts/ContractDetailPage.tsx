@@ -15,6 +15,8 @@ import { formatPoints, pointsToBDT, DEFAULT_PLATFORM_FEE_PERCENT } from "@/backe
 import { formatBDT } from "@/backend/utils/currency";
 import { useTranslation } from "react-i18next";
 import { useDocumentTitle } from "@/frontend/hooks";
+import { monetizationChannelName } from "@/backend/services/realtime";
+import { useAuth } from "@/frontend/auth/AuthContext";
 
 const STATUS_COLORS: Record<string, { color: string; bg: string }> = {
   draft: { color: "#848484", bg: "#84848420" },
@@ -41,6 +43,7 @@ export default function ContractDetailPage() {
   useDocumentTitle(tDocTitle("pageTitles.contractDetail", "Contract Detail"));
 
   const { id } = useParams();
+  const { user } = useAuth();
   const { contract, loading, error, refetch, submitOffer: submitOfferAction, acceptOffer: acceptOfferAction, rejectOffer: rejectOfferAction } = useContractDetail(id);
   const [showOfferForm, setShowOfferForm] = useState(false);
   const [offerRate, setOfferRate] = useState("");
@@ -48,8 +51,12 @@ export default function ContractDetailPage() {
   const [showNegotiationHistory, setShowNegotiationHistory] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
+  const contractRole = contract?.partyA?.role ?? "guardian";
+  const fallbackUserId = contractRole === "agency" ? "agency-1" : contractRole === "caregiver" ? "caregiver-1" : "guardian-1";
+  const contractChannelId = monetizationChannelName(user?.id || fallbackUserId);
+
   // Fire toasts on channel health degradation for this contract's feed
-  useChannelHealthToast("admin:monetization", { channelLabel: `Contract ${id}` });
+  useChannelHealthToast(contractChannelId, { channelLabel: `Contract ${id}` });
 
   // Loading state
   if (loading && !contract) {
@@ -132,7 +139,7 @@ export default function ContractDetailPage() {
             <div className="mt-1 flex flex-wrap items-center gap-2 text-sm" style={{ color: cn.textSecondary }}>
               <span>{contract.type === "guardian_agency" ? "Guardian ↔ Agency" : "Agency ↔ Caregiver"} · {contract.serviceType}</span>
               <SubscriptionHealthBadge
-                channelId="admin:monetization"
+                channelId={contractChannelId}
                 compact={false}
                 showThreshold
               />

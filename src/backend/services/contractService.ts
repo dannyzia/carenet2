@@ -2,15 +2,15 @@
  * CareNet Contract Service
  * ────────────────────────
  * Provides contract and negotiation CRUD operations.
- * When USE_SUPABASE is false, returns mock data.
- * When true, calls Supabase.
+ * When not using Supabase for legacy `contracts`, demo sessions use static mocks; others get empty.
  */
 
 import { USE_SUPABASE, getSupabaseClient } from "./supabase";
+import { isDemoSession } from "./_sb";
 import { MOCK_CONTRACTS } from "@/backend/utils/contracts";
 import type { CareContract, NegotiationOffer, ContractStatus, ContractType } from "@/backend/utils/contracts";
 import type { ContractDispute, DisputeMessage } from "@/backend/models";
-import { MOCK_CONTRACT_DISPUTES } from "@/backend/api/mock";
+import { loadMockBarrel } from "@/backend/api/mock/loadMockBarrel";
 import { withRetry } from "@/backend/utils/retry";
 import { dedup } from "@/backend/utils/dedup";
 
@@ -18,28 +18,34 @@ import { dedup } from "@/backend/utils/dedup";
 const READ_RETRY = { maxRetries: 3, baseDelayMs: 800, onRetry: (_e: unknown, a: number, d: number) => console.log(`[Contract] Retry #${a} in ${d}ms`) };
 const WRITE_RETRY = { maxRetries: 2, baseDelayMs: 500 };
 
-function isDemoAuthMode(): boolean {
-  if (typeof window === "undefined") return false;
-
-  try {
-    const mode = window.localStorage.getItem("carenet-auth-mode");
-    if (mode === "demo") return true;
-
-    const rawUser = window.localStorage.getItem("carenet-auth");
-    if (!rawUser) return false;
-    const parsed = JSON.parse(rawUser) as { id?: string; email?: string };
-    return (
-      typeof parsed.id === "string" && parsed.id.startsWith("demo-")
-    ) || (
-      typeof parsed.email === "string" && parsed.email.endsWith("@carenet.demo")
-    );
-  } catch {
-    return false;
-  }
+type ContractMockApi = typeof import("@/backend/api/mock");
+let contractMockBarrel: ContractMockApi | null = null;
+async function contractDisputesMock(): Promise<ContractMockApi> {
+  if (!contractMockBarrel) contractMockBarrel = await loadMockBarrel();
+  return contractMockBarrel;
 }
 
+/** Legacy `contracts` table exists in public only — demo users use mock here and UCCF `care_contracts` elsewhere. */
 function shouldUseSupabase(): boolean {
-  return USE_SUPABASE && !isDemoAuthMode();
+  return USE_SUPABASE && !isDemoSession();
+}
+
+export interface ContractDashboardSummary {
+  activeCount: number;
+  pendingOffersCount: number;
+}
+
+const PENDING_CONTRACT_STATUSES: ContractStatus[] = ["draft", "offered", "negotiating"];
+
+export async function getContractDashboardSummary(role: string): Promise<ContractDashboardSummary> {
+  try {
+    const contracts = await getMyContracts(role);
+    const activeCount = contracts.filter((c) => c.status === "active").length;
+    const pendingOffersCount = contracts.filter((c) => PENDING_CONTRACT_STATUSES.includes(c.status)).length;
+    return { activeCount, pendingOffersCount };
+  } catch {
+    return { activeCount: 0, pendingOffersCount: 0 };
+  }
 }
 
 // ─── Get contracts for current user ───
@@ -48,9 +54,15 @@ export async function getMyContracts(
   opts?: { status?: ContractStatus; type?: ContractType }
 ): Promise<CareContract[]> {
   if (!shouldUseSupabase()) {
+    if (!isDemoSession()) return [];
     let contracts = MOCK_CONTRACTS;
     if (role === "guardian") contracts = contracts.filter((c) => c.type === "guardian_agency");
     if (role === "caregiver") contracts = contracts.filter((c) => c.type === "agency_caregiver");
+    if (role === "agency") {
+      contracts = contracts.filter(
+        (c) => c.type === "guardian_agency" || c.type === "agency_caregiver"
+      );
+    }
     if (opts?.status) contracts = contracts.filter((c) => c.status === opts.status);
     if (opts?.type) contracts = contracts.filter((c) => c.type === opts.type);
     return contracts;
@@ -83,6 +95,7 @@ export async function getMyContracts(
 // ─── Get single contract by ID ───
 export async function getContract(id: string): Promise<CareContract | null> {
   if (!shouldUseSupabase()) {
+    if (!isDemoSession()) return null;
     return MOCK_CONTRACTS.find((c) => c.id === id) || null;
   }
 
@@ -117,6 +130,7 @@ export async function createContract(params: {
   endDate: string;
 }): Promise<{ success: boolean; contractId?: string; error?: string }> {
   if (!shouldUseSupabase()) {
+    if (!isDemoSession()) return { success: false, error: "Sign in with Demo Access or connect Supabase." };
     console.log("[Mock] Creating contract:", params);
     return { success: true, contractId: `CTR-2026-${Math.floor(Math.random() * 9999).toString().padStart(4, "0")}` };
   }
@@ -157,6 +171,7 @@ export async function submitOffer(params: {
   message: string;
 }): Promise<{ success: boolean; offerId?: string; error?: string }> {
   if (!shouldUseSupabase()) {
+    if (!isDemoSession()) return { success: false, error: "Sign in with Demo Access or connect Supabase." };
     console.log("[Mock] Submitting offer:", params);
     return { success: true, offerId: `OFF-${Math.floor(Math.random() * 999).toString().padStart(3, "0")}` };
   }
@@ -198,6 +213,7 @@ export async function acceptOffer(
   responseMessage: string = ""
 ): Promise<{ success: boolean; error?: string }> {
   if (!shouldUseSupabase()) {
+    if (!isDemoSession()) return { success: false, error: "Sign in with Demo Access or connect Supabase." };
     console.log(`[Mock] Accepting offer ${offerId}: ${responseMessage}`);
     return { success: true };
   }
@@ -224,6 +240,7 @@ export async function rejectOffer(
   responseMessage: string = ""
 ): Promise<{ success: boolean; error?: string }> {
   if (!shouldUseSupabase()) {
+    if (!isDemoSession()) return { success: false, error: "Sign in with Demo Access or connect Supabase." };
     console.log(`[Mock] Rejecting offer ${offerId}: ${responseMessage}`);
     return { success: true };
   }
@@ -249,6 +266,7 @@ export async function getAllContracts(
   opts?: { status?: ContractStatus; type?: ContractType; search?: string }
 ): Promise<CareContract[]> {
   if (!shouldUseSupabase()) {
+    if (!isDemoSession()) return [];
     let contracts = [...MOCK_CONTRACTS];
     if (opts?.status) contracts = contracts.filter((c) => c.status === opts.status);
     if (opts?.type) contracts = contracts.filter((c) => c.type === opts.type);
@@ -292,7 +310,8 @@ export async function getAllContracts(
 // ─── Get disputes for a contract ───
 export async function getContractDisputes(contractId: string): Promise<ContractDispute[]> {
   if (!shouldUseSupabase()) {
-    return MOCK_CONTRACT_DISPUTES.filter((d) => d.contractId === contractId);
+    if (!isDemoSession()) return [];
+    return (await contractDisputesMock()).MOCK_CONTRACT_DISPUTES.filter((d) => d.contractId === contractId);
   }
   return dedup(`disputes:${contractId}`, () => withRetry(async () => {
     const sb = getSupabaseClient();
@@ -308,7 +327,8 @@ export async function getContractDisputes(contractId: string): Promise<ContractD
 // ─── Get single dispute by ID ───
 export async function getDispute(id: string): Promise<ContractDispute | null> {
   if (!shouldUseSupabase()) {
-    return MOCK_CONTRACT_DISPUTES.find((d) => d.id === id) || null;
+    if (!isDemoSession()) return null;
+    return (await contractDisputesMock()).MOCK_CONTRACT_DISPUTES.find((d) => d.id === id) || null;
   }
   return dedup(`dispute:${id}`, () => withRetry(async () => {
     const sb = getSupabaseClient();
@@ -324,7 +344,8 @@ export async function getDispute(id: string): Promise<ContractDispute | null> {
 // ─── Get all disputes (for listing) ───
 export async function getAllDisputes(): Promise<ContractDispute[]> {
   if (!shouldUseSupabase()) {
-    return MOCK_CONTRACT_DISPUTES;
+    if (!isDemoSession()) return [];
+    return (await contractDisputesMock()).MOCK_CONTRACT_DISPUTES;
   }
   return dedup("disputes:all", () => withRetry(async () => {
     const sb = getSupabaseClient();

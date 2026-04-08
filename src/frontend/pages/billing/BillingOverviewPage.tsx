@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import {
   FileText, CreditCard, Clock, CheckCircle2, AlertTriangle,
@@ -10,6 +10,9 @@ import { PageHero } from "@/frontend/components/PageHero";
 import { formatBDT } from "@/backend/utils/currency";
 import { useAsyncData, useDocumentTitle } from "@/frontend/hooks";
 import { billingService } from "@/backend/services/billing.service";
+import { useAuth } from "@/frontend/auth/AuthContext";
+import { USE_SUPABASE } from "@/backend/services/supabase";
+import { subscribeToBillingForUser } from "@/backend/services/realtime";
 import { PageSkeleton } from "@/frontend/components/PageSkeleton";
 import { useTranslation } from "react-i18next";
 import type { BillingInvoice, PaymentProof } from "@/backend/models";
@@ -18,6 +21,8 @@ const statusConfig: Record<string, { label: string; color: string; bg: string; i
   unpaid: { label: "Unpaid", color: "#EF4444", bg: "rgba(239,68,68,0.1)", icon: Clock },
   proof_submitted: { label: "Proof Submitted", color: "#E8A838", bg: "rgba(232,168,56,0.1)", icon: Upload },
   verified: { label: "Verified", color: "#5FB865", bg: "rgba(95,184,101,0.1)", icon: CheckCircle2 },
+  paid: { label: "Paid", color: "#2E7D32", bg: "rgba(46,125,50,0.1)", icon: CheckCircle2 },
+  partial: { label: "Partial", color: "#E8A838", bg: "rgba(232,168,56,0.1)", icon: Clock },
   disputed: { label: "Disputed", color: "#EF4444", bg: "rgba(239,68,68,0.1)", icon: AlertTriangle },
   overdue: { label: "Overdue", color: "#EF4444", bg: "rgba(239,68,68,0.1)", icon: AlertTriangle },
 };
@@ -32,10 +37,18 @@ const proofStatusConfig: Record<string, { label: string; color: string; bg: stri
 export default function BillingOverviewPage() {
   const navigate = useNavigate();
   const { t } = useTranslation("common");
+  const { user } = useAuth();
   useDocumentTitle(t("pageTitles.billing", "Billing"));
-  const { data, loading } = useAsyncData(() => billingService.getOverview(), []);
+  const { data, loading, refetch } = useAsyncData(() => billingService.getOverview(), []);
   const [tab, setTab] = useState<"invoices" | "proofs">("invoices");
   const [filter, setFilter] = useState<string>("all");
+
+  useEffect(() => {
+    if (!USE_SUPABASE || !user?.id) return;
+    return subscribeToBillingForUser(user.id, () => {
+      void refetch();
+    });
+  }, [user?.id, refetch]);
 
   if (loading || !data) return <PageSkeleton />;
 

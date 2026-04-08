@@ -2,10 +2,10 @@
  * Community Service — blog posts, careers, etc.
  */
 import type { BlogPost, CareerData } from "@/backend/models";
-import { MOCK_BLOG_POSTS, MOCK_CAREER_DATA } from "@/backend/api/mock";
 import { USE_SUPABASE, sbRead, sb } from "./_sb";
+import { demoOfflineDelayAndPick } from "./demoOfflineMock";
 
-const delay = (ms = 200) => new Promise((r) => setTimeout(r, ms));
+const EMPTY_CAREER: CareerData = { openings: [], benefits: [], culture: [] };
 
 function mapBlogPost(d: any): BlogPost {
   return {
@@ -31,8 +31,7 @@ export const communityService = {
         return (data || []).map(mapBlogPost);
       });
     }
-    await delay();
-    return MOCK_BLOG_POSTS;
+    return demoOfflineDelayAndPick(200, [] as BlogPost[], (m) => m.MOCK_BLOG_POSTS);
   },
 
   async getBlogPostById(id: string): Promise<BlogPost | undefined> {
@@ -49,8 +48,9 @@ export const communityService = {
         return data ? mapBlogPost(data) : undefined;
       });
     }
-    await delay();
-    return MOCK_BLOG_POSTS.find((p) => p.id === id);
+    return demoOfflineDelayAndPick(200, undefined as BlogPost | undefined, (m) =>
+      m.MOCK_BLOG_POSTS.find((p) => p.id === id),
+    );
   },
 
   async getCareerData(): Promise<CareerData> {
@@ -60,7 +60,6 @@ export const communityService = {
         return { openings: [], benefits: [], culture: [] };
       });
     }
-    await delay();
-    return MOCK_CAREER_DATA;
+    return demoOfflineDelayAndPick(200, EMPTY_CAREER, (m) => m.MOCK_CAREER_DATA);
   },
 };

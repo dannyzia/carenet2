@@ -33,12 +33,33 @@ export default function AgencyJobManagementPage() {
 
   if (loading || !loadedJobs) return <PageSkeleton cards={4} />;
 
+  const openJobsCount = loadedJobs.filter((j) => j.status === "open").length;
+  const applicationsThisWeek = loadedJobs.reduce((sum, j) => sum + (j.applications || 0), 0);
+  const filledJobs = loadedJobs.filter((j) => j.status === "filled" || j.status === "closed");
+  const fillRate = loadedJobs.length > 0 ? Math.round((filledJobs.length / loadedJobs.length) * 100) : 0;
+  const parseDaysSincePosted = (posted: string): number | null => {
+    const parsed = Date.parse(`${posted}, ${new Date().getFullYear()}`);
+    if (!Number.isFinite(parsed)) return null;
+    return Math.max(0, Math.round((Date.now() - parsed) / (1000 * 60 * 60 * 24)));
+  };
+  const daysSamples = (filledJobs.length > 0 ? filledJobs : loadedJobs)
+    .map((j) => parseDaysSincePosted(j.posted))
+    .filter((v): v is number => v !== null);
+  const avgTimeToFillDays = daysSamples.length > 0
+    ? Math.round((daysSamples.reduce((sum, d) => sum + d, 0) / daysSamples.length) * 10) / 10
+    : 0;
+
   const filtered = activeTab === "all" ? loadedJobs : loadedJobs.filter((j) => j.status === activeTab);
   return (
     <>
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: cn.tealBg }}><Briefcase className="w-5 h-5" style={{ color: cn.teal }} /></div><div><h1 className="text-xl" style={{ color: cn.text }}>Job Management</h1><p className="text-sm" style={{ color: cn.textSecondary }}>Create and manage caregiver job postings</p></div></div><button className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm" style={{ background: "var(--cn-gradient-agency)" }}><Plus className="w-4 h-4" /> Create Job</button></div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">{[{ label: "Open Jobs", value: "3", color: "#0288D1", bg: "rgba(2,136,209,0.12)" }, { label: "Applications (Week)", value: "18", color: cn.amber, bg: cn.amberBg }, { label: "Avg Time to Fill", value: "5.2 days", color: cn.teal, bg: cn.tealBg }, { label: "Fill Rate", value: "84%", color: cn.green, bg: cn.greenBg }].map((s) => (<div key={s.label} className="stat-card"><p className="text-lg" style={{ color: s.color }}>{s.value}</p><p className="text-xs" style={{ color: cn.textSecondary }}>{s.label}</p></div>))}</div>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: cn.tealBg }}><Briefcase className="w-5 h-5" style={{ color: cn.teal }} /></div><div><h1 className="text-xl" style={{ color: cn.text }}>Job Management</h1><p className="text-sm" style={{ color: cn.textSecondary }}>Create and manage caregiver job postings</p></div></div><Link to="/agency/requirements-inbox" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm no-underline cn-touch-target" style={{ background: "var(--cn-gradient-agency)" }}><Plus className="w-4 h-4" /> Create Job</Link></div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">{[
+          { label: "Open Jobs", value: String(openJobsCount), color: "#0288D1", bg: "rgba(2,136,209,0.12)" },
+          { label: "Applications (Week)", value: String(applicationsThisWeek), color: cn.amber, bg: cn.amberBg },
+          { label: "Avg Time to Fill", value: `${avgTimeToFillDays} days`, color: cn.teal, bg: cn.tealBg },
+          { label: "Fill Rate", value: `${fillRate}%`, color: cn.green, bg: cn.greenBg },
+        ].map((s) => (<div key={s.label} className="stat-card"><p className="text-lg" style={{ color: s.color }}>{s.value}</p><p className="text-xs" style={{ color: cn.textSecondary }}>{s.label}</p></div>))}</div>
         <div className="flex gap-1 overflow-x-auto pb-1 cn-scroll-x -mx-1 px-1">{tabs.map((tab) => { const isActive = activeTab === tab.key; const count = tab.key === "all" ? loadedJobs.length : loadedJobs.filter((j) => j.status === tab.key).length; return (<button key={tab.key} onClick={() => setActiveTab(tab.key)} className="px-3 py-2 rounded-lg text-sm whitespace-nowrap flex items-center gap-1.5 cn-no-select" style={{ background: isActive ? cn.tealBg : "transparent", color: isActive ? cn.teal : cn.textSecondary }}>{tab.label} <span className="text-xs opacity-70">({count})</span></button>); })}</div>
         <div className="space-y-3">{filtered.map((job) => { const st = statusStyles[job.status] || { label: job.status || "Unknown", color: "#848484", bg: "rgba(132,132,132,0.12)" }; return (
           <div key={job.id} className="finance-card p-4 sm:p-5">

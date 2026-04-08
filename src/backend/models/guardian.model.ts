@@ -12,6 +12,20 @@ export interface GuardianDashboardPatient {
 export interface GuardianActivity {
   iconType: "heart" | "calendar" | "creditCard" | "message" | "star";
   text: string; time: string; color: string;
+  link?: string;
+}
+
+export interface GuardianDashboardAlert {
+  id: string;
+  title: string;
+  subtitle?: string;
+  actionPath: string;
+}
+
+export interface GuardianDashboardSummary {
+  activePlacements: number;
+  monthlySpendBdt: number;
+  totalSessions: number;
 }
 
 // ─── Care Requirements ───

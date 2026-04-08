@@ -39,7 +39,7 @@ interface UseWalletReturn {
  * Hook for user-facing wallet pages (Guardian, Caregiver, Agency).
  * Fetches wallet + transactions for the given role and subscribes to real-time updates.
  */
-export function useWallet(role: string): UseWalletReturn {
+export function useWallet(role: string, userIdOverride?: string): UseWalletReturn {
   const toast = useAriaToast();
   const { t } = useTranslation("common");
   const { successWithUndo } = useOptimisticUndo();
@@ -49,16 +49,15 @@ export function useWallet(role: string): UseWalletReturn {
   const [error, setError] = useState<string | null>(null);
   const mountedRef = useRef(true);
 
+  const walletUserId = userIdOverride || (role === "guardian" ? "guardian-1" : role === "agency" ? "agency-1" : "caregiver-1");
+
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       const [w, txs] = await Promise.all([
         getMyWallet(role),
-        getWalletTransactions(
-          role === "guardian" ? "guardian-1" : role === "agency" ? "agency-1" : "caregiver-1",
-          { limit: 50 }
-        ),
+        getWalletTransactions(walletUserId, { limit: 50 }),
       ]);
       if (mountedRef.current) {
         setWallet(w);
@@ -71,7 +70,7 @@ export function useWallet(role: string): UseWalletReturn {
     } finally {
       if (mountedRef.current) setLoading(false);
     }
-  }, [role]);
+  }, [role, walletUserId]);
 
   // Initial fetch
   useEffect(() => {
@@ -82,9 +81,7 @@ export function useWallet(role: string): UseWalletReturn {
 
   // Real-time subscription
   useEffect(() => {
-    const userId = role === "guardian" ? "guardian-1" : role === "agency" ? "agency-1" : "caregiver-1";
-
-    const unsub = subscribeToMonetization(userId, (event) => {
+    const unsub = subscribeToMonetization(walletUserId, (event) => {
       if (event.table === "wallets" && event.type === "UPDATE") {
         // Update wallet balance in-place
         const p = event.payload;
@@ -110,7 +107,7 @@ export function useWallet(role: string): UseWalletReturn {
         const p = event.payload;
         const newTx: PointTransaction = {
           id: (p.id as string) || `rt-${Date.now()}`,
-          walletId: (p.wallet_id as string) || userId,
+          walletId: (p.wallet_id as string) || walletUserId,
           type: (p.type as PointTransaction["type"]) || "transfer",
           amount: (p.amount as number) || 0,
           balanceAfter: (p.balance_after as number) || 0,
@@ -133,7 +130,7 @@ export function useWallet(role: string): UseWalletReturn {
     });
 
     return unsub;
-  }, [role]);
+  }, [walletUserId]);
 
   // ─── Optimistic Buy Points ───
   const buyPoints = useCallback(async (packageId: string, paymentMethod: string) => {

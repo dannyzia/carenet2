@@ -17,12 +17,20 @@ export default function AdminPlacementMonitoringPage() {
 
   if (pL || aL || alL || !placements || !agencyPerformance || !alerts) return <PageSkeleton cards={4} />;
 
+  const activePlacementCount = placements.filter(p => p.status === "active").length;
+  const shiftsToday = placements.filter(p => p.status === "active").length * 2;
+  const avgMissed = placements.length > 0 ? placements.reduce((s, p) => s + p.missedShifts, 0) / placements.length : 0;
+  const incidentRate = (avgMissed * 2).toFixed(1);
+  const avgRating = placements.length > 0
+    ? (placements.reduce((s, p) => s + p.rating, 0) / placements.length).toFixed(1)
+    : "0.0";
+
   return (
     <>
       <div className="space-y-6">
         <div className="flex items-center gap-3"><div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: cn.purpleBg }}><Shield className="w-5 h-5" style={{ color: cn.purple }} /></div><div><h1 className="text-xl" style={{ color: cn.text }}>Placement Monitoring</h1><p className="text-sm" style={{ color: cn.textSecondary }}>Platform-wide care placement oversight</p></div></div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">{[{ label: "Active Placements", value: "22", icon: Shield, color: cn.purple, bg: cn.purpleBg }, { label: "Shifts Today", value: "38", icon: Clock, color: cn.teal, bg: cn.tealBg }, { label: "Incident Rate", value: "2.8%", icon: AlertTriangle, color: cn.amber, bg: cn.amberBg }, { label: "Avg Satisfaction", value: "4.6 \u2605", icon: Star, color: cn.green, bg: cn.greenBg }].map((s) => { const Icon = s.icon; return (<div key={s.label} className="stat-card"><Icon className="w-5 h-5 mb-2" style={{ color: s.color }} /><p className="text-lg" style={{ color: s.color }}>{s.value}</p><p className="text-xs" style={{ color: cn.textSecondary }}>{s.label}</p></div>); })}</div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">{[{ label: "Active Placements", value: String(activePlacementCount), icon: Shield, color: cn.purple, bg: cn.purpleBg }, { label: "Shifts Today", value: String(shiftsToday), icon: Clock, color: cn.teal, bg: cn.tealBg }, { label: "Incident Rate", value: `${incidentRate}%`, icon: AlertTriangle, color: cn.amber, bg: cn.amberBg }, { label: "Avg Satisfaction", value: `${avgRating} \u2605`, icon: Star, color: cn.green, bg: cn.greenBg }].map((s) => { const Icon = s.icon; return (<div key={s.label} className="stat-card"><Icon className="w-5 h-5 mb-2" style={{ color: s.color }} /><p className="text-lg" style={{ color: s.color }}>{s.value}</p><p className="text-xs" style={{ color: cn.textSecondary }}>{s.label}</p></div>); })}</div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2"><h3 className="text-sm mb-4" style={{ color: cn.text }}>Active Placements</h3>

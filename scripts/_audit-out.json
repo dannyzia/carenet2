@@ -1,0 +1,630 @@
+{
+  "roles": {
+    "agency": {
+      "deadButtons": 22,
+      "deadLinks": 0,
+      "files": [
+        {
+          "file": "agency\\AgencyJobApplicationsPage.tsx",
+          "deadButtons": 4,
+          "deadButtonLines": [
+            39,
+            39,
+            39,
+            39
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "agency\\AgencyPayrollPage.tsx",
+          "deadButtons": 2,
+          "deadButtonLines": [
+            42,
+            42
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "agency\\AgencyPlacementDetailPage.tsx",
+          "deadButtons": 2,
+          "deadButtonLines": [
+            25,
+            26
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "agency\\AgencyPlacementsPage.tsx",
+          "deadButtons": 1,
+          "deadButtonLines": [
+            31
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "agency\\AgencyRequirementReviewPage.tsx",
+          "deadButtons": 2,
+          "deadButtonLines": [
+            31,
+            31
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "agency\\AgencySettingsPage.tsx",
+          "deadButtons": 5,
+          "deadButtonLines": [
+            25,
+            25,
+            27,
+            27,
+            33
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "agency\\BackupCaregiverPage.tsx",
+          "deadButtons": 1,
+          "deadButtonLines": [
+            168
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "agency\\DocumentVerificationPage.tsx",
+          "deadButtons": 1,
+          "deadButtonLines": [
+            116
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "agency\\IncidentReportWizardPage.tsx",
+          "deadButtons": 1,
+          "deadButtonLines": [
+            20
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "agency\\ShiftMonitoringPage.tsx",
+          "deadButtons": 3,
+          "deadButtonLines": [
+            25,
+            25,
+            25
+          ],
+          "deadLinks": []
+        }
+      ]
+    },
+    "caregiver": {
+      "deadButtons": 39,
+      "deadLinks": 0,
+      "files": [
+        {
+          "file": "caregiver\\CaregiverAssignedPatientsPage.tsx",
+          "deadButtons": 2,
+          "deadButtonLines": [
+            94,
+            97
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "caregiver\\CaregiverCareLogPage.tsx",
+          "deadButtons": 2,
+          "deadButtonLines": [
+            302,
+            305
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "caregiver\\CaregiverCareNotesPage.tsx",
+          "deadButtons": 3,
+          "deadButtonLines": [
+            89,
+            89,
+            90
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "caregiver\\CaregiverDocumentsPage.tsx",
+          "deadButtons": 3,
+          "deadButtonLines": [
+            64,
+            106,
+            107
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "caregiver\\CaregiverJobDetailPage.tsx",
+          "deadButtons": 2,
+          "deadButtonLines": [
+            58,
+            161
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "caregiver\\CaregiverJobsPage.tsx",
+          "deadButtons": 1,
+          "deadButtonLines": [
+            133
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "caregiver\\CaregiverMedSchedulePage.tsx",
+          "deadButtons": 3,
+          "deadButtonLines": [
+            153,
+            155,
+            208
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "caregiver\\CaregiverPrescriptionPage.tsx",
+          "deadButtons": 4,
+          "deadButtonLines": [
+            80,
+            121,
+            122,
+            123
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "caregiver\\CaregiverProfilePage.tsx",
+          "deadButtons": 1,
+          "deadButtonLines": [
+            34
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "caregiver\\CaregiverReviewsPage.tsx",
+          "deadButtons": 1,
+          "deadButtonLines": [
+            98
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "caregiver\\CaregiverSchedulePage.tsx",
+          "deadButtons": 4,
+          "deadButtonLines": [
+            59,
+            72,
+            76,
+            184
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "caregiver\\CaregiverShiftPlannerPage.tsx",
+          "deadButtons": 8,
+          "deadButtonLines": [
+            64,
+            104,
+            122,
+            147,
+            148,
+            156,
+            157,
+            170
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "caregiver\\PayoutSetupPage.tsx",
+          "deadButtons": 1,
+          "deadButtonLines": [
+            40
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "caregiver\\PortfolioEditorPage.tsx",
+          "deadButtons": 2,
+          "deadButtonLines": [
+            48,
+            59
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "caregiver\\ShiftDetailPage.tsx",
+          "deadButtons": 2,
+          "deadButtonLines": [
+            52,
+            52
+          ],
+          "deadLinks": []
+        }
+      ]
+    },
+    "guardian": {
+      "deadButtons": 20,
+      "deadLinks": 0,
+      "files": [
+        {
+          "file": "guardian\\BookingWizardPage.tsx",
+          "deadButtons": 2,
+          "deadButtonLines": [
+            612,
+            621
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "guardian\\CareRequirementDetailPage.tsx",
+          "deadButtons": 1,
+          "deadButtonLines": [
+            27
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "guardian\\FamilyHubPage.tsx",
+          "deadButtons": 2,
+          "deadButtonLines": [
+            25,
+            25
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "guardian\\GuardianPaymentsPage.tsx",
+          "deadButtons": 2,
+          "deadButtonLines": [
+            89,
+            104
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "guardian\\GuardianPlacementDetailPage.tsx",
+          "deadButtons": 5,
+          "deadButtonLines": [
+            37,
+            37,
+            49,
+            49,
+            49
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "guardian\\GuardianPlacementsPage.tsx",
+          "deadButtons": 1,
+          "deadButtonLines": [
+            55
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "guardian\\GuardianProfilePage.tsx",
+          "deadButtons": 1,
+          "deadButtonLines": [
+            31
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "guardian\\GuardianReviewsPage.tsx",
+          "deadButtons": 1,
+          "deadButtonLines": [
+            42
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "guardian\\GuardianSchedulePage.tsx",
+          "deadButtons": 4,
+          "deadButtonLines": [
+            42,
+            42,
+            43,
+            43
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "guardian\\ShiftRatingPage.tsx",
+          "deadButtons": 1,
+          "deadButtonLines": [
+            96
+          ],
+          "deadLinks": []
+        }
+      ]
+    },
+    "patient": {
+      "deadButtons": 9,
+      "deadLinks": 0,
+      "files": [
+        {
+          "file": "patient\\DataPrivacyManagerPage.tsx",
+          "deadButtons": 1,
+          "deadButtonLines": [
+            25
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "patient\\EmergencyHubPage.tsx",
+          "deadButtons": 2,
+          "deadButtonLines": [
+            25,
+            25
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "patient\\EmergencySOSPage.tsx",
+          "deadButtons": 1,
+          "deadButtonLines": [
+            113
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "patient\\MedicationRemindersPage.tsx",
+          "deadButtons": 1,
+          "deadButtonLines": [
+            25
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "patient\\PatientDocumentUploadPage.tsx",
+          "deadButtons": 1,
+          "deadButtonLines": [
+            141
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "patient\\PatientProfilePage.tsx",
+          "deadButtons": 1,
+          "deadButtonLines": [
+            28
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "patient\\PatientSchedulePage.tsx",
+          "deadButtons": 2,
+          "deadButtonLines": [
+            28,
+            28
+          ],
+          "deadLinks": []
+        }
+      ]
+    },
+    "admin": {
+      "deadButtons": 27,
+      "deadLinks": 0,
+      "files": [
+        {
+          "file": "admin\\AdminAgencyApprovalsPage.tsx",
+          "deadButtons": 7,
+          "deadButtonLines": [
+            28,
+            28,
+            28,
+            28,
+            28,
+            28,
+            28
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "admin\\AdminPaymentsPage.tsx",
+          "deadButtons": 2,
+          "deadButtonLines": [
+            34,
+            37
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "admin\\AdminReportsPage.tsx",
+          "deadButtons": 4,
+          "deadButtonLines": [
+            31,
+            31,
+            33,
+            33
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "admin\\AdminUsersPage.tsx",
+          "deadButtons": 4,
+          "deadButtonLines": [
+            61,
+            61,
+            61,
+            61
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "admin\\AdminVerificationsPage.tsx",
+          "deadButtons": 5,
+          "deadButtonLines": [
+            30,
+            30,
+            31,
+            31,
+            31
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "admin\\AdminWalletManagementPage.tsx",
+          "deadButtons": 1,
+          "deadButtonLines": [
+            75
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "admin\\CMSManagerPage.tsx",
+          "deadButtons": 1,
+          "deadButtonLines": [
+            27
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "admin\\PromoManagementPage.tsx",
+          "deadButtons": 1,
+          "deadButtonLines": [
+            28
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "admin\\SupportTicketDetailPage.tsx",
+          "deadButtons": 1,
+          "deadButtonLines": [
+            25
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "admin\\SystemHealthPage.tsx",
+          "deadButtons": 1,
+          "deadButtonLines": [
+            45
+          ],
+          "deadLinks": []
+        }
+      ]
+    },
+    "moderator": {
+      "deadButtons": 14,
+      "deadLinks": 0,
+      "files": [
+        {
+          "file": "moderator\\ModeratorContentPage.tsx",
+          "deadButtons": 3,
+          "deadButtonLines": [
+            46,
+            47,
+            48
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "moderator\\ModeratorDashboardPage.tsx",
+          "deadButtons": 3,
+          "deadButtonLines": [
+            132,
+            133,
+            134
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "moderator\\ModeratorEscalationsPage.tsx",
+          "deadButtons": 3,
+          "deadButtonLines": [
+            246,
+            250,
+            255
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "moderator\\ModeratorQueueDetailPage.tsx",
+          "deadButtons": 1,
+          "deadButtonLines": [
+            145
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "moderator\\ModeratorReportsPage.tsx",
+          "deadButtons": 3,
+          "deadButtonLines": [
+            43,
+            44,
+            45
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "moderator\\ModeratorSanctionsPage.tsx",
+          "deadButtons": 1,
+          "deadButtonLines": [
+            248
+          ],
+          "deadLinks": []
+        }
+      ]
+    },
+    "shop": {
+      "deadButtons": 8,
+      "deadLinks": 0,
+      "files": [
+        {
+          "file": "shop\\ShopAnalyticsPage.tsx",
+          "deadButtons": 1,
+          "deadButtonLines": [
+            22
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "shop\\ShopDashboardPage.tsx",
+          "deadButtons": 1,
+          "deadButtonLines": [
+            37
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "shop\\ShopInventoryPage.tsx",
+          "deadButtons": 1,
+          "deadButtonLines": [
+            27
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "shop\\ShopOrdersPage.tsx",
+          "deadButtons": 2,
+          "deadButtonLines": [
+            20,
+            20
+          ],
+          "deadLinks": []
+        },
+        {
+          "file": "shop\\ShopProductsPage.tsx",
+          "deadButtons": 3,
+          "deadButtonLines": [
+            23,
+            24,
+            24
+          ],
+          "deadLinks": []
+        }
+      ]
+    }
+  },
+  "totals": {
+    "deadButtons": 139,
+    "deadLinks": 0
+  }
+}

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 import { cn } from "@/frontend/theme/tokens";
 import { Search, MapPin, Star, Users, Shield, ChevronRight, Filter, Building2, CheckCircle2 } from "lucide-react";
 import { useAsyncData, useDocumentTitle } from "@/frontend/hooks";
@@ -13,6 +13,7 @@ export default function AgencyDirectoryPage() {
   const { t: tDocTitle } = useTranslation("common");
   useDocumentTitle(tDocTitle("pageTitles.agencyDirectory", "Agency Directory"));
 
+  const location = useLocation();
   const { data: agencies, loading } = useAsyncData(() => agencyService.getDirectoryAgencies());
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSpecialty, setSelectedSpecialty] = useState("All");
@@ -80,7 +81,14 @@ export default function AgencyDirectoryPage() {
               </div>
               <div className="flex gap-2">
                 <Link to={`/guardian/agency/${agency.id}`} className="flex-1 py-2 rounded-lg text-xs text-center border flex items-center justify-center gap-1" style={{ borderColor: cn.teal, color: cn.teal }}>View Profile <ChevronRight className="w-3 h-3" /></Link>
-                <Link to={`/guardian/care-requirement-wizard?agency=${agency.id}`} className="flex-1 py-2 rounded-lg text-xs text-center text-white" style={{ background: "var(--cn-gradient-agency)" }}>Submit Requirement</Link>
+                <Link
+                  to={`/guardian/care-requirement-wizard?agency=${agency.id}`}
+                  state={{ wizardReturnTo: `${location.pathname}${location.search}` }}
+                  className="flex-1 py-2 rounded-lg text-xs text-center text-white"
+                  style={{ background: "var(--cn-gradient-agency)" }}
+                >
+                  Submit Requirement
+                </Link>
               </div>
             </div>
           ))}

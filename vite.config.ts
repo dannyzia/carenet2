@@ -5,11 +5,16 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import i18nSyncPlugin from './plugins/vite-i18n-sync'
 
+function envTruthy(v: string | undefined): boolean {
+  if (!v) return false
+  const s = String(v).trim().toLowerCase()
+  return s === 'true' || s === '1' || s === 'yes'
+}
+
 export default defineConfig(({ mode }) => {
   const fileEnv = loadEnv(mode, process.cwd(), '')
   const playwrightE2E =
-    process.env.VITE_PLAYWRIGHT_E2E === 'true' ||
-    fileEnv.VITE_PLAYWRIGHT_E2E === 'true'
+    envTruthy(process.env.VITE_PLAYWRIGHT_E2E) || envTruthy(fileEnv.VITE_PLAYWRIGHT_E2E)
   const vitest = process.env.VITEST === 'true'
   /** Capacitor/Android: Workbox SW + navigateFallback often yields a blank WebView; web builds keep PWA. */
   const disablePwa = process.env.VITE_DISABLE_PWA === 'true'
@@ -58,6 +63,8 @@ export default defineConfig(({ mode }) => {
   return {
   define: {
     __CARENET_PLAYWRIGHT_E2E__: JSON.stringify(playwrightE2E),
+    /** Ensures client `import.meta.env` sees the flag (not only `process.env` at config time). */
+    'import.meta.env.VITE_PLAYWRIGHT_E2E': JSON.stringify(playwrightE2E ? 'true' : ''),
   },
   plugins: [
     // The React and Tailwind plugins are both required for Make, even if

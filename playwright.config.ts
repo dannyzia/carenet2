@@ -46,7 +46,9 @@ export default defineConfig({
         ? "cmd /c \"set VITE_PLAYWRIGHT_E2E=true&& npx vite --host\""
         : "env VITE_PLAYWRIGHT_E2E=true npx vite --host",
     url: "http://localhost:5173",
-    reuseExistingServer: !process.env.CI,
+    // Reusing a normal `npm run dev` server skips `VITE_PLAYWRIGHT_E2E` → dashboards hang on real Supabase.
+    // Set `PW_REUSE_VITE=1` if you intentionally want to attach to an already-running dev server.
+    reuseExistingServer: process.env.PW_REUSE_VITE === "1",
     timeout: 120_000,
     env: {
       ...process.env,

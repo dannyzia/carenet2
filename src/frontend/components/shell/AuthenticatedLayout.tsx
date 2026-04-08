@@ -296,10 +296,10 @@ const roleNavLinks: Record<Role, { label: string; path: string; icon: React.Elem
 
 /* ─── Demo user names per role ─── */
 const roleUserNames: Record<Role, string> = {
-  caregiver: "Karim Uddin",
-  guardian: "Rashed Hossain",
+  caregiver: "Mock_Karim Uddin",
+  guardian: "Mock_Rashed Hossain",
   admin: "Admin",
-  moderator: "Mod User",
+  moderator: "Mock_Mod User",
   patient: "Patient User",
   agency: "Agency Manager",
   shop: "Shop Owner",

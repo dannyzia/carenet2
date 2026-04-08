@@ -6,6 +6,8 @@ import { useTranslation } from "react-i18next";
 import { useDocumentTitle } from "@/frontend/hooks";
 import { cn } from "@/frontend/theme/tokens";
 import { useAuth } from "@/frontend/auth/AuthContext";
+import { USE_SUPABASE, supabase } from "@/backend/services/supabase";
+import { getAuthEmailRedirectTo } from "@/frontend/auth/authEmailRedirect";
 import type { Role } from "@/frontend/auth/types";
 
 const roleConfig: Record<string, { label: string; color: string; gradient: string }> = {
@@ -23,11 +25,14 @@ export default function RegisterPage() {
   useDocumentTitle(t("common:pageTitles.register", "Register"));
   const { register } = useAuth();
   const [step, setStep] = useState<"form" | "done">("form");
+  const [registeredEmail, setRegisteredEmail] = useState("");
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [showPwd, setShowPwd] = useState(false);
   const [showConfirmPwd, setShowConfirmPwd] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [resending, setResending] = useState(false);
+  const [resendStatus, setResendStatus] = useState<"idle" | "sent" | "rate-limited">("idle");
 
   const resolvedRole: Role = (role as Role) || "guardian";
   const config = roleConfig[resolvedRole] || roleConfig.guardian;
@@ -65,19 +70,41 @@ export default function RegisterPage() {
     });
     setLoading(false);
     if (result.success) {
-      if (result.needsMfa) {
-        // New user must verify MFA before accessing app
-        navigate("/auth/mfa-verify", { replace: true });
-      } else {
-        setStep("done");
+      if (result.signedInWithoutEmailConfirmation) {
+        navigate(`/${resolvedRole}/dashboard`, { replace: true });
+        return;
       }
+      setRegisteredEmail(formData.email || "");
+      setStep("done");
     } else {
       setError(result.error || "Registration failed");
     }
   };
 
   const handleContinue = () => {
-    navigate("/auth/mfa-verify", { replace: true });
+    navigate("/auth/login", { replace: true });
+  };
+
+  const handleResendConfirmation = async () => {
+    if (!registeredEmail || resending) return;
+    setResending(true);
+    setResendStatus("idle");
+    const redirectTo = getAuthEmailRedirectTo();
+    const { error: resendErr } = await supabase.auth.resend({
+      type: "signup",
+      email: registeredEmail,
+      options: redirectTo ? { emailRedirectTo: redirectTo } : undefined,
+    });
+    setResending(false);
+    if (resendErr) {
+      if (resendErr.message.toLowerCase().includes("rate limit") || resendErr.status === 429) {
+        setResendStatus("rate-limited");
+      } else {
+        setResendStatus("rate-limited");
+      }
+    } else {
+      setResendStatus("sent");
+    }
   };
 
   return (
@@ -146,7 +173,16 @@ export default function RegisterPage() {
                 ))}
               </div>
             )}
-            {error && <p className="text-sm text-center py-2 px-3 rounded-lg" style={{ color: "#EF4444", background: "rgba(239,68,68,0.08)" }}>{error}</p>}
+            {error && (
+              <div className="text-sm text-center py-2 px-3 rounded-lg" style={{ color: "#EF4444", background: "rgba(239,68,68,0.08)" }}>
+                <p>{error}</p>
+                {(error.toLowerCase().includes("rate limit") || error.toLowerCase().includes("already registered") || error.toLowerCase().includes("sign in")) && (
+                  <button type="button" onClick={() => navigate("/auth/login")} className="mt-2 text-xs font-medium underline underline-offset-2" style={{ color: cn.pink }}>
+                    Go to Sign In
+                  </button>
+                )}
+              </div>
+            )}
             <button type="submit" disabled={loading} className="w-full py-3.5 rounded-xl text-white flex items-center justify-center gap-2 disabled:opacity-50 cn-touch-target" style={{ background: config.gradient }}>
               {loading ? <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" /> : "Create Account"}
             </button>
@@ -154,14 +190,56 @@ export default function RegisterPage() {
         )}
 
         {step === "done" && (
-          <div className="text-center space-y-6">
-            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto" style={{ background: cn.greenBg }}><CheckCircle className="w-8 h-8" style={{ color: cn.green }} /></div>
+          <div className="text-center space-y-5">
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto" style={{ background: cn.greenBg }}>
+              <CheckCircle className="w-8 h-8" style={{ color: cn.green }} />
+            </div>
             <div>
               <h2 className="text-xl mb-2" style={{ color: cn.text }}>Account Created!</h2>
-              <p className="text-sm" style={{ color: cn.textSecondary }}>Welcome to CareNet as a {config.label}. Next, set up Google Authenticator for secure login.</p>
+              <p className="text-sm" style={{ color: cn.textSecondary }}>
+                Welcome to CareNet as a {config.label}.
+              </p>
             </div>
-            <button onClick={handleContinue} className="w-full py-3.5 rounded-xl text-white cn-touch-target" style={{ background: config.gradient }}>Set Up Authenticator</button>
-            <button onClick={() => navigate(`/${resolvedRole}/dashboard`, { replace: true })} className="w-full text-center text-sm hover:underline" style={{ color: cn.textSecondary }}>Skip for now</button>
+            {USE_SUPABASE && (
+              <div className="rounded-xl p-4 text-left space-y-3" style={{ background: cn.bgInput, border: `1px solid ${cn.border}` }}>
+                <div className="flex items-center gap-2">
+                  <Mail className="w-4 h-4 shrink-0" style={{ color: cn.pink }} />
+                  <p className="text-sm font-medium" style={{ color: cn.text }}>Check your email to confirm</p>
+                </div>
+                <p className="text-xs leading-relaxed" style={{ color: cn.textSecondary }}>
+                  We sent a confirmation link to{" "}
+                  <span className="font-medium" style={{ color: cn.text }}>{registeredEmail}</span>.
+                  {" "}Open that email and click the link — then come back here to sign in.
+                </p>
+                <p className="text-xs" style={{ color: cn.textSecondary }}>
+                  Don't see it? Check your <strong>spam / junk</strong> folder first.
+                </p>
+                <div className="pt-1 border-t" style={{ borderColor: cn.border }}>
+                  {resendStatus === "sent" && (
+                    <p className="text-xs text-center" style={{ color: cn.green }}>✓ Confirmation email resent — check your inbox.</p>
+                  )}
+                  {resendStatus === "rate-limited" && (
+                    <p className="text-xs text-center" style={{ color: "#F59E0B" }}>
+                      Too many resend attempts. Please wait a few minutes before trying again.
+                    </p>
+                  )}
+                  {resendStatus === "idle" && (
+                    <button
+                      type="button"
+                      onClick={handleResendConfirmation}
+                      disabled={resending}
+                      className="w-full text-xs py-2 rounded-lg border transition-all disabled:opacity-50"
+                      style={{ borderColor: cn.border, color: cn.textSecondary }}
+                    >
+                      {resending ? "Sending…" : "Resend confirmation email"}
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+            <button onClick={handleContinue} className="w-full py-3.5 rounded-xl text-white cn-touch-target" style={{ background: config.gradient }}>
+              Go to Sign In
+            </button>
           </div>
         )}
       </div>

@@ -119,22 +119,47 @@ export const MOCK_AGENCY_SETTINGS: AgencySettings = {
   name: "HealthCare Pro BD", email: "admin@healthcarepro.bd", phone: "+880 1700-000000",
   address: "Gulshan-2, Dhaka", license: "DGHS-2024-1234", established: 2018,
   services: ["Elderly Care", "Post-Op Recovery", "Night Care", "Pediatric Care"],
-  commissionRate: 15, payoutSchedule: "weekly" as const,
+  commissionRate: 15, payoutSchedule: "weekly" as const, hourlyRate: 350,
+  complianceDocs: [
+    { name: "Trade License", status: "valid", expires: "Dec 2026" },
+    { name: "Tax Identification (TIN)", status: "valid", expires: "N/A" },
+    { name: "Professional Liability Insurance", status: "valid", expires: "Sep 2026" },
+    { name: "Staff Background Check Policy", status: "review", expires: "Needs update" },
+  ],
 };
 
 export const MOCK_STOREFRONT_DATA: StorefrontData = {
-  agency: { name: "HealthCare Pro BD", rating: 4.8, reviews: 124, tagline: "Trusted Home Healthcare Since 2018" },
+  agency: {
+    name: "HealthCare Pro BD",
+    rating: 4.8,
+    reviews: 124,
+    tagline: "Trusted Home Healthcare Since 2018",
+    established: 2018,
+    successRate: 99.2,
+    responseTime: "<15 min",
+    tier: "Tier 1",
+    location: "Banani, Dhaka",
+    caregiverCount: 85,
+  },
   services: [
     { id: "s1", name: "Full Day Care", price: 2000, description: "Comprehensive 8AM-8PM care package", popular: true },
     { id: "s2", name: "Night Care", price: 1800, description: "Overnight monitoring 8PM-8AM", popular: false },
     { id: "s3", name: "Post-Op Recovery", price: 3000, description: "Specialized post-surgery care", popular: true },
   ],
+  staff: [
+    { id: "sf1", name: "Dr. Rahat Khan", role: "Sr. Nurse Specialist", imageUrl: "https://images.unsplash.com/photo-1559839734-2b71f1536783?auto=format&fit=crop&q=80&w=200&h=200" },
+    { id: "sf2", name: "Sumi Akter", role: "Physiotherapist", imageUrl: "https://images.unsplash.com/photo-1594824476967-48c8b964273f?auto=format&fit=crop&q=80&w=200&h=200" },
+  ],
+  reviewItems: [
+    { rating: 5, text: "Excellent professional service during my father's recovery.", authorName: "Zubayer Ahmed", authorRole: "Guardian", createdAt: "2026-03-10T12:00:00Z" },
+    { rating: 5, text: "Responsive team and compassionate caregivers.", authorName: "Fatima Rahman", authorRole: "Guardian", createdAt: "2026-03-05T10:00:00Z" },
+  ],
 };
 
 export const MOCK_BRANCHES: Branch[] = [
-  { id: "b1", name: "Gulshan Branch (HQ)", address: "House 42, Road 11, Gulshan-2", staff: 24, active: true },
-  { id: "b2", name: "Dhanmondi Branch", address: "Road 27, Dhanmondi", staff: 16, active: true },
-  { id: "b3", name: "Uttara Branch", address: "Sector 7, Uttara", staff: 12, active: false },
+  { id: "b1", name: "Gulshan Branch (HQ)", address: "House 42, Road 11, Gulshan-2", city: "Dhaka", staff: 24, active: true, performance: "Excellent" },
+  { id: "b2", name: "Dhanmondi Branch", address: "Road 27, Dhanmondi", city: "Dhaka", staff: 16, active: true, performance: "Good" },
+  { id: "b3", name: "Uttara Branch", address: "Sector 7, Uttara", city: "Dhaka", staff: 12, active: false, performance: "Standby" },
 ];
 
 export const MOCK_CLIENT_CARE_PLAN: ClientCarePlanData = {

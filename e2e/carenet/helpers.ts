@@ -13,13 +13,13 @@ export const DEMO_PASSWORD = "demo1234";
 export const DEMO_TOTP = "123456";
 
 export const DEMO_ACCOUNTS = {
-  caregiver:  { email: "caregiver@carenet.demo",  name: "Karim Uddin",       dashboard: "/caregiver/dashboard"  },
-  guardian:   { email: "guardian@carenet.demo",   name: "Rashed Hossain",    dashboard: "/guardian/dashboard"   },
-  patient:    { email: "patient@carenet.demo",    name: "Amina Begum",       dashboard: "/patient/dashboard"    },
-  agency:     { email: "agency@carenet.demo",     name: "CareFirst Agency",  dashboard: "/agency/dashboard"     },
-  admin:      { email: "admin@carenet.demo",      name: "Admin User",        dashboard: "/admin/dashboard"      },
-  moderator:  { email: "moderator@carenet.demo",  name: "Mod User",          dashboard: "/moderator/dashboard"  },
-  shop:       { email: "shop@carenet.demo",       name: "MediMart Store",    dashboard: "/shop/dashboard"       },
+  caregiver:  { email: "caregiver@carenet.demo",  name: "Mock_Karim Uddin",       dashboard: "/caregiver/dashboard"  },
+  guardian:   { email: "guardian@carenet.demo",   name: "Mock_Rashed Hossain",    dashboard: "/guardian/dashboard"   },
+  patient:    { email: "patient@carenet.demo",    name: "Mock_Amina Begum",       dashboard: "/patient/dashboard"    },
+  agency:     { email: "agency@carenet.demo",     name: "Mock_CareFirst Agency",  dashboard: "/agency/dashboard"     },
+  admin:      { email: "admin@carenet.demo",      name: "Mock_Admin User",        dashboard: "/admin/dashboard"      },
+  moderator:  { email: "moderator@carenet.demo",  name: "Mock_Mod User",          dashboard: "/moderator/dashboard"  },
+  shop:       { email: "shop@carenet.demo",       name: "Mock_MediMart Store",    dashboard: "/shop/dashboard"       },
 } as const;
 
 export type DemoRole = keyof typeof DEMO_ACCOUNTS;

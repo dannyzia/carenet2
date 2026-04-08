@@ -16,8 +16,7 @@ const pageGroups = [
   { category: "Authentication", icon: Lock, color: "#8B7AE8", pages: [
     { name: "Login", path: "/auth/login" }, { name: "Role Selection", path: "/auth/role-selection" },
     { name: "Register", path: "/auth/register/guardian" }, { name: "Forgot Password", path: "/auth/forgot-password" },
-    { name: "Reset Password", path: "/auth/reset-password" }, { name: "MFA Setup", path: "/auth/mfa-setup" },
-    { name: "MFA Verify", path: "/auth/mfa-verify" }, { name: "Verification Result", path: "/auth/verification-result" },
+    { name: "Reset Password", path: "/auth/reset-password" }, { name: "Verification Result", path: "/auth/verification-result" },
   ]},
   { category: "Guardian", icon: Users, color: "#DB869A", pages: [
     { name: "Guardian Dashboard", path: "/guardian/dashboard" }, { name: "Care Requirement Wizard", path: "/guardian/care-requirement-wizard" },

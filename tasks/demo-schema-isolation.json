@@ -1,0 +1,347 @@
+[
+  {
+    "_readme": "Demo Schema Isolation — full implementation plan. Two phases: Phase 1 (tasks 1–5) delivers a working isolated demo experience. Phase 2 (tasks 6–8) cleans up public schema contamination and optimises the production bundle. Tasks within each phase follow the dependency order listed.",
+    "_phases": {
+      "phase_1": {
+        "label": "Core isolation — demo schema live, services routed, demo users see demo data",
+        "tasks": ["demo-schema-migration", "demo-schema-seed", "demo-schema-cleanup-cron", "demo-user-detection", "services-demo-schema-routing"],
+        "outcome": "Demo users are fully isolated in demo.* schema. Real users see zero Mock_ data. JS mock arrays still work for local dev."
+      },
+      "phase_2": {
+        "label": "Cleanup and hardening — remove public contamination, optimise bundle",
+        "tasks": ["public-schema-mock-cleanup", "demo-realtime-routing", "demo-mock-array-tree-shake"],
+        "outcome": "Mock_ rows removed from public schema and seed file. Realtime works for demo users. Mock data excluded from production bundle."
+      }
+    }
+  },
+  {
+    "task_id": "demo-schema-migration",
+    "phase": 1,
+    "priority": "high",
+    "dependencies": [],
+    "objective": "Create a separate `demo` Postgres schema in Supabase with mirrored tables for all entities that demo users interact with. Demo rows are completely isolated from the `public` schema — no real user can ever see them.",
+    "inputs": [
+      "supabase/migrations/20260318_full_domain_schema.sql — table shapes to mirror",
+      "seed/01_seed_data.sql — current Mock_ rows to move into demo schema",
+      "seed/00_seed_auth_users.sql — demo user UUIDs (00000000-0000-0000-0000-00000000000x pattern)"
+    ],
+    "constraints": [
+      "Demo schema tables must exactly mirror public schema column shapes — no divergence",
+      "RLS on demo schema: only rows owned by demo user UUIDs are accessible; real user UUIDs never match",
+      "demo_expires_at column added to every demo table — NULL means permanent seed row",
+      "Do NOT alter any public schema table — zero coupling",
+      "Migration must be idempotent (CREATE SCHEMA IF NOT EXISTS, CREATE TABLE IF NOT EXISTS)"
+    ],
+    "deliverables": [
+      "supabase/migrations/20260408100000_demo_schema_create.sql — creates demo schema + mirrors tables: patients, caregiver_profiles, guardian_profiles, agencies, placements, shifts, care_contracts, care_contract_bids, invoices, payment_proofs, wallets, wallet_transactions, jobs",
+      "Each table gets a demo_expires_at TIMESTAMPTZ column (nullable — NULL = permanent)",
+      "RLS policies on each demo table: SELECT/INSERT/UPDATE/DELETE allowed only for demo user UUIDs",
+      "Helper function: demo.is_demo_user() → bool — checks if auth.uid() is a known demo UUID"
+    ],
+    "definition_of_done": [
+      "SELECT * FROM demo.patients returns rows; SELECT * FROM public.patients as a real user returns nothing from demo",
+      "A real authenticated user querying demo.patients gets 0 rows (RLS blocks)",
+      "A demo user querying demo.patients gets their seeded rows",
+      "demo_expires_at column exists on all demo tables"
+    ],
+    "validation_steps": [
+      "Run migration in Supabase SQL editor — no errors",
+      "As real user JWT: SELECT * FROM demo.care_contracts → 0 rows",
+      "As demo user JWT: SELECT * FROM demo.care_contracts → seeded rows visible",
+      "Describe demo.patients → demo_expires_at column present"
+    ],
+    "failure_conditions": [
+      "Real user can see any demo schema row",
+      "Missing demo_expires_at column on any table",
+      "Any foreign key reference from demo schema into public schema (no cross-schema FKs)",
+      "Migration fails on re-run (not idempotent)"
+    ]
+  },
+  {
+    "task_id": "demo-schema-seed",
+    "phase": 1,
+    "priority": "high",
+    "dependencies": ["demo-schema-migration"],
+    "objective": "Insert all permanent Mock_ seed rows into the demo schema tables. These rows have demo_expires_at = NULL and are never auto-deleted. This is the baseline demo experience every demo user sees.",
+    "inputs": [
+      "seed/01_seed_data.sql — all existing Mock_ rows (patients, caregiver_profiles, guardian_profiles, agencies, placements, shifts, care_contracts, care_contract_bids, invoices, wallets, etc.)",
+      "seed/00_seed_auth_users.sql — demo user UUIDs for owner/guardian_id columns"
+    ],
+    "constraints": [
+      "demo_expires_at = NULL on every row (permanent, never auto-deleted)",
+      "All UUIDs match the existing demo user UUIDs (00000000-0000-0000-0000-00000000000x)",
+      "Use ON CONFLICT (id) DO UPDATE to make this re-runnable without duplicates",
+      "Must NOT insert these rows into public schema tables — public seed file to be cleaned up separately"
+    ],
+    "deliverables": [
+      "supabase/migrations/20260408110000_demo_schema_seed.sql — inserts all Mock_ rows into demo.* tables with demo_expires_at = NULL",
+      "Covers: demo.patients, demo.caregiver_profiles, demo.guardian_profiles, demo.agencies, demo.placements, demo.shifts, demo.care_contracts, demo.care_contract_bids, demo.wallets, demo.wallet_transactions, demo.jobs"
+    ],
+    "definition_of_done": [
+      "After running migration: SELECT COUNT(*) FROM demo.care_contracts → matches current 01_seed_data.sql contract count",
+      "All demo_expires_at values are NULL",
+      "Migration re-runnable without errors or duplicate rows"
+    ],
+    "validation_steps": [
+      "Run seed migration in SQL editor",
+      "SELECT id, title, demo_expires_at FROM demo.care_contracts → rows visible, expires_at is NULL",
+      "Run migration again — no unique constraint violations",
+      "As demo user in browser: guardian dashboard shows Mock_ patients, care contracts"
+    ],
+    "failure_conditions": [
+      "Any demo_expires_at set to a non-NULL value on permanent seed rows",
+      "Rows inserted into public.* instead of demo.*",
+      "Migration fails on second run (not idempotent)",
+      "Missing rows for any entity type the demo UI expects"
+    ]
+  },
+  {
+    "task_id": "demo-schema-cleanup-cron",
+    "phase": 1,
+    "priority": "high",
+    "dependencies": ["demo-schema-migration", "demo-schema-seed"],
+    "objective": "Schedule a pg_cron job that runs on the first day of every month and deletes all demo schema rows where demo_expires_at < NOW(). Permanent seed rows (demo_expires_at = NULL) are never touched.",
+    "inputs": [
+      "Supabase project with pg_cron extension enabled",
+      "demo schema with demo_expires_at column on all tables",
+      "List of all demo tables to clean: patients, caregiver_profiles, guardian_profiles, agencies, placements, shifts, care_contracts, care_contract_bids, invoices, payment_proofs, wallets, wallet_transactions, jobs"
+    ],
+    "constraints": [
+      "Only delete rows WHERE demo_expires_at IS NOT NULL AND demo_expires_at < NOW()",
+      "Never delete rows where demo_expires_at IS NULL (permanent seeds)",
+      "Cron schedule: '0 0 1 * *' — midnight UTC on the 1st of every month",
+      "Idempotent: running cleanup manually between cron ticks must be safe",
+      "Log a count of deleted rows per table to pg_cron.job_run_details"
+    ],
+    "deliverables": [
+      "supabase/migrations/20260408120000_demo_cleanup_cron.sql — creates pg_cron job 'demo-monthly-cleanup'",
+      "Cleanup function: demo.cleanup_expired_rows() — iterates all demo tables and deletes expired rows",
+      "Cron registration: SELECT cron.schedule('demo-monthly-cleanup', '0 0 1 * *', 'SELECT demo.cleanup_expired_rows()')"
+    ],
+    "definition_of_done": [
+      "SELECT * FROM cron.job WHERE jobname = 'demo-monthly-cleanup' → 1 row",
+      "INSERT a test row with demo_expires_at = NOW() - INTERVAL '1 day' → run cleanup manually → row deleted",
+      "INSERT a row with demo_expires_at = NULL → run cleanup → row still exists",
+      "INSERT a row with demo_expires_at = NOW() + INTERVAL '10 days' → run cleanup → row still exists (not yet expired)"
+    ],
+    "validation_steps": [
+      "Run migration — no errors",
+      "SELECT * FROM cron.job WHERE jobname = 'demo-monthly-cleanup' → schedule is '0 0 1 * *'",
+      "INSERT INTO demo.care_contracts (..., demo_expires_at = NOW() - INTERVAL '1 day')",
+      "SELECT demo.cleanup_expired_rows() → returns deleted counts",
+      "Verify the past-expired row is gone; permanent rows (NULL) untouched"
+    ],
+    "failure_conditions": [
+      "Cleanup deletes rows with demo_expires_at = NULL (permanent seeds destroyed)",
+      "Cron job not registered (SELECT from cron.job returns nothing)",
+      "pg_cron extension not enabled — migration fails with 'extension not found'",
+      "Cleanup function errors silently and returns without deleting anything"
+    ],
+    "notes": "If pg_cron is not available in your Supabase plan tier, an alternative is a Supabase Edge Function triggered by an external cron service (e.g. GitHub Actions scheduled workflow calling POST /cleanup-demo). The same SQL logic applies."
+  },
+  {
+    "task_id": "demo-user-detection",
+    "phase": 1,
+    "priority": "high",
+    "dependencies": ["demo-schema-migration"],
+    "objective": "Add a centralised isDemoSession() check in the frontend service layer so every service routes demo users to demo.* tables and real users to public.* tables. No service should have ad-hoc demo detection logic.",
+    "inputs": [
+      "src/backend/services/_sb.ts — shared Supabase query helpers",
+      "src/backend/services/guardian.service.ts — existing isDemoAuthMode() pattern to generalise",
+      "src/backend/services/supabase.ts — USE_SUPABASE flag",
+      "src/frontend/auth/mockAuth.ts — demo email/id conventions (@carenet.demo, demo- prefix)"
+    ],
+    "constraints": [
+      "isDemoSession() must work without async calls — read from localStorage only (same approach as isDemoAuthMode())",
+      "sbDemo() helper must return sb().schema('demo') — Supabase JS client supports .schema() natively",
+      "shouldUseSupabase() must stay: true only when USE_SUPABASE=true AND not a demo session",
+      "All existing services that currently have ad-hoc demo checks must be migrated to use these shared helpers",
+      "E2E tests using VITE_PLAYWRIGHT_E2E=true must still go through mock mode (no demo schema hit)"
+    ],
+    "deliverables": [
+      "src/backend/services/_sb.ts — add isDemoSession(), sbDemo(), shouldUseSupabase() (already exists in guardian.service — move here), demoDelay() helper",
+      "src/backend/services/guardian.service.ts — remove local isDemoAuthMode(), import from _sb",
+      "Document the three-mode decision tree as a comment block in _sb.ts: (1) E2E/no-env → mock arrays, (2) USE_SUPABASE + demo session → demo schema, (3) USE_SUPABASE + real session → public schema"
+    ],
+    "definition_of_done": [
+      "isDemoSession() returns true for @carenet.demo emails and demo- id prefixes",
+      "isDemoSession() returns false for any real user",
+      "sbDemo().from('care_contracts').select('*') queries demo schema, not public",
+      "All services use shouldUseSupabase() not raw USE_SUPABASE for read/write decisions",
+      "guardian.service.ts no longer has its own isDemoAuthMode() — uses _sb import"
+    ],
+    "validation_steps": [
+      "Log in as guardian@carenet.demo → isDemoSession() === true in browser console",
+      "Log in as a real Supabase user → isDemoSession() === false",
+      "Check network tab: demo user's patient fetch hits schema=demo query parameter",
+      "Check network tab: real user's patient fetch hits no schema parameter (defaults to public)"
+    ],
+    "failure_conditions": [
+      "isDemoSession() throws or returns wrong value for edge-case emails",
+      "Real user accidentally routed to demo schema",
+      "Demo user accidentally routed to public schema (sees real data or empty results)",
+      "E2E tests hitting demo schema instead of mock arrays"
+    ]
+  },
+  {
+    "task_id": "services-demo-schema-routing",
+    "phase": 1,
+    "priority": "high",
+    "dependencies": ["demo-user-detection", "demo-schema-seed"],
+    "objective": "Update all backend services to route demo users to demo.* tables instead of returning static JS mock arrays. Real users continue to use public schema. USE_SUPABASE=false (no env vars) still falls back to JS mock arrays for local dev.",
+    "inputs": [
+      "src/backend/services/_sb.ts (with isDemoSession, sbDemo, shouldUseSupabase)",
+      "All services: guardian.service.ts, marketplace.service.ts, billing.service.ts, caregiver.service.ts, agency.service.ts, patient.service.ts, schedule.service.ts, message.service.ts, notification.service.ts, support.service.ts, admin.service.ts, community.service.ts, shop.service.ts, section15.service.ts, moderator.service.ts, contractService.ts, walletService.ts",
+      "src/backend/api/mock/* — JS mock arrays (remain for USE_SUPABASE=false fallback only)"
+    ],
+    "constraints": [
+      "Three-branch pattern per function: (1) !USE_SUPABASE → mock array, (2) isDemoSession() → sbDemo().from(...), (3) else → sb().from(...)",
+      "Demo INSERT/UPDATE must tag new rows: demo_expires_at = NOW() + INTERVAL '30 days'",
+      "Demo DELETE must only delete rows the demo user owns (owner_id or guardian_id matches demo UUID)",
+      "Do not remove JS mock arrays — they are the fallback for USE_SUPABASE=false (local dev, E2E)"
+    ],
+    "deliverables": [
+      "All ~17 service files updated with three-branch routing",
+      "Every demo INSERT includes demo_expires_at = NOW() + INTERVAL '30 days'",
+      "JS mock arrays retained but only reached when USE_SUPABASE is false"
+    ],
+    "definition_of_done": [
+      "Demo user logs in → patients list shows Mock_ rows from demo.patients (not JS array)",
+      "Demo user creates a new care request → row appears in demo.care_contracts with demo_expires_at ~30 days out",
+      "Real user logs in → public.patients shows only their own rows, zero Mock_ rows visible",
+      "Local dev with no VITE_SUPABASE_URL → JS mock arrays returned as before"
+    ],
+    "validation_steps": [
+      "Login as guardian@carenet.demo → open patients page → rows say Mock_Amina Begum etc.",
+      "In Supabase SQL editor: SELECT * FROM demo.patients → same rows visible",
+      "Create a new patient as demo user → SELECT from demo.patients → new row present with demo_expires_at NOT NULL",
+      "Login as real Supabase guardian → patients page shows only their own rows",
+      "In Supabase SQL editor: SELECT * FROM public.patients → zero Mock_ rows present"
+    ],
+    "failure_conditions": [
+      "Demo user sees empty lists (routed to public schema with mismatched UUIDs)",
+      "Real user sees Mock_ prefixed rows",
+      "Demo INSERT missing demo_expires_at (row becomes permanent accidentally)",
+      "Service still importing and returning from JS mock array when USE_SUPABASE=true"
+    ]
+  },
+  {
+    "task_id": "public-schema-mock-cleanup",
+    "phase": 2,
+    "priority": "medium",
+    "dependencies": ["demo-schema-seed", "services-demo-schema-routing"],
+    "objective": "Remove all Mock_ seed rows from the public schema (01_seed_data.sql and live DB) now that demo data lives exclusively in the demo schema. Prevents any chance of real users seeing demo rows.",
+    "inputs": [
+      "seed/01_seed_data.sql — all Mock_ rows to remove",
+      "seed/00_seed_auth_users.sql — demo auth users to assess (keep for demo login; they live in auth.users not public schema)",
+      "Live Supabase DB — existing Mock_ rows in public.patients, public.care_contracts, etc."
+    ],
+    "constraints": [
+      "Do NOT delete auth.users rows for demo accounts — demo users must still be able to log in via Supabase Auth",
+      "Only delete rows from public.* tables (not auth.users)",
+      "Create a migration rather than running ad-hoc SQL so the cleanup is tracked",
+      "Update seed/01_seed_data.sql to remove all Mock_ INSERT statements (they now live in demo schema seed migration)"
+    ],
+    "deliverables": [
+      "supabase/migrations/20260408130000_remove_public_mock_rows.sql — DELETE FROM public.patients WHERE id IN (...demo UUIDs...) etc. for all affected tables",
+      "seed/01_seed_data.sql updated: Mock_ INSERT blocks removed (file kept for any future real seed data)",
+      "seed/README.md updated: note that demo data lives in demo schema migration, not here"
+    ],
+    "definition_of_done": [
+      "SELECT * FROM public.patients WHERE name LIKE 'Mock_%' → 0 rows",
+      "SELECT * FROM public.care_contracts WHERE title LIKE 'Mock_%' → 0 rows",
+      "Demo users can still log in with guardian@carenet.demo + demo1234",
+      "Demo users see their data from demo schema (not affected by this cleanup)"
+    ],
+    "validation_steps": [
+      "Run migration in SQL editor",
+      "SELECT name FROM public.patients → no Mock_ names",
+      "SELECT title FROM public.care_contracts → no Mock_ titles",
+      "Log in as guardian@carenet.demo → data still visible (from demo schema, not public)",
+      "Log in as real guardian → no Mock_ data visible anywhere"
+    ],
+    "failure_conditions": [
+      "Demo auth users deleted from auth.users — demo login breaks",
+      "Migration deletes rows from demo schema instead of public schema",
+      "Real user data accidentally deleted (must only target known demo UUIDs)",
+      "seed/01_seed_data.sql still contains Mock_ INSERTs after cleanup"
+    ]
+  },
+  {
+    "task_id": "demo-realtime-routing",
+    "phase": 2,
+    "priority": "medium",
+    "dependencies": ["demo-user-detection", "demo-schema-migration"],
+    "objective": "Update Supabase Realtime subscriptions in realtime.ts to listen on the demo schema when the session is a demo session, so demo users receive realtime events from demo.* tables, not public.*.",
+    "inputs": [
+      "src/backend/services/realtime.ts — subscribeToMonetization, subscribeToAllMonetization, subscribeToCareContractBids, subscribeToBillingForUser",
+      "src/backend/services/_sb.ts — isDemoSession()",
+      "supabase/migrations/20260408100000_demo_schema_create.sql — demo schema tables added to realtime publication"
+    ],
+    "constraints": [
+      "Supabase Realtime postgres_changes requires tables to be in supabase_realtime publication — demo schema tables must be added",
+      "Channel names should include a 'demo:' prefix when in demo mode to avoid collisions with real user channels",
+      "isDemoSession() check must happen at subscription time, not at module load time",
+      "Unsubscribe/cleanup logic is unchanged"
+    ],
+    "deliverables": [
+      "realtime.ts — each subscription function checks isDemoSession() and sets schema: 'demo' on postgres_changes listener when true",
+      "supabase/migrations/20260408100000_demo_schema_create.sql updated to ADD demo schema tables to supabase_realtime publication",
+      "Channel names prefixed: 'demo:monetization:{userId}' vs 'monetization:{userId}'"
+    ],
+    "definition_of_done": [
+      "Demo user creates a bid in demo schema → realtime event fires → UI updates without refresh",
+      "Real user's realtime channel does not receive demo schema events",
+      "Channel name in Supabase dashboard shows 'demo:' prefix for demo sessions"
+    ],
+    "validation_steps": [
+      "Log in as demo guardian → open marketplace hub → submit a bid",
+      "Observe UI updates (toast or list refresh) without page reload",
+      "Check Supabase Realtime inspector → channel name has 'demo:' prefix",
+      "Log in as real user → no demo schema events received"
+    ],
+    "failure_conditions": [
+      "Demo schema tables not in supabase_realtime publication — silent channel failure",
+      "Real user channel accidentally subscribed to demo schema",
+      "Channel name collision between demo and real user sessions"
+    ]
+  },
+  {
+    "task_id": "demo-mock-array-tree-shake",
+    "phase": 2,
+    "priority": "low",
+    "dependencies": ["services-demo-schema-routing"],
+    "objective": "Convert JS mock array imports in all services from static top-level imports to dynamic imports so Vite excludes the entire mock/ folder from the production bundle when USE_SUPABASE=true.",
+    "inputs": [
+      "src/backend/api/mock/*.ts — all mock data files",
+      "All service files that import from @/backend/api/mock",
+      "vite.config.ts — to verify tree-shaking / code-splitting behavior"
+    ],
+    "constraints": [
+      "Dynamic import only called in the !USE_SUPABASE branch — never reached in production",
+      "USE_SUPABASE is a build-time constant (import.meta.env) so Vite can statically eliminate the dead branch",
+      "Must not break local dev (USE_SUPABASE=false path must still work)",
+      "Do not restructure mock files — only change how they are imported"
+    ],
+    "deliverables": [
+      "Each service: replace `import { MOCK_X } from '@/backend/api/mock'` with `const { MOCK_X } = await import('@/backend/api/mock/xMocks')` inside the !USE_SUPABASE branch",
+      "Verify with `npx vite build --mode production` that dist/ does not contain mock data strings (e.g. 'Mock_Amina Begum')"
+    ],
+    "definition_of_done": [
+      "Production build (VITE_SUPABASE_URL set): grep dist/ for 'Mock_' → 0 matches",
+      "Local dev build (no VITE_SUPABASE_URL): mock arrays still load and return data correctly",
+      "Bundle size reduction visible in vite build output (mock files no longer in chunk)"
+    ],
+    "validation_steps": [
+      "npm run build with VITE_SUPABASE_URL set",
+      "grep -r 'Mock_Amina' dist/ → no results",
+      "npm run dev with no VITE_SUPABASE_URL → guardian page shows JS mock patients",
+      "Check vite build chunk report — no mock*.ts files in output chunks"
+    ],
+    "failure_conditions": [
+      "Mock data strings present in production bundle (tree-shaking failed)",
+      "Local dev breaks — mock arrays unreachable after dynamic import change",
+      "Dynamic import causes async waterfall in the critical render path"
+    ]
+  }
+]

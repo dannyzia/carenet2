@@ -1,31 +1,37 @@
 # CareNet Seed Data
 
+## Demo schema (`demo.*`)
+
+Demo and `Mock_` domain rows for fixed auth UUIDs are loaded by the migration **`supabase/migrations/20260408110000_demo_schema_seed.sql`** into the Postgres **`demo`** schema (not `public`). The app routes demo sessions to `demo` via PostgREST (`sbData()`). After that migration, **`01_seed_data.sql` should not re-insert those Mock_ rows into `public`**; migration **`20260408130000_demo_remove_public_mock_rows.sql`** removes any that remain in `public`. Add **`demo`** under Supabase **Settings → API → Exposed schemas** so the client can query it.
+
 ## UUID Reference (use these across ALL files)
 
 ### Users (created by `00_seed_auth_users.sql`)
+Display names in seed data use a **`Mock_` prefix** so demo rows are obvious in the UI. IDs and emails are unchanged.
+
 | ID | Name | Role | Phone |
 |----|------|------|-------|
-| `00000000-0000-0000-0000-000000000001` | Karim Uddin | caregiver | 01712345678 |
-| `00000000-0000-0000-0000-000000000002` | Rashed Hossain | guardian | 01812345678 |
-| `00000000-0000-0000-0000-000000000003` | Amina Begum | patient | 01912345678 |
-| `00000000-0000-0000-0000-000000000004` | CareFirst Agency | agency | 01612345678 |
-| `00000000-0000-0000-0000-000000000005` | Admin User | admin | 01512345678 |
-| `00000000-0000-0000-0000-000000000006` | Mod User | moderator | 01412345678 |
-| `00000000-0000-0000-0000-000000000007` | MediMart Store | shop | 01312345678 |
-| `00000000-0000-0000-0000-000000000008` | Multi-Role Demo | guardian | 01011111111 |
+| `00000000-0000-0000-0000-000000000001` | Mock_Karim Uddin | caregiver | 01712345678 |
+| `00000000-0000-0000-0000-000000000002` | Mock_Rashed Hossain | guardian | 01812345678 |
+| `00000000-0000-0000-0000-000000000003` | Mock_Amina Begum | patient | 01912345678 |
+| `00000000-0000-0000-0000-000000000004` | Mock_CareFirst Agency | agency | 01612345678 |
+| `00000000-0000-0000-0000-000000000005` | Mock_Admin User | admin | 01512345678 |
+| `00000000-0000-0000-0000-000000000006` | Mock_Mod User | moderator | 01412345678 |
+| `00000000-0000-0000-0000-000000000007` | Mock_MediMart Store | shop | 01312345678 |
+| `00000000-0000-0000-0000-000000000008` | Mock_Multi-Role Demo | guardian | 01011111111 |
 
 ### Patients
 | ID | Name | Guardian |
 |----|------|----------|
-| `10000000-0000-0000-0000-000000000001` | Amina Begum | Rashed Hossain |
-| `10000000-0000-0000-0000-000000000002` | Rafiq Ahmed | Rashed Hossain |
-| `10000000-0000-0000-0000-000000000003` | Fatima Khatun | Multi-Role Demo |
+| `10000000-0000-0000-0000-000000000001` | Mock_Amina Begum | Mock_Rashed Hossain |
+| `10000000-0000-0000-0000-000000000002` | Mock_Rafiq Ahmed | Mock_Rashed Hossain |
+| `10000000-0000-0000-0000-000000000003` | Mock_Fatima Khatun | Mock_Multi-Role Demo |
 
 ### Placements
 | ID | Patient | Guardian | Agency | Caregiver |
 |----|---------|----------|--------|-----------|
-| `20000000-0000-0000-0000-000000000001` | Amina Begum | Rashed | CareFirst | Karim |
-| `20000000-0000-0000-0000-000000000002` | Fatima Khatun | Multi-Role | CareFirst | Karim |
+| `20000000-0000-0000-0000-000000000001` | Mock_Amina Begum | Mock_Rashed | Mock_CareFirst | Mock_Karim |
+| `20000000-0000-0000-0000-000000000002` | Mock_Fatima Khatun | Mock_Multi-Role | Mock_CareFirst | Mock_Karim |
 
 ### Shifts
 | ID | Prefix |
@@ -51,6 +57,8 @@
 | ID | Prefix |
 |----|--------|
 | `70000000-0000-0000-0000-00000000XXXX` | Care Contract IDs |
+
+Published offers and requests include **`care_needs` and `services` JSONB** (plus flat columns) so rows round-trip with `mapSupabaseContractRow` / `careContractToSupabaseRow` in `src/backend/domain/uccf/`.
 
 ### Conversations
 | ID | Prefix |

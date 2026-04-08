@@ -4,7 +4,8 @@ import type {
   CareRequirement, MessageChat, GuardianTransaction, GuardianInvoice,
   GuardianAppointment, GuardianTodayEvent, PastCaregiverReview,
   ReceivedReview, PlacementShiftHistory, CaregiverTimelineEntry,
-  GuardianActivity, AgencyPublicProfile, CaregiverPublicProfile,
+  GuardianActivity, GuardianDashboardAlert, GuardianDashboardSummary,
+  AgencyPublicProfile, CaregiverPublicProfile,
   ComparisonCaregiver, GuardianProfile, InvoiceDetail,
 } from "@/backend/models";
 
@@ -126,12 +127,27 @@ export const MOCK_CAREGIVER_TIMELINE: CaregiverTimelineEntry[] = [
 
 // ─── Guardian Recent Activity (Dashboard) ───
 export const MOCK_GUARDIAN_RECENT_ACTIVITY: GuardianActivity[] = [
-  { iconType: "heart", text: "Care log updated for Mr. Abdul Rahman", time: "10 min ago", color: "#DB869A" },
-  { iconType: "calendar", text: "Next appointment: Tomorrow 9:00 AM", time: "1h ago", color: "#5FB865" },
-  { iconType: "creditCard", text: "Payment of \u09F3 4,800 processed", time: "2h ago", color: "#7B5EA7" },
-  { iconType: "message", text: "New message from Karim Uddin", time: "3h ago", color: "#E8A838" },
-  { iconType: "star", text: "Reminder: Rate Fatema Akter's service", time: "1d ago", color: "#E8A838" },
+  { iconType: "heart", text: "Care log updated for Mr. Abdul Rahman", time: "10 min ago", color: "#DB869A", link: "/guardian/care-log" },
+  { iconType: "calendar", text: "Next appointment: Tomorrow 9:00 AM", time: "1h ago", color: "#5FB865", link: "/guardian/schedule" },
+  { iconType: "creditCard", text: "Payment of \u09F3 4,800 processed", time: "2h ago", color: "#7B5EA7", link: "/guardian/payments" },
+  { iconType: "message", text: "New message from Karim Uddin", time: "3h ago", color: "#E8A838", link: "/guardian/messages" },
+  { iconType: "star", text: "Reminder: Rate Fatema Akter's service", time: "1d ago", color: "#E8A838", link: "/guardian/reviews" },
 ];
+
+export const MOCK_GUARDIAN_DASHBOARD_ALERTS: GuardianDashboardAlert[] = [
+  {
+    id: "med-1",
+    title: "Reminder: Mr. Rahman's 10 AM medication is due",
+    subtitle: "The assigned caregiver has been notified. Open care log for details.",
+    actionPath: "/guardian/care-log",
+  },
+];
+
+export const MOCK_GUARDIAN_DASHBOARD_SUMMARY: GuardianDashboardSummary = {
+  activePlacements: 2,
+  monthlySpendBdt: 16200,
+  totalSessions: 47,
+};
 
 // ─── Agency Public Profile ───
 export const MOCK_AGENCY_PUBLIC_PROFILE: AgencyPublicProfile = {

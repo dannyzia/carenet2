@@ -37,6 +37,21 @@ export interface ShopDashboardOrder {
   id: string; customer: string; product: string; amount: string; status: string; date: string;
 }
 
+export interface ShopDashboardStats {
+  totalSalesBdt: number;
+  activeProducts: number;
+  newOrders: number;
+  totalCustomers: number;
+  salesChangeLabel: string;
+  salesChangePositive: boolean;
+  productsChangeLabel: string;
+  productsChangePositive: boolean;
+  ordersChangeLabel: string;
+  ordersChangePositive: boolean;
+  customersChangeLabel: string;
+  customersChangePositive: boolean;
+}
+
 // ─── Analytics ───
 export interface SalesChartDataPoint { name: string; sales: number; orders: number; }
 export interface CategoryDataPoint { name: string; value: number; }

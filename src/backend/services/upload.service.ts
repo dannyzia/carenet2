@@ -5,13 +5,23 @@
  * In production: uses Supabase Storage.
  */
 import type { UploadedFile, DocumentCategory, CaptureMethod, DocumentExpiryAlert } from "@/backend/models";
-import { MOCK_UPLOADED_FILES, MOCK_DOCUMENT_EXPIRY_ALERTS, MOCK_CAREGIVER_DOCUMENTS } from "@/backend/api/mock";
-import { USE_SUPABASE, sbWrite, sbRead, sb, currentUserId } from "./_sb";
+import { loadMockBarrel } from "@/backend/api/mock/loadMockBarrel";
+import { USE_SUPABASE, sbWrite, sbRead, sb, currentUserId, useInAppMockDataset } from "./_sb";
 
 const delay = (ms = 200) => new Promise((r) => setTimeout(r, ms));
 
 /** In-memory store for dev uploads */
-let uploadedFiles: UploadedFile[] = [...MOCK_UPLOADED_FILES];
+let uploadedFiles: UploadedFile[] | null = null;
+
+async function ensureUploadMock() {
+  if (uploadedFiles !== null) return;
+  if (!useInAppMockDataset()) {
+    uploadedFiles = [];
+    return;
+  }
+  const m = await loadMockBarrel();
+  uploadedFiles = [...m.MOCK_UPLOADED_FILES];
+}
 
 const BUCKET = "uploads";
 
@@ -59,7 +69,11 @@ export const uploadService = {
       });
     }
 
+    if (!useInAppMockDataset()) {
+      throw new Error("[CareNet] Connect Supabase or use Demo Access for file uploads.");
+    }
     // Mock mode
+    await ensureUploadMock();
     await delay(800 + Math.random() * 400);
     const url = await fileToDataUrl(file);
     const thumbnailUrl = file.type.startsWith("image/") ? url : undefined;
@@ -79,7 +93,7 @@ export const uploadService = {
       status: "completed",
     };
 
-    uploadedFiles.push(uploaded);
+    uploadedFiles!.push(uploaded);
     return uploaded;
   },
 
@@ -111,8 +125,12 @@ export const uploadService = {
         await sb().from("uploaded_files").delete().eq("id", fileId);
       });
     }
+    if (!useInAppMockDataset()) {
+      throw new Error("[CareNet] Connect Supabase or use Demo Access to delete uploads.");
+    }
     await delay(200);
-    uploadedFiles = uploadedFiles.filter((f) => f.id !== fileId);
+    await ensureUploadMock();
+    uploadedFiles = uploadedFiles!.filter((f) => f.id !== fileId);
   },
 
   /**
@@ -142,9 +160,10 @@ export const uploadService = {
       });
     }
     await delay(100);
-    const fromMemory = uploadedFiles.find((f) => f.id === fileId);
+    await ensureUploadMock();
+    const fromMemory = uploadedFiles!.find((f) => f.id === fileId);
     if (fromMemory) return fromMemory;
-    return mockCaregiverDocumentToUploadedFile(fileId);
+    return await mockCaregiverDocumentToUploadedFile(fileId);
   },
 
   /**
@@ -177,7 +196,8 @@ export const uploadService = {
       });
     }
     await delay(200);
-    let files = uploadedFiles.filter((f) => f.uploadedBy === userId);
+    await ensureUploadMock();
+    let files = uploadedFiles!.filter((f) => f.uploadedBy === userId);
     if (category) files = files.filter((f) => f.category === category);
     return files;
   },
@@ -212,6 +232,8 @@ export const uploadService = {
       });
     }
     await delay(200);
+    if (!useInAppMockDataset()) return [];
+    const { MOCK_DOCUMENT_EXPIRY_ALERTS } = await loadMockBarrel();
     return MOCK_DOCUMENT_EXPIRY_ALERTS.filter((a) => a.daysUntilExpiry <= daysAhead);
   },
 };
@@ -222,7 +244,9 @@ const MOCK_PDF_VIEW_URL =
 const MOCK_IMAGE_VIEW_URL =
   "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=80&w=1200";
 
-function mockCaregiverDocumentToUploadedFile(fileId: string): UploadedFile | undefined {
+async function mockCaregiverDocumentToUploadedFile(fileId: string): Promise<UploadedFile | undefined> {
+  if (!useInAppMockDataset()) return undefined;
+  const { MOCK_CAREGIVER_DOCUMENTS } = await loadMockBarrel();
   const cd = MOCK_CAREGIVER_DOCUMENTS.find((d) => String(d.id) === fileId);
   if (!cd) return undefined;
   const mimeType = mimeFromDocNameAndType(cd.file, cd.type);

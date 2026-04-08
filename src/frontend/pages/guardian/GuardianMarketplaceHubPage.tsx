@@ -4,8 +4,8 @@
  *   1. "My Posted Jobs" — care requests with incoming bids
  *   2. "Browse Packages" — agency-published service packages to pick
  */
-import { useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import {
   Megaphone, Package, Plus, ChevronRight, Star, Shield, MapPin,
   Clock, Users, DollarSign, Filter, Search, Eye, MessageSquare,
@@ -19,6 +19,9 @@ import { PageSkeleton } from "@/frontend/components/shared/PageSkeleton";
 import type { CareContract, AgencyPackage, CareCategory, UCCFPricingRequest, UCCFPricingOffer } from "@/backend/models";
 import { useAriaToast } from "@/frontend/hooks/useAriaToast";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/frontend/auth/AuthContext";
+import { USE_SUPABASE } from "@/backend/services/supabase";
+import { subscribeToCareContractBids } from "@/backend/services/realtime";
 
 type Tab = "my_jobs" | "packages";
 
@@ -75,18 +78,56 @@ function timeAgo(dateStr: string): string {
 
 export default function GuardianMarketplaceHubPage() {
   const { t: tDocTitle } = useTranslation("common");
+  const { t } = useTranslation("guardian");
   useDocumentTitle(tDocTitle("pageTitles.guardianMarketplaceHub", "Guardian Marketplace Hub"));
 
+  const { user } = useAuth();
   const toast = useAriaToast();
   const navigate = useNavigate();
   const base = useCareSeekerBasePath();
-  const [activeTab, setActiveTab] = useState<Tab>("my_jobs");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabFromUrl: Tab = searchParams.get("tab") === "packages" ? "packages" : "my_jobs";
+  const [activeTab, setActiveTab] = useState<Tab>(tabFromUrl);
+
+  useEffect(() => {
+    setActiveTab(tabFromUrl);
+  }, [tabFromUrl]);
+
+  const selectTab = useCallback(
+    (tab: Tab) => {
+      setActiveTab(tab);
+      setSearchParams(
+        (p) => {
+          const n = new URLSearchParams(p);
+          if (tab === "packages") n.set("tab", "packages");
+          else n.delete("tab");
+          return n;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState<CareCategory | "">("");
 
-  const { data: myRequests, loading: loadingReqs } = useAsyncData(() =>
-    marketplaceService.getMyRequests("guardian-current")
+  const { data: myRequests, loading: loadingReqs, refetch: refetchMyRequests } = useAsyncData(() =>
+    marketplaceService.getMyRequests(),
+    []
   );
+
+  const myRequestIds = useMemo(() => (myRequests ?? []).map((r) => r.id).filter(Boolean), [myRequests]);
+  const myRequestIdsKey = myRequestIds.join(",");
+
+  useEffect(() => {
+    if (!USE_SUPABASE || !user?.id || myRequestIds.length === 0) return;
+    return subscribeToCareContractBids(myRequestIds, user.id, (payload) => {
+      void refetchMyRequests();
+      if (payload.eventType === "INSERT") {
+        toast.success(t("marketplace.newBidToast"));
+      }
+    });
+  }, [user?.id, myRequestIdsKey, myRequestIds, refetchMyRequests, toast, t]);
   const { data: packages, loading: loadingPkgs } = useAsyncData(() =>
     marketplaceService.getAgencyPackages()
   );
@@ -129,8 +170,9 @@ export default function GuardianMarketplaceHubPage() {
           { key: "packages" as Tab, label: "Agency Packages", icon: Package, count: packages?.length || 0 },
         ]).map((tab) => (
           <button
+            type="button"
             key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
+            onClick={() => selectTab(tab.key)}
             className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm transition-all cn-touch-target"
             style={{
               background: activeTab === tab.key ? "white" : "transparent",
@@ -224,6 +266,30 @@ export default function GuardianMarketplaceHubPage() {
                         </div>
                       </Link>
 
+                      {req.status === "active" && (
+                        <div className="px-4 pb-3">
+                          <button
+                            type="button"
+                            onClick={async (e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              try {
+                                await marketplaceService.markCareContractCompleted(req.id);
+                                toast.success(t("marketplace.careMarkedComplete"));
+                                await refetchMyRequests();
+                              } catch (err) {
+                                toast.error(err instanceof Error ? err.message : t("marketplace.repostFailed"));
+                              }
+                            }}
+                            className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-medium cn-touch-target"
+                            style={{ background: `${cn.teal}18`, color: cn.teal }}
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5" aria-hidden />
+                            {t("marketplace.markCareComplete")}
+                          </button>
+                        </div>
+                      )}
+
                       {/* Re-post button for taken/expired jobs */}
                       {canRepost && (
                         <div className="px-4 pb-4 -mt-1">
@@ -298,6 +364,7 @@ export default function GuardianMarketplaceHubPage() {
                 <Link
                   key={pkg.id}
                   to={`${base}/marketplace/package/${pkg.id}`}
+                  state={{ fromMarketplacePackages: `${base}/marketplace-hub?tab=packages` }}
                   className="block stat-card p-4 hover:shadow-md transition-shadow no-underline"
                 >
                   {pkg.featured && (

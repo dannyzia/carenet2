@@ -17,14 +17,14 @@
 -- Fixed UUIDs for deterministic foreign keys across all CSV seed files.
 
 -- ─── User UUID Reference ───
--- demo-caregiver-1  = 00000000-0000-0000-0000-000000000001  Karim Uddin
--- demo-guardian-1   = 00000000-0000-0000-0000-000000000002  Rashed Hossain
--- demo-patient-1    = 00000000-0000-0000-0000-000000000003  Amina Begum
--- demo-agency-1     = 00000000-0000-0000-0000-000000000004  CareFirst Agency
--- demo-admin-1      = 00000000-0000-0000-0000-000000000005  Admin User
--- demo-moderator-1  = 00000000-0000-0000-0000-000000000006  Mod User
--- demo-shop-1       = 00000000-0000-0000-0000-000000000007  MediMart Store
--- demo-multi-1      = 00000000-0000-0000-0000-000000000008  Multi-Role Demo
+-- demo-caregiver-1  = 00000000-0000-0000-0000-000000000001  Mock_Karim Uddin
+-- demo-guardian-1   = 00000000-0000-0000-0000-000000000002  Mock_Rashed Hossain
+-- demo-patient-1    = 00000000-0000-0000-0000-000000000003  Mock_Amina Begum
+-- demo-agency-1     = 00000000-0000-0000-0000-000000000004  Mock_CareFirst Agency
+-- demo-admin-1      = 00000000-0000-0000-0000-000000000005  Mock_Admin User
+-- demo-moderator-1  = 00000000-0000-0000-0000-000000000006  Mock_Mod User
+-- demo-shop-1       = 00000000-0000-0000-0000-000000000007  Mock_MediMart Store
+-- demo-multi-1      = 00000000-0000-0000-0000-000000000008  Mock_Multi-Role Demo
 
 -- ─── Insert demo users into auth.users ───
 -- NOTE: confirmed_at is a generated column in modern Supabase — do NOT insert into it.
@@ -46,7 +46,7 @@ INSERT INTO auth.users (
   crypt('DemoPass123!', gen_salt('bf')),
   '+8801712345678', NOW(),
   NOW(),
-  '{"name": "Karim Uddin", "role": "caregiver", "phone": "01712345678"}'::jsonb,
+  '{"name": "Mock_Karim Uddin", "role": "caregiver", "phone": "01712345678"}'::jsonb,
   '{"provider": "email", "providers": ["email"]}'::jsonb,
   '2024-06-15T00:00:00Z', NOW()
 ),
@@ -59,7 +59,7 @@ INSERT INTO auth.users (
   crypt('DemoPass123!', gen_salt('bf')),
   '+8801812345678', NOW(),
   NOW(),
-  '{"name": "Rashed Hossain", "role": "guardian", "phone": "01812345678"}'::jsonb,
+  '{"name": "Mock_Rashed Hossain", "role": "guardian", "phone": "01812345678"}'::jsonb,
   '{"provider": "email", "providers": ["email"]}'::jsonb,
   '2024-03-10T00:00:00Z', NOW()
 ),
@@ -72,7 +72,7 @@ INSERT INTO auth.users (
   crypt('DemoPass123!', gen_salt('bf')),
   '+8801912345678', NOW(),
   NOW(),
-  '{"name": "Amina Begum", "role": "patient", "phone": "01912345678"}'::jsonb,
+  '{"name": "Mock_Amina Begum", "role": "patient", "phone": "01912345678"}'::jsonb,
   '{"provider": "email", "providers": ["email"]}'::jsonb,
   '2024-08-22T00:00:00Z', NOW()
 ),
@@ -85,7 +85,7 @@ INSERT INTO auth.users (
   crypt('DemoPass123!', gen_salt('bf')),
   '+8801612345678', NOW(),
   NOW(),
-  '{"name": "CareFirst Agency", "role": "agency", "phone": "01612345678"}'::jsonb,
+  '{"name": "Mock_CareFirst Agency", "role": "agency", "phone": "01612345678"}'::jsonb,
   '{"provider": "email", "providers": ["email"]}'::jsonb,
   '2024-01-05T00:00:00Z', NOW()
 ),
@@ -98,7 +98,7 @@ INSERT INTO auth.users (
   crypt('DemoPass123!', gen_salt('bf')),
   '+8801512345678', NOW(),
   NOW(),
-  '{"name": "Admin User", "role": "admin", "phone": "01512345678"}'::jsonb,
+  '{"name": "Mock_Admin User", "role": "admin", "phone": "01512345678"}'::jsonb,
   '{"provider": "email", "providers": ["email"]}'::jsonb,
   '2024-01-01T00:00:00Z', NOW()
 ),
@@ -111,7 +111,7 @@ INSERT INTO auth.users (
   crypt('DemoPass123!', gen_salt('bf')),
   '+8801412345678', NOW(),
   NOW(),
-  '{"name": "Mod User", "role": "moderator", "phone": "01412345678"}'::jsonb,
+  '{"name": "Mock_Mod User", "role": "moderator", "phone": "01412345678"}'::jsonb,
   '{"provider": "email", "providers": ["email"]}'::jsonb,
   '2024-05-01T00:00:00Z', NOW()
 ),
@@ -124,7 +124,7 @@ INSERT INTO auth.users (
   crypt('DemoPass123!', gen_salt('bf')),
   '+8801312345678', NOW(),
   NOW(),
-  '{"name": "MediMart Store", "role": "shop", "phone": "01312345678"}'::jsonb,
+  '{"name": "Mock_MediMart Store", "role": "shop", "phone": "01312345678"}'::jsonb,
   '{"provider": "email", "providers": ["email"]}'::jsonb,
   '2024-04-15T00:00:00Z', NOW()
 ),
@@ -137,7 +137,7 @@ INSERT INTO auth.users (
   crypt('DemoPass123!', gen_salt('bf')),
   '+8801011111111', NOW(),
   NOW(),
-  '{"name": "Multi-Role Demo", "role": "guardian", "phone": "01011111111"}'::jsonb,
+  '{"name": "Mock_Multi-Role Demo", "role": "guardian", "phone": "01011111111"}'::jsonb,
   '{"provider": "email", "providers": ["email"]}'::jsonb,
   '2024-01-01T00:00:00Z', NOW()
 )

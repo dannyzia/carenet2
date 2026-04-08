@@ -5,6 +5,7 @@ import { useAsyncData, useDocumentTitle } from "@/frontend/hooks";
 import { moderatorService } from "@/backend/services";
 import { PageSkeleton } from "@/frontend/components/shared/PageSkeleton";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router";
 
 const statusConfig: Record<string, { color: string; bg: string; label: string }> = {
   flagged: { color: "#EF4444", bg: "#EF444420", label: "Flagged" },
@@ -75,18 +76,18 @@ export default function ModeratorReviewsPage() {
                 )}
 
                 <div className="flex gap-2 flex-wrap">
-                  <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-white" style={{ background: "#5FB865" }}>
+                  <Link to="/moderator/sanctions" className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-white no-underline cn-touch-target" style={{ background: "#5FB865" }}>
                     <CheckCircle className="w-3.5 h-3.5" /> Approve
-                  </button>
-                  <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-white" style={{ background: "#EF4444" }}>
+                  </Link>
+                  <Link to="/moderator/sanctions" className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-white no-underline cn-touch-target" style={{ background: "#EF4444" }}>
                     <XCircle className="w-3.5 h-3.5" /> Remove
-                  </button>
-                  <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs" style={{ borderColor: "#E5E7EB", color: "#535353" }}>
+                  </Link>
+                  <Link to={`/moderator/queue-detail/${r.id}`} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs no-underline cn-touch-target" style={{ borderColor: "#E5E7EB", color: "#535353" }}>
                     <Eye className="w-3.5 h-3.5" /> View Full
-                  </button>
-                  <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs" style={{ borderColor: "#E8A838", color: "#E8A838" }}>
+                  </Link>
+                  <Link to="/moderator/escalations" className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs no-underline cn-touch-target" style={{ borderColor: "#E8A838", color: "#E8A838" }}>
                     <Flag className="w-3.5 h-3.5" /> Escalate
-                  </button>
+                  </Link>
                 </div>
               </div>
             );

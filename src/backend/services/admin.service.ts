@@ -8,60 +8,107 @@ import type {
   AuditChartDataPoint, SystemPerformancePoint,
   AuditLogsData, CMSPageData, DisputeData, PolicyData, PromoData,
   SupportTicketData, UserInspectorData, VerificationCaseData, AdminSettingsData,
+  SecurityAlertItem,
+  SupportTicketData,
 } from "@/backend/models";
+import { loadMockBarrel } from "@/backend/api/mock/loadMockBarrel";
+import { USE_SUPABASE, sbRead, sb, sbData, dataCacheScope, useInAppMockDataset } from "./_sb";
 import {
-  MOCK_ADMIN_DASHBOARD,
-  MOCK_ADMIN_PAYMENTS,
-  MOCK_ADMIN_VERIFICATIONS,
-  MOCK_ADMIN_REPORTS,
-  MOCK_ADMIN_USERS,
-  MOCK_ADMIN_AGENCY_APPROVALS,
-  MOCK_ADMIN_PLACEMENTS,
-  MOCK_AGENCY_PERFORMANCE,
-  MOCK_ADMIN_ALERTS,
-  MOCK_AUDIT_CHART_DATA,
-  MOCK_SYSTEM_PERFORMANCE,
-  MOCK_AUDIT_LOGS,
-  MOCK_CMS_PAGE_DATA,
-  MOCK_DISPUTE_DATA,
-  MOCK_POLICY_DATA,
-  MOCK_PROMO_DATA,
-  MOCK_SUPPORT_TICKET,
-  MOCK_USER_INSPECTOR,
-  MOCK_VERIFICATION_CASE,
-  MOCK_ADMIN_SETTINGS,
-} from "@/backend/api/mock";
-import { USE_SUPABASE, sbRead, sb } from "./_sb";
+  EMPTY_ADMIN_DASHBOARD,
+  EMPTY_ADMIN_PAYMENTS,
+  EMPTY_AUDIT_LOGS,
+  EMPTY_CMS_PAGE,
+  EMPTY_DISPUTE_DATA,
+  EMPTY_POLICY_DATA,
+  EMPTY_PROMO_DATA,
+  EMPTY_USER_INSPECTOR,
+  EMPTY_ADMIN_SETTINGS,
+  emptyVerificationCase,
+} from "./liveEmptyDefaults";
 
 const delay = (ms = 200) => new Promise((r) => setTimeout(r, ms));
 
+function emptySupportTicket(id: string): SupportTicketData {
+  return {
+    id,
+    subject: "",
+    status: "",
+    priority: "",
+    user: { name: "", role: "", email: "" },
+    created: "",
+    category: "",
+    messages: [],
+  };
+}
+
+function adminPendingPath(type: string): string {
+  const t = type.toLowerCase();
+  if (t.includes("verification")) return "/admin/verifications";
+  if (t.includes("withdraw")) return "/admin/payments";
+  if (t.includes("dispute")) return "/admin/disputes";
+  if (t.includes("report")) return "/admin/reports";
+  return "/admin/reports";
+}
+
 export const adminService = {
   async getDashboardData(): Promise<AdminDashboardData> {
+    const mockDash = async () => (await loadMockBarrel()).MOCK_ADMIN_DASHBOARD;
     if (USE_SUPABASE) {
       try {
         return await sbRead("admin:dashboard", async () => {
           const { data, error } = await sb().rpc("get_admin_dashboard");
           if (error) throw error;
-          const d = data as any;
+          const d = data as Record<string, unknown> | null;
+          const base = useInAppMockDataset() ? await mockDash() : EMPTY_ADMIN_DASHBOARD;
+          if (!d) return base;
+          const summaryRaw = d.summary as Record<string, unknown> | undefined;
           return {
-            userGrowth: d.userGrowth || [],
-            revenueData: d.revenueData || [],
-            pieData: [], // Computed client-side from stats
-            pendingItems: (d.pendingItems || []).map((p: any) => ({
-              type: p.type, count: p.count, color: "#E91E63", path: `/admin/${p.type}`,
-            })),
-            recentActivity: [],
+            summary: summaryRaw
+              ? {
+                  totalUsers: Number(summaryRaw.totalUsers ?? base.summary.totalUsers),
+                  totalUsersChangeLabel: String(summaryRaw.totalUsersChangeLabel ?? base.summary.totalUsersChangeLabel),
+                  activeCaregivers: Number(summaryRaw.activeCaregivers ?? base.summary.activeCaregivers),
+                  activeCaregiversChangeLabel: String(
+                    summaryRaw.activeCaregiversChangeLabel ?? base.summary.activeCaregiversChangeLabel
+                  ),
+                  revenueMonthLabel: String(summaryRaw.revenueMonthLabel ?? base.summary.revenueMonthLabel),
+                  revenueThisMonthBdt: Number(summaryRaw.revenueThisMonthBdt ?? base.summary.revenueThisMonthBdt),
+                  revenueChangeLabel: String(summaryRaw.revenueChangeLabel ?? base.summary.revenueChangeLabel),
+                  platformGrowthPercent: Number(summaryRaw.platformGrowthPercent ?? base.summary.platformGrowthPercent),
+                  platformGrowthChangeLabel: String(
+                    summaryRaw.platformGrowthChangeLabel ?? base.summary.platformGrowthChangeLabel
+                  ),
+                  pointsInCirculation: Number(summaryRaw.pointsInCirculation ?? base.summary.pointsInCirculation),
+                  pendingDuesCp: Number(summaryRaw.pendingDuesCp ?? base.summary.pendingDuesCp),
+                  contractsTotal: Number(summaryRaw.contractsTotal ?? base.summary.contractsTotal),
+                  platformRevenueCp: Number(summaryRaw.platformRevenueCp ?? base.summary.platformRevenueCp),
+                }
+              : base.summary,
+            userGrowth: (d.userGrowth as typeof base.userGrowth) || base.userGrowth,
+            revenueData: (d.revenueData as typeof base.revenueData) || base.revenueData,
+            pieData: (d.pieData as typeof base.pieData) || base.pieData,
+            pendingItems: Array.isArray(d.pendingItems)
+              ? (d.pendingItems as { type: string; count: number }[]).map((p) => {
+                  const match = base.pendingItems.find((x) => x.type === p.type);
+                  return {
+                    type: p.type,
+                    count: p.count,
+                    color: match?.color ?? "#E8A838",
+                    path: match?.path ?? adminPendingPath(p.type),
+                  };
+                })
+              : base.pendingItems,
+            recentActivity: (d.recentActivity as typeof base.recentActivity) || base.recentActivity,
           };
         });
       } catch (error) {
         console.warn("[Admin Service] Supabase call failed, falling back to mock data:", error);
-        // Fall back to mock data when Supabase fails
         await delay();
-        return MOCK_ADMIN_DASHBOARD;
+        return useInAppMockDataset() ? await mockDash() : EMPTY_ADMIN_DASHBOARD;
       }
     }
     await delay();
-    return MOCK_ADMIN_DASHBOARD;
+    return useInAppMockDataset() ? await mockDash() : EMPTY_ADMIN_DASHBOARD;
   },
 
   async getPaymentsData(): Promise<AdminPaymentsData> {
@@ -82,11 +129,13 @@ export const adminService = {
       } catch (error) {
         console.warn("[Admin Service] Supabase payments call failed, falling back to mock data:", error);
         await delay();
-        return MOCK_ADMIN_PAYMENTS;
+        return useInAppMockDataset()
+          ? (await loadMockBarrel()).MOCK_ADMIN_PAYMENTS
+          : EMPTY_ADMIN_PAYMENTS;
       }
     }
     await delay();
-    return MOCK_ADMIN_PAYMENTS;
+    return useInAppMockDataset() ? (await loadMockBarrel()).MOCK_ADMIN_PAYMENTS : EMPTY_ADMIN_PAYMENTS;
   },
 
   async getVerifications(): Promise<AdminVerification[]> {
@@ -119,11 +168,13 @@ export const adminService = {
       } catch (error) {
         console.warn("[Admin Service] Supabase verifications call failed, falling back to mock data:", error);
         await delay();
-        return MOCK_ADMIN_VERIFICATIONS;
+        return useInAppMockDataset()
+          ? (await loadMockBarrel()).MOCK_ADMIN_VERIFICATIONS
+          : [];
       }
     }
     await delay();
-    return MOCK_ADMIN_VERIFICATIONS;
+    return useInAppMockDataset() ? (await loadMockBarrel()).MOCK_ADMIN_VERIFICATIONS : [];
   },
 
   async getReports(): Promise<AdminReport[]> {
@@ -135,11 +186,11 @@ export const adminService = {
       } catch (error) {
         console.warn("[Admin Service] Supabase reports call failed, falling back to mock data:", error);
         await delay();
-        return MOCK_ADMIN_REPORTS;
+        return useInAppMockDataset() ? (await loadMockBarrel()).MOCK_ADMIN_REPORTS : [];
       }
     }
     await delay();
-    return MOCK_ADMIN_REPORTS;
+    return useInAppMockDataset() ? (await loadMockBarrel()).MOCK_ADMIN_REPORTS : [];
   },
 
   async getUsers(): Promise<AdminUser[]> {
@@ -167,18 +218,18 @@ export const adminService = {
       } catch (error) {
         console.warn("[Admin Service] Supabase users call failed, falling back to mock data:", error);
         await delay();
-        return MOCK_ADMIN_USERS;
+        return useInAppMockDataset() ? (await loadMockBarrel()).MOCK_ADMIN_USERS : [];
       }
     }
     await delay();
-    return MOCK_ADMIN_USERS;
+    return useInAppMockDataset() ? (await loadMockBarrel()).MOCK_ADMIN_USERS : [];
   },
 
   async getAgencyApprovals(): Promise<AdminAgencyApproval[]> {
     if (USE_SUPABASE) {
       try {
-        return await sbRead("admin:agency-approvals", async () => {
-          const { data, error } = await sb().from("agencies")
+        return await sbRead(`admin:agency-approvals:${dataCacheScope()}`, async () => {
+          const { data, error } = await sbData().from("agencies")
             .select("*")
             .eq("verified", false)
             .order("created_at", { ascending: false });
@@ -197,18 +248,20 @@ export const adminService = {
       } catch (error) {
         console.warn("[Admin Service] Supabase agency approvals call failed, falling back to mock data:", error);
         await delay();
-        return MOCK_ADMIN_AGENCY_APPROVALS;
+        return useInAppMockDataset()
+          ? (await loadMockBarrel()).MOCK_ADMIN_AGENCY_APPROVALS
+          : [];
       }
     }
     await delay();
-    return MOCK_ADMIN_AGENCY_APPROVALS;
+    return useInAppMockDataset() ? (await loadMockBarrel()).MOCK_ADMIN_AGENCY_APPROVALS : [];
   },
 
   async getPlacements(): Promise<AdminPlacement[]> {
     if (USE_SUPABASE) {
       try {
-        return await sbRead("admin:placements", async () => {
-          const { data, error } = await sb().from("placements")
+        return await sbRead(`admin:placements:${dataCacheScope()}`, async () => {
+          const { data, error } = await sbData().from("placements")
             .select("*")
             .order("created_at", { ascending: false })
             .limit(100);
@@ -223,11 +276,11 @@ export const adminService = {
       } catch (error) {
         console.warn("[Admin Service] Supabase placements call failed, falling back to mock data:", error);
         await delay();
-        return MOCK_ADMIN_PLACEMENTS;
+        return useInAppMockDataset() ? (await loadMockBarrel()).MOCK_ADMIN_PLACEMENTS : [];
       }
     }
     await delay();
-    return MOCK_ADMIN_PLACEMENTS;
+    return useInAppMockDataset() ? (await loadMockBarrel()).MOCK_ADMIN_PLACEMENTS : [];
   },
 
   async getAgencyPerformance(): Promise<AgencyPerformanceRow[]> {
@@ -250,11 +303,11 @@ export const adminService = {
       } catch (error) {
         console.warn("[Admin Service] Supabase agency performance call failed, falling back to mock data:", error);
         await delay();
-        return MOCK_AGENCY_PERFORMANCE;
+        return useInAppMockDataset() ? (await loadMockBarrel()).MOCK_AGENCY_PERFORMANCE : [];
       }
     }
     await delay();
-    return MOCK_AGENCY_PERFORMANCE;
+    return useInAppMockDataset() ? (await loadMockBarrel()).MOCK_AGENCY_PERFORMANCE : [];
   },
 
   async getAlerts(): Promise<AdminAlert[]> {
@@ -266,11 +319,11 @@ export const adminService = {
       } catch (error) {
         console.warn("[Admin Service] Supabase alerts call failed, falling back to mock data:", error);
         await delay();
-        return MOCK_ADMIN_ALERTS;
+        return useInAppMockDataset() ? (await loadMockBarrel()).MOCK_ADMIN_ALERTS : [];
       }
     }
     await delay();
-    return MOCK_ADMIN_ALERTS;
+    return useInAppMockDataset() ? (await loadMockBarrel()).MOCK_ADMIN_ALERTS : [];
   },
 
   async getAuditChartData(): Promise<AuditChartDataPoint[]> {
@@ -291,11 +344,11 @@ export const adminService = {
       } catch (error) {
         console.warn("[Admin Service] Supabase audit chart call failed, falling back to mock data:", error);
         await delay();
-        return MOCK_AUDIT_CHART_DATA;
+        return useInAppMockDataset() ? (await loadMockBarrel()).MOCK_AUDIT_CHART_DATA : [];
       }
     }
     await delay();
-    return MOCK_AUDIT_CHART_DATA;
+    return useInAppMockDataset() ? (await loadMockBarrel()).MOCK_AUDIT_CHART_DATA : [];
   },
 
   async getSystemPerformance(): Promise<SystemPerformancePoint[]> {
@@ -307,27 +360,115 @@ export const adminService = {
       } catch (error) {
         console.warn("[Admin Service] Supabase system performance call failed, falling back to mock data:", error);
         await delay();
-        return MOCK_SYSTEM_PERFORMANCE;
+        return useInAppMockDataset() ? (await loadMockBarrel()).MOCK_SYSTEM_PERFORMANCE : [];
       }
     }
     await delay();
-    return MOCK_SYSTEM_PERFORMANCE;
+    return useInAppMockDataset() ? (await loadMockBarrel()).MOCK_SYSTEM_PERFORMANCE : [];
   },
 
   async getAuditLogs(): Promise<AuditLogsData> {
     if (USE_SUPABASE) {
       try {
         return await sbRead("admin:audit-logs", async () => {
-          return { logs: [], total: 0 };
+          const { data, error } = await sb()
+            .from("audit_logs")
+            .select("id, created_at, action, user_id, ip_address, severity")
+            .order("created_at", { ascending: false })
+            .limit(50);
+          if (error) {
+            return useInAppMockDataset()
+              ? (await loadMockBarrel()).MOCK_AUDIT_LOGS
+              : EMPTY_AUDIT_LOGS;
+          }
+          if (!data?.length) {
+            return useInAppMockDataset()
+              ? (await loadMockBarrel()).MOCK_AUDIT_LOGS
+              : EMPTY_AUDIT_LOGS;
+          }
+          const logs = data.map((l: Record<string, unknown>) => ({
+            time: l.created_at ? new Date(l.created_at as string).toLocaleTimeString() : "—",
+            action: (l.action as string) ?? "UNKNOWN",
+            uid: (l.user_id as string) ?? "—",
+            ip: (l.ip_address as string) ?? "—",
+            severity: ((l.severity as string) || "info") as "info" | "warning" | "critical",
+          }));
+          const totalEvents = data.length;
+          const securityAlerts = logs.filter(l => l.severity === "critical" || l.severity === "warning").length;
+          return {
+            stats: [
+              { label: "Total Events", val: String(totalEvents) },
+              { label: "Security Alerts", val: String(securityAlerts) },
+              { label: "Data Integrity", val: "100%" },
+              { label: "Auth Success", val: totalEvents > 0 ? `${Math.max(90, Math.round((1 - securityAlerts / totalEvents) * 100))}%` : "—" },
+            ],
+            logs,
+          };
         });
       } catch (error) {
         console.warn("[Admin Service] Supabase audit logs call failed, falling back to mock data:", error);
         await delay();
-        return MOCK_AUDIT_LOGS;
+        return useInAppMockDataset() ? (await loadMockBarrel()).MOCK_AUDIT_LOGS : EMPTY_AUDIT_LOGS;
       }
     }
     await delay();
-    return MOCK_AUDIT_LOGS;
+    return useInAppMockDataset() ? (await loadMockBarrel()).MOCK_AUDIT_LOGS : EMPTY_AUDIT_LOGS;
+  },
+
+  async getRecentSecurityAlerts(limit = 5): Promise<SecurityAlertItem[]> {
+    if (USE_SUPABASE) {
+      try {
+        return await sbRead("admin:security-alerts", async () => {
+          const { data, error } = await sb()
+            .from("audit_logs")
+            .select("id, created_at, action, ip_address, severity, source")
+            .in("severity", ["warning", "critical"])
+            .order("created_at", { ascending: false })
+            .limit(limit);
+          if (error || !data?.length) return [];
+          return data.map((row: Record<string, unknown>) => {
+            const sev = row.severity === "critical" ? "critical" : "warning";
+            const action = String(row.action ?? "Security event");
+            const ip = row.ip_address ? String(row.ip_address) : "";
+            return {
+              id: String(row.id ?? ""),
+              title: action,
+              detail: ip ? `${action} · IP ${ip}` : action,
+              severity: sev as "warning" | "critical",
+              timeLabel: row.created_at
+                ? new Date(row.created_at as string).toLocaleString(undefined, {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  })
+                : "—",
+              source: row.source ? String(row.source) : undefined,
+            };
+          });
+        });
+      } catch {
+        return [];
+      }
+    }
+    await delay();
+    if (!useInAppMockDataset()) return [];
+    return [
+      {
+        id: "mock-s1",
+        title: "Failed login attempt threshold exceeded",
+        detail: "Failed login attempt threshold exceeded · IP 45.12.0.0",
+        severity: "warning" as const,
+        timeLabel: "Recently",
+        source: "auth",
+      },
+      {
+        id: "mock-s2",
+        title: "Suspicious session from new device",
+        detail: "Suspicious session from new device · IP 103.120.0.1",
+        severity: "critical" as const,
+        timeLabel: "Recently",
+        source: "auth",
+      },
+    ];
   },
 
   async getCMSPageData(): Promise<CMSPageData> {
@@ -355,11 +496,11 @@ export const adminService = {
       } catch (error) {
         console.warn("[Admin Service] Supabase CMS page data call failed, falling back to mock data:", error);
         await delay();
-        return MOCK_CMS_PAGE_DATA;
+        return useInAppMockDataset() ? (await loadMockBarrel()).MOCK_CMS_PAGE_DATA : EMPTY_CMS_PAGE;
       }
     }
     await delay();
-    return MOCK_CMS_PAGE_DATA;
+    return useInAppMockDataset() ? (await loadMockBarrel()).MOCK_CMS_PAGE_DATA : EMPTY_CMS_PAGE;
   },
 
   async getDisputeData(): Promise<DisputeData> {
@@ -387,11 +528,11 @@ export const adminService = {
       } catch (error) {
         console.warn("[Admin Service] Supabase dispute data call failed, falling back to mock data:", error);
         await delay();
-        return MOCK_DISPUTE_DATA;
+        return useInAppMockDataset() ? (await loadMockBarrel()).MOCK_DISPUTE_DATA : EMPTY_DISPUTE_DATA;
       }
     }
     await delay();
-    return MOCK_DISPUTE_DATA;
+    return useInAppMockDataset() ? (await loadMockBarrel()).MOCK_DISPUTE_DATA : EMPTY_DISPUTE_DATA;
   },
 
   async getPolicyData(): Promise<PolicyData> {
@@ -403,11 +544,11 @@ export const adminService = {
       } catch (error) {
         console.warn("[Admin Service] Supabase policy data call failed, falling back to mock data:", error);
         await delay();
-        return MOCK_POLICY_DATA;
+        return useInAppMockDataset() ? (await loadMockBarrel()).MOCK_POLICY_DATA : EMPTY_POLICY_DATA;
       }
     }
     await delay();
-    return MOCK_POLICY_DATA;
+    return useInAppMockDataset() ? (await loadMockBarrel()).MOCK_POLICY_DATA : EMPTY_POLICY_DATA;
   },
 
   async getPromoData(): Promise<PromoData> {
@@ -419,11 +560,11 @@ export const adminService = {
       } catch (error) {
         console.warn("[Admin Service] Supabase promo data call failed, falling back to mock data:", error);
         await delay();
-        return MOCK_PROMO_DATA;
+        return useInAppMockDataset() ? (await loadMockBarrel()).MOCK_PROMO_DATA : EMPTY_PROMO_DATA;
       }
     }
     await delay();
-    return MOCK_PROMO_DATA;
+    return useInAppMockDataset() ? (await loadMockBarrel()).MOCK_PROMO_DATA : EMPTY_PROMO_DATA;
   },
 
   async getSupportTicket(id: string): Promise<SupportTicketData> {
@@ -444,7 +585,9 @@ export const adminService = {
       });
     }
     await delay();
-    return { ...MOCK_SUPPORT_TICKET, id };
+    return useInAppMockDataset()
+      ? { ...(await loadMockBarrel()).MOCK_SUPPORT_TICKET, id }
+      : emptySupportTicket(id);
   },
 
   async getUserInspector(query?: string): Promise<UserInspectorData> {
@@ -473,11 +616,11 @@ export const adminService = {
       } catch (error) {
         console.warn("[Admin Service] Supabase user inspector call failed, falling back to mock data:", error);
         await delay();
-        return MOCK_USER_INSPECTOR;
+        return useInAppMockDataset() ? (await loadMockBarrel()).MOCK_USER_INSPECTOR : EMPTY_USER_INSPECTOR;
       }
     }
     await delay();
-    return MOCK_USER_INSPECTOR;
+    return useInAppMockDataset() ? (await loadMockBarrel()).MOCK_USER_INSPECTOR : EMPTY_USER_INSPECTOR;
   },
 
   async getVerificationCase(id: string): Promise<VerificationCaseData> {
@@ -502,11 +645,15 @@ export const adminService = {
       } catch (error) {
         console.warn("[Admin Service] Supabase verification case call failed, falling back to mock data:", error);
         await delay();
-        return { ...MOCK_VERIFICATION_CASE, id };
+        return useInAppMockDataset()
+          ? { ...(await loadMockBarrel()).MOCK_VERIFICATION_CASE, id }
+          : emptyVerificationCase(id);
       }
     }
     await delay();
-    return { ...MOCK_VERIFICATION_CASE, id };
+    return useInAppMockDataset()
+      ? { ...(await loadMockBarrel()).MOCK_VERIFICATION_CASE, id }
+      : emptyVerificationCase(id);
   },
 
   async getSettingsData(): Promise<AdminSettingsData> {
@@ -518,10 +665,10 @@ export const adminService = {
       } catch (error) {
         console.warn("[Admin Service] Supabase settings data call failed, falling back to mock data:", error);
         await delay();
-        return MOCK_ADMIN_SETTINGS;
+        return useInAppMockDataset() ? (await loadMockBarrel()).MOCK_ADMIN_SETTINGS : EMPTY_ADMIN_SETTINGS;
       }
     }
     await delay();
-    return MOCK_ADMIN_SETTINGS;
+    return useInAppMockDataset() ? (await loadMockBarrel()).MOCK_ADMIN_SETTINGS : EMPTY_ADMIN_SETTINGS;
   },
 };

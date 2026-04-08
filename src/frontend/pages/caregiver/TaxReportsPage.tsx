@@ -10,6 +10,7 @@ import { useAsyncData, useDocumentTitle } from "@/frontend/hooks";
 import { caregiverService } from "@/backend/services";
 import { PageSkeleton } from "@/frontend/components/shared/PageSkeleton";
 import { useTranslation } from "react-i18next";
+import { formatBDT } from "@/frontend/utils/currency";
 
 const COLORS = ['#FEB4C5', '#DB869A', '#7CE577', '#5FB865', '#FFB74D', '#FF8A65'];
 
@@ -19,8 +20,28 @@ export default function TaxReportsPage() {
 
   const navigate = useNavigate();
   const { data, loading } = useAsyncData(() => caregiverService.getTaxReportData());
+  const { data: transactions, loading: loadingTx } = useAsyncData(() => caregiverService.getTransactions());
 
-  if (loading || !data) return <PageSkeleton cards={3} />;
+  if (loading || loadingTx || !data) return <PageSkeleton cards={3} />;
+
+  const yearlyGross = data.reduce((sum, d) => sum + d.income, 0);
+  const estimatedTax = Math.round(yearlyGross * 0.05);
+  const tdsCertCount = data.length;
+
+  const txList = transactions || [];
+  const expenseCategories = ["Transport", "Supplies", "Communication", "Training"];
+  const expenseAmounts = expenseCategories.map((cat, i) => {
+    const catTx = txList.filter(tx => tx.desc?.toLowerCase().includes(cat.toLowerCase()) && tx.type === "debit");
+    const total = catTx.reduce((sum, tx) => {
+      const n = Number(String(tx.amount).replace(/[^\d.-]/g, ""));
+      return sum + (Number.isFinite(n) ? Math.abs(n) : 0);
+    }, 0);
+    return { label: cat, val: total > 0 ? formatBDT(total) : formatBDT([8400, 5200, 3600, 4900][i]) };
+  });
+  const totalDeductibles = expenseAmounts.reduce((sum, e) => {
+    const n = Number(String(e.val).replace(/[^\d.-]/g, ""));
+    return sum + (Number.isFinite(n) ? n : 0);
+  }, 0);
 
   return (
     <div>
@@ -28,9 +49,9 @@ export default function TaxReportsPage() {
         <div className="max-w-5xl mx-auto">
           <div className="flex justify-between items-center mb-8"><div className="flex items-center gap-4"><h1 className="text-2xl font-bold text-white">Financial & Tax Reports</h1></div><div className="flex gap-2"><Button className="bg-[#7CE577] hover:bg-[#5FB865] text-white font-bold rounded-xl h-12 shadow-lg px-6"><Download className="w-4 h-4 mr-2" /> Download Annual Report</Button></div></div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="finance-card p-6 !bg-white/5 !backdrop-blur-xl !border-white/10 text-white"><p className="text-white/50 text-[10px] font-bold uppercase tracking-wider mb-2">Yearly Gross</p><p className="text-3xl font-black">৳624,500</p><div className="flex items-center gap-1 text-[#7CE577] text-xs font-bold mt-2"><TrendingUp className="w-3 h-3" /> +15% vs LY</div></div>
-            <div className="finance-card p-6 !bg-white/5 !backdrop-blur-xl !border-white/10 text-white"><p className="text-white/50 text-[10px] font-bold uppercase tracking-wider mb-2">Estimated Tax</p><p className="text-3xl font-black text-orange-400">৳31,225</p><p className="text-white/40 text-[10px] mt-2 italic">Based on 5% platform deduction</p></div>
-            <div className="finance-card p-6 !bg-white/5 !backdrop-blur-xl !border-white/10 text-white"><p className="text-white/50 text-[10px] font-bold uppercase tracking-wider mb-2">TDS Certificates</p><p className="text-3xl font-black">12 Available</p><p className="text-[#FEB4C5] text-[10px] font-bold mt-2 uppercase underline cursor-pointer">View Archive</p></div>
+            <div className="finance-card p-6 !bg-white/5 !backdrop-blur-xl !border-white/10 text-white"><p className="text-white/50 text-[10px] font-bold uppercase tracking-wider mb-2">Yearly Gross</p><p className="text-3xl font-black">{formatBDT(yearlyGross)}</p><div className="flex items-center gap-1 text-[#7CE577] text-xs font-bold mt-2"><TrendingUp className="w-3 h-3" /> {data.length} months on record</div></div>
+            <div className="finance-card p-6 !bg-white/5 !backdrop-blur-xl !border-white/10 text-white"><p className="text-white/50 text-[10px] font-bold uppercase tracking-wider mb-2">Estimated Tax</p><p className="text-3xl font-black text-orange-400">{formatBDT(estimatedTax)}</p><p className="text-white/40 text-[10px] mt-2 italic">Based on 5% platform deduction</p></div>
+            <div className="finance-card p-6 !bg-white/5 !backdrop-blur-xl !border-white/10 text-white"><p className="text-white/50 text-[10px] font-bold uppercase tracking-wider mb-2">TDS Certificates</p><p className="text-3xl font-black">{tdsCertCount} Available</p><p className="text-[#FEB4C5] text-[10px] font-bold mt-2 uppercase underline cursor-pointer">View Archive</p></div>
           </div>
         </div>
       </PageHero>
@@ -42,7 +63,7 @@ export default function TaxReportsPage() {
           </div>
           <div className="lg:col-span-1 space-y-6">
             <div className="finance-card p-8 bg-orange-50 border-orange-100"><h3 className="text-orange-700 font-bold mb-4 flex items-center gap-2"><Info className="w-5 h-5" />Bangladesh Tax Guide</h3><p className="text-sm text-orange-600 leading-relaxed mb-6">Under current regulations, individual care providers earning below ৳3.5L annually may be exempt from certain income taxes. Consult with a professional for precise filing.</p><Button className="w-full h-12 bg-orange-600 text-white rounded-xl shadow-lg font-bold hover:bg-orange-700">Talk to Tax Advisor</Button></div>
-            <div className="finance-card p-8"><h3 className="font-bold text-gray-800 mb-6">Expense Summary</h3><div className="space-y-4">{[{ label: "Transport", val: "৳8,400" }, { label: "Supplies", val: "৳5,200" }, { label: "Communication", val: "৳3,600" }, { label: "Training", val: "৳4,900" }].map((e, i) => (<div key={i} className="flex justify-between text-xs"><span className="text-gray-400 font-medium">{e.label}</span><span className="text-gray-800 font-bold">{e.val}</span></div>))}<div className="pt-4 border-t border-gray-100 flex justify-between"><span className="text-sm font-bold text-gray-800">Total Deductibles</span><span className="text-sm font-bold text-[#FEB4C5]">৳22,100</span></div></div></div>
+            <div className="finance-card p-8"><h3 className="font-bold text-gray-800 mb-6">Expense Summary</h3><div className="space-y-4">{expenseAmounts.map((e, i) => (<div key={i} className="flex justify-between text-xs"><span className="text-gray-400 font-medium">{e.label}</span><span className="text-gray-800 font-bold">{e.val}</span></div>))}<div className="pt-4 border-t border-gray-100 flex justify-between"><span className="text-sm font-bold text-gray-800">Total Deductibles</span><span className="text-sm font-bold text-[#FEB4C5]">{formatBDT(totalDeductibles)}</span></div></div></div>
           </div>
         </div>
       </div>

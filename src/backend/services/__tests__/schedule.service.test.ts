@@ -6,6 +6,7 @@ vi.mock("../_sb", () => ({
   sbWrite: vi.fn(),
   sb: vi.fn(),
   currentUserId: vi.fn(),
+  useInAppMockDataset: () => true,
 }));
 
 import { scheduleService } from "../schedule.service";

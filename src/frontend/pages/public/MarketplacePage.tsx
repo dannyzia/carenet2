@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Search, Filter, Star, Clock, DollarSign, MapPin, Building2 } from "lucide-react";
 import { Button } from "@/frontend/components/ui/button";
 import { Input } from "@/frontend/components/ui/input";
@@ -9,7 +9,8 @@ import { useAsyncData, useDocumentTitle } from "@/frontend/hooks";
 import { PageSkeleton } from "@/frontend/components/shared/PageSkeleton";
 import type { Job } from "@/backend/models";
 import { useTranslation } from "react-i18next";
-import { MOCK_MARKETPLACE_JOBS } from "@/backend/api/mock";
+import { loadMockBarrel } from "@/backend/api/mock/loadMockBarrel";
+import { useInAppMockDataset } from "@/backend/services/_sb";
 
 /** DB/API rows may omit `skills`; never call `.map`/`.some` on raw `job.skills`. */
 function jobSkills(j: Job): string[] {
@@ -33,16 +34,35 @@ export default function MarketplacePage() {
   useDocumentTitle(tDocTitle("pageTitles.marketplace", "Marketplace"));
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [errorFallbackJobs, setErrorFallbackJobs] = useState<Job[] | null>(null);
   const { data: allJobs, loading: initialLoading, error: loadError, refetch } = useAsyncData(() =>
     marketplaceService.getJobs(),
   );
 
+  useEffect(() => {
+    if (!loadError) {
+      setErrorFallbackJobs(null);
+      return;
+    }
+    if (!useInAppMockDataset()) {
+      setErrorFallbackJobs([]);
+      return;
+    }
+    let cancelled = false;
+    void loadMockBarrel().then((m) => {
+      if (!cancelled) setErrorFallbackJobs(m.MOCK_MARKETPLACE_JOBS);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [loadError]);
+
   const usingMockFallback = !!loadError;
   const baseJobs: Job[] | null = useMemo(() => {
     if (initialLoading) return null;
-    if (loadError) return MOCK_MARKETPLACE_JOBS;
+    if (loadError) return errorFallbackJobs;
     return allJobs ?? [];
-  }, [initialLoading, loadError, allJobs]);
+  }, [initialLoading, loadError, allJobs, errorFallbackJobs]);
 
   const filteredJobs = useMemo(
     () => (baseJobs ? filterJobsLocal(baseJobs, searchQuery) : []),

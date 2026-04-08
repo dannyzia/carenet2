@@ -73,3 +73,6 @@ export const API = {
     orders: "/shop/orders",
   },
 } as const;
+
+/** Full platform route registry from `packages-1.md` §1 (UCCF platform API). */
+export { PLATFORM_API, PLATFORM_API_TOTAL } from "./platformEndpoints";

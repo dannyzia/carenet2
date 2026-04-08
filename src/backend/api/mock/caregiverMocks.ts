@@ -1,6 +1,6 @@
 import type {
   CaregiverProfile, CareNote, AssignedPatient, Job, ShiftPlan, Prescription, JobDetail,
-  TaxChartDataPoint, DashboardEarningsPoint, RecentJob, UpcomingScheduleItem,
+  TaxChartDataPoint, DashboardEarningsPoint, RecentJob, UpcomingScheduleItem, CaregiverDashboardSummary,
   MonthlyEarningsPoint, CaregiverTransaction, CaregiverPaymentMethod,
   CaregiverDocument, RequiredDocument, ScheduleBlock, UpcomingBooking,
   MedScheduleItem, CaregiverProfileData, RecentCareLog, PastPatient,
@@ -173,6 +173,17 @@ export const MOCK_CAREGIVER_EARNINGS_CHART: DashboardEarningsPoint[] = [
   { month: "Jan", amount: 11200 }, { month: "Feb", amount: 10500 }, { month: "Mar", amount: 13400 },
 ];
 
+export const MOCK_CAREGIVER_DASHBOARD_SUMMARY: CaregiverDashboardSummary = {
+  activeJobs: 3,
+  avgRating: 4.8,
+  reviewCount: 128,
+  thisMonthBdt: 13400,
+  hoursThisMonth: 94,
+  weekJobsDelta: 1,
+  vsLastMonthPercent: 27,
+  earningsTrendPercent: 27,
+};
+
 export const MOCK_RECENT_JOBS: RecentJob[] = [
   { id: 1, patient: "Mr. Rahim Ahmed", type: "Elderly Care", date: "Today, 9:00 AM", status: "active", amount: "\u09F3 800/day" },
   { id: 2, patient: "Mrs. Fatema Begum", type: "Post-Surgery Care", date: "Yesterday", status: "completed", amount: "\u09F3 1,200/day" },
@@ -181,9 +192,9 @@ export const MOCK_RECENT_JOBS: RecentJob[] = [
 ];
 
 export const MOCK_UPCOMING_SCHEDULE: UpcomingScheduleItem[] = [
-  { time: "9:00 AM", patient: "Mr. Rahim Ahmed", type: "Morning routine", duration: "2h" },
-  { time: "2:00 PM", patient: "New Client", type: "Initial consultation", duration: "1h" },
-  { time: "5:00 PM", patient: "Mrs. Hossain", type: "Evening care", duration: "3h" },
+  { shiftId: "shift-demo-1", time: "9:00 AM", patient: "Mr. Rahim Ahmed", type: "Morning routine", duration: "2h" },
+  { shiftId: "shift-demo-2", time: "2:00 PM", patient: "New Client", type: "Initial consultation", duration: "1h" },
+  { shiftId: "shift-demo-3", time: "5:00 PM", patient: "Mrs. Hossain", type: "Evening care", duration: "3h" },
 ];
 
 // ─── Caregiver Earnings Page Data ───
@@ -356,11 +367,11 @@ export const MOCK_SKILLS_ASSESSMENT: SkillsAssessment = {
 };
 
 export const MOCK_TRAINING_MODULES: TrainingModule[] = [
-  { id: "t1", title: "Advanced Wound Care", category: "Clinical", duration: "4 hours", progress: 75, status: "in_progress" as const },
-  { id: "t2", title: "Diabetes Management", category: "Clinical", duration: "3 hours", progress: 100, status: "completed" as const },
-  { id: "t3", title: "Emergency First Response", category: "Safety", duration: "6 hours", progress: 0, status: "not_started" as const },
-  { id: "t4", title: "Patient Communication", category: "Soft Skills", duration: "2 hours", progress: 30, status: "in_progress" as const },
-  { id: "t5", title: "Geriatric Nutrition", category: "Clinical", duration: "3 hours", progress: 100, status: "completed" as const },
+  { id: "t1", title: "Advanced Wound Care", category: "Clinical", duration: "4 hours", progress: 75, status: "in_progress" as const, xpReward: 50, thumbnailUrl: "https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&q=80&w=200&h=120" },
+  { id: "t2", title: "Diabetes Management", category: "Clinical", duration: "3 hours", progress: 100, status: "completed" as const, xpReward: 40 },
+  { id: "t3", title: "Emergency First Response", category: "Safety", duration: "6 hours", progress: 0, status: "not_started" as const, xpReward: 60 },
+  { id: "t4", title: "Patient Communication", category: "Soft Skills", duration: "2 hours", progress: 30, status: "in_progress" as const, xpReward: 30, thumbnailUrl: "https://images.unsplash.com/photo-1527137342181-19aab11a8ee1?auto=format&fit=crop&q=80&w=200&h=120" },
+  { id: "t5", title: "Geriatric Nutrition", category: "Clinical", duration: "3 hours", progress: 100, status: "completed" as const, xpReward: 40 },
 ];
 
 // ─── Incident History (Phase 7) ───

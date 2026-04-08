@@ -1,11 +1,13 @@
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import { useParams, Link } from "react-router";
 import { cn } from "@/frontend/theme/tokens";
 import { Camera, MapPin, Clock, CheckCircle, AlertTriangle, Navigation } from "lucide-react";
 import { useAsyncData, useDocumentTitle } from "@/frontend/hooks";
 import { caregiverService } from "@/backend/services";
 import { PageSkeleton } from "@/frontend/components/shared/PageSkeleton";
-import { MOCK_SHIFT_CHECKIN_DATA } from "@/backend/api/mock";
+import { loadMockBarrel } from "@/backend/api/mock/loadMockBarrel";
+import { useInAppMockDataset } from "@/backend/services/_sb";
+import { CARE_SITE_GEOFENCE_MAX_M, metersBetween } from "@/frontend/utils/shiftSiteGeofence";
 import { useTranslation } from "react-i18next";
 
 export default function ShiftCheckInPage() {
@@ -51,14 +53,38 @@ export default function ShiftCheckInPage() {
 }
 
 function ShiftCheckInContent({ shiftId }: { shiftId: string }) {
+  const { t } = useTranslation("common");
   const [step, setStep] = useState<"ready" | "selfie" | "gps" | "done">("ready");
   const [selfieUrl, setSelfieUrl] = useState<string | null>(null);
   const [gps, setGps] = useState<{ lat: number; lng: number } | null>(null);
   const [gpsError, setGpsError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const cameraRef = useRef<HTMLInputElement>(null);
+  const [geoMode, setGeoMode] = useState<"init" | "mock" | "live">("init");
+  const [mockSite, setMockSite] = useState<{ lat: number; lng: number; address: string } | null>(null);
 
-  const expected = MOCK_SHIFT_CHECKIN_DATA.expectedLocation;
+  useEffect(() => {
+    if (!useInAppMockDataset()) {
+      setGeoMode("live");
+      return;
+    }
+    let cancelled = false;
+    void loadMockBarrel().then((m) => {
+      if (!cancelled) {
+        setMockSite(m.MOCK_SHIFT_CHECKIN_DATA.expectedLocation);
+        setGeoMode("mock");
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (geoMode === "init") {
+    return <PageSkeleton cards={2} />;
+  }
+
+  const liveGeo = geoMode === "live";
 
   const handleCaptureSelfie = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -73,19 +99,36 @@ function ShiftCheckInContent({ shiftId }: { shiftId: string }) {
 
   const handleGetLocation = () => {
     if (!navigator.geolocation) {
-      // Mock fallback
-      const mockGps = { lat: expected.lat + (Math.random() - 0.5) * 0.001, lng: expected.lng + (Math.random() - 0.5) * 0.001 };
+      if (liveGeo || !mockSite) {
+        setGpsError(
+          t("shiftCheckIn.geolocationRequired", {
+            defaultValue: "Turn on location services or use a browser that supports GPS.",
+          }),
+        );
+        return;
+      }
+      const mockGps = {
+        lat: mockSite.lat + (Math.random() - 0.5) * 0.001,
+        lng: mockSite.lng + (Math.random() - 0.5) * 0.001,
+      };
       setGps(mockGps);
       return;
     }
     navigator.geolocation.getCurrentPosition(
       (pos) => setGps({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
       () => {
-        // Fallback to mock GPS on error
-        setGps({ lat: expected.lat + 0.0005, lng: expected.lng + 0.0003 });
+        if (liveGeo || !mockSite) {
+          setGpsError(
+            t("shiftCheckIn.gpsUnavailable", {
+              defaultValue: "Could not read GPS. Enable location and try again.",
+            }),
+          );
+          return;
+        }
+        setGps({ lat: mockSite.lat + 0.0005, lng: mockSite.lng + 0.0003 });
         setGpsError("Using approximate location (GPS unavailable in preview)");
       },
-      { enableHighAccuracy: true, timeout: 10000 }
+      { enableHighAccuracy: true, timeout: 10000 },
     );
   };
 
@@ -100,15 +143,8 @@ function ShiftCheckInContent({ shiftId }: { shiftId: string }) {
     }
   };
 
-  const distanceMeters = gps
-    ? Math.round(
-        Math.sqrt(
-          Math.pow((gps.lat - expected.lat) * 111320, 2) +
-          Math.pow((gps.lng - expected.lng) * 111320 * Math.cos(expected.lat * Math.PI / 180), 2)
-        )
-      )
-    : null;
-  const withinRange = distanceMeters !== null && distanceMeters <= MOCK_SHIFT_CHECKIN_DATA.maxDistanceMeters;
+  const distanceMeters = !liveGeo && gps && mockSite ? metersBetween(gps, mockSite) : null;
+  const withinRange = liveGeo ? gps !== null : distanceMeters !== null && distanceMeters <= CARE_SITE_GEOFENCE_MAX_M;
 
   return (
     <div className="space-y-5 max-w-lg mx-auto">
@@ -154,7 +190,16 @@ function ShiftCheckInContent({ shiftId }: { shiftId: string }) {
             </p>
           </div>
           <div className="text-xs p-3 rounded-xl" style={{ background: cn.bgInput, color: cn.textSecondary }}>
-            <div className="flex items-center gap-2"><MapPin className="w-4 h-4" style={{ color: cn.green }} /><span>{expected.address}</span></div>
+            <div className="flex items-center gap-2">
+              <MapPin className="w-4 h-4" style={{ color: cn.green }} />
+              <span>
+                {liveGeo
+                  ? t("shiftCheckIn.liveAddressHint", {
+                      defaultValue: "You will confirm GPS at the care site in the next step.",
+                    })
+                  : mockSite!.address}
+              </span>
+            </div>
           </div>
           <button onClick={() => { setStep("selfie"); }} className="w-full py-3 rounded-xl text-white text-sm" style={{ background: "var(--cn-gradient-caregiver)" }}>
             Start Check-In
@@ -191,7 +236,15 @@ function ShiftCheckInContent({ shiftId }: { shiftId: string }) {
             <Navigation className="w-6 h-6" style={{ color: cn.green }} />
             <div>
               <p style={{ color: cn.textHeading }}>Verify Location</p>
-              <p className="text-xs" style={{ color: cn.textSecondary }}>Must be within {MOCK_SHIFT_CHECKIN_DATA.maxDistanceMeters}m of {expected.address}</p>
+              <p className="text-xs" style={{ color: cn.textSecondary }}>
+                {liveGeo
+                  ? t("shiftCheckIn.liveGpsOnly", { defaultValue: "Capture your GPS at the care location." })
+                  : t("shiftCheckIn.mockGeofenceHint", {
+                      defaultValue: "Must be within {{m}}m of {{address}}",
+                      m: CARE_SITE_GEOFENCE_MAX_M,
+                      address: mockSite!.address,
+                    })}
+              </p>
             </div>
           </div>
 
@@ -205,7 +258,18 @@ function ShiftCheckInContent({ shiftId }: { shiftId: string }) {
                 <div className="flex items-center gap-2">
                   {withinRange ? <CheckCircle className="w-5 h-5 text-green-600" /> : <AlertTriangle className="w-5 h-5 text-red-500" />}
                   <span style={{ color: withinRange ? cn.green : "var(--cn-red)" }}>
-                    {withinRange ? `Within range (${distanceMeters}m)` : `Out of range (${distanceMeters}m — max ${MOCK_SHIFT_CHECKIN_DATA.maxDistanceMeters}m)`}
+                    {liveGeo
+                      ? t("shiftCheckIn.gpsCaptured", { defaultValue: "Location captured" })
+                      : withinRange
+                        ? t("shiftCheckIn.withinRange", {
+                            defaultValue: "Within range ({{m}}m)",
+                            m: distanceMeters,
+                          })
+                        : t("shiftCheckIn.outOfRange", {
+                            defaultValue: "Out of range ({{m}}m — max {{max}}m)",
+                            m: distanceMeters,
+                            max: CARE_SITE_GEOFENCE_MAX_M,
+                          })}
                   </span>
                 </div>
               </div>

@@ -35,7 +35,7 @@ export interface BillingInvoice {
   amount: number;
   platformFee: number;
   total: number;
-  status: "unpaid" | "proof_submitted" | "verified" | "disputed" | "overdue";
+  status: "unpaid" | "proof_submitted" | "verified" | "disputed" | "overdue" | "paid" | "partial";
   issuedDate: string;
   dueDate: string;
   placementId?: string;

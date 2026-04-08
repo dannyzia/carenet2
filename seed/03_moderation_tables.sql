@@ -322,7 +322,7 @@ SELECT
 -- Queue items
 INSERT INTO moderation_queue (type, content, reporter_name, target_name, priority, status, auto_flagged, created_at) VALUES
 ('review', 'Suspicious 5-star review with generic text and no specifics. Possible fake review.', 'System', 'Unknown Reviewer', 'medium', 'pending', true, '2026-03-17T14:00:00Z'),
-('content', 'Profile bio contains promotional links to external services.', 'Rashed Hossain', 'John Doe', 'low', 'pending', false, '2026-03-17T10:30:00Z'),
+('content', 'Profile bio contains promotional links to external services.', 'Mock_Rashed Hossain', 'John Doe', 'low', 'pending', false, '2026-03-17T10:30:00Z'),
 ('message', 'Reported message contains threatening language toward a caregiver.', 'Karim Uddin', 'Anonymous User', 'high', 'in_review', false, '2026-03-16T22:00:00Z'),
 ('profile', 'Profile photo appears to be stolen from stock photo site.', 'System', 'Fake Caregiver', 'critical', 'pending', true, '2026-03-18T06:00:00Z'),
 ('incident', 'Incident report flagged for inconsistencies between description and GPS data.', 'System', 'Karim Uddin', 'medium', 'pending', true, '2026-03-17T09:00:00Z')
@@ -332,7 +332,7 @@ ON CONFLICT DO NOTHING;
 INSERT INTO flagged_content (content_type, content_id, content_snippet, target_user_name, reporter_name, reason, severity, status, created_at) VALUES
 ('review', 'CA000000-0000-0000-0000-000000000001', 'Amazing perfect best caregiver ever nothing bad to say...', 'Unknown', 'System', 'spam', 'medium', 'pending', '2026-03-17T14:00:00Z'),
 ('message', '81000000-0000-0000-0000-000000000008', 'Threatening message content...', 'Anonymous User', 'Karim Uddin', 'harassment', 'high', 'pending', '2026-03-16T22:00:00Z'),
-('profile_bio', '00000000-0000-0000-0000-000000000001', 'Visit mysite.com for better rates! Use code SAVE20...', 'John Doe', 'Rashed Hossain', 'spam', 'low', 'pending', '2026-03-17T10:30:00Z')
+('profile_bio', '00000000-0000-0000-0000-000000000001', 'Visit mysite.com for better rates! Use code SAVE20...', 'John Doe', 'Mock_Rashed Hossain', 'spam', 'low', 'pending', '2026-03-17T10:30:00Z')
 ON CONFLICT DO NOTHING;
 
 -- Sanctions
@@ -347,7 +347,7 @@ ON CONFLICT DO NOTHING;
 
 -- Contract disputes
 INSERT INTO contract_disputes (contract_id, filed_by, filed_by_name, filed_by_role, against_party, reason, description, status, priority, filed_at) VALUES
-('70000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002', 'Rashed Hossain', 'guardian', 'CareFirst Agency', 'billing', 'Agency charged for 26 days but caregiver only worked 24 days in February. Requesting adjustment of ৳1,600.', 'open', 'medium', '2026-03-10T00:00:00Z')
+('70000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002', 'Mock_Rashed Hossain', 'guardian', 'Mock_CareFirst Agency', 'billing', 'Agency charged for 26 days but caregiver only worked 24 days in February. Requesting adjustment of ৳1,600.', 'open', 'medium', '2026-03-10T00:00:00Z')
 ON CONFLICT DO NOTHING;
 
 

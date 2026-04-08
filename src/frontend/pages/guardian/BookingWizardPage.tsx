@@ -1,29 +1,34 @@
 "use client";
-import React, { useState, useMemo } from "react";
-import { Calendar, Clock, User, CreditCard, CheckCircle2, ChevronRight, ChevronLeft, MapPin, Heart, Stethoscope, ShieldAlert, Package } from "lucide-react";
+import React, { useState, useMemo, useEffect } from "react";
+import { Calendar, User, CreditCard, CheckCircle2, ChevronRight, Stethoscope, Package } from "lucide-react";
 import { Button } from "@/frontend/components/ui/button";
-import { useNavigate, useSearchParams } from "react-router";
+import { useNavigate, useSearchParams, useLocation } from "react-router";
 import { PageHero } from "@/frontend/components/PageHero";
 import { motion, AnimatePresence } from "motion/react";
 import { useAsyncData, useDocumentTitle, useCareSeekerBasePath } from "@/frontend/hooks";
 import { guardianService } from "@/backend/services/guardian.service";
+import { patientService } from "@/backend/services/patient.service";
 import { marketplaceService } from "@/backend/services/marketplace.service";
 import { PageSkeleton } from "@/frontend/components/PageSkeleton";
 import { useAriaToast } from "@/frontend/hooks/useAriaToast";
-import type { AgencyPackage, UCCFPricingOffer } from "@/backend/models";
+import type { Patient, PatientProfile, UCCFPricingOffer } from "@/backend/models";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/frontend/auth/AuthContext";
+import {
+  getBookingMinPriceHintBdt,
+  getBookingPlatformFeeRate,
+  getBkashLogoUrl,
+} from "@/config/bookingPresentation";
+import {
+  BOOKING_SERVICE_TYPE_KEYS,
+  BOOKING_TIME_SLOT_KEYS,
+  CATEGORY_TO_SERVICE_TYPE_KEY,
+  DEFAULT_SERVICE_TYPE_KEY,
+  type BookingServiceTypeKey,
+} from "@/domain/bookingWizardKeys";
 
-const steps = [{ id: 1, name: "Service Details", icon: Stethoscope }, { id: 2, name: "Schedule", icon: Calendar }, { id: 3, name: "Patient Info", icon: User }, { id: 4, name: "Payment", icon: CreditCard }];
-
-// Map package categories to service types
-const categoryToServiceType: Record<string, string> = {
-  elderly: "Full Day Care",
-  chronic: "Full Day Care",
-  post_surgery: "Post-Op Recovery",
-  baby: "Daily Check-in",
-  critical: "Medical Support",
-  disability: "Full Day Care",
-};
+const STEP_ICONS = [Stethoscope, Calendar, User, CreditCard] as const;
+const STEP_KEYS = ["serviceDetails", "schedule", "patientInfo", "payment"] as const;
 
 function formatPriceModel(model?: string): string {
   if (model === "daily") return "day";
@@ -31,62 +36,137 @@ function formatPriceModel(model?: string): string {
   return "mo";
 }
 
+function profileToPatient(profile: PatientProfile, userId: string): Patient {
+  const g = profile.gender;
+  const gender: Patient["gender"] =
+    g === "Male" || g === "Female" || g === "Other" ? g : "Other";
+  return {
+    id: userId,
+    name: profile.name?.trim() || "",
+    age: profile.age ?? 0,
+    gender,
+    location: profile.address || "",
+    phone: profile.phone || undefined,
+    conditions: [],
+    status: "active",
+  };
+}
+
 export default function BookingWizardPage() {
   const { t: tDocTitle } = useTranslation("common");
+  const { t } = useTranslation("guardian", { keyPrefix: "bookingWizard" });
+  const { t: tg } = useTranslation("guardian");
   useDocumentTitle(tDocTitle("pageTitles.bookingWizard", "Booking Wizard"));
 
   const toast = useAriaToast();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useAuth();
   const base = useCareSeekerBasePath();
-  const subscriberId = base === "/patient" ? "patient-current" : "guardian-current";
+  const isPatientCareSeeker = base === "/patient";
+  const subscriptionOwnerId =
+    user?.id ?? (isPatientCareSeeker ? "patient-current" : "guardian-current");
   const [searchParams] = useSearchParams();
   const packageId = searchParams.get("package");
   const [currentStep, setCurrentStep] = useState(1);
   const [completed, setCompleted] = useState(false);
   const [subscribing, setSubscribing] = useState(false);
-  const [selectedService, setSelectedService] = useState<string | null>(null);
-  const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, steps.length));
-  const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
+  const [selectedServiceKey, setSelectedServiceKey] = useState<BookingServiceTypeKey | null>(null);
+  const [selectedTimeKey, setSelectedTimeKey] = useState<string | null>(null);
+  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
+  const nextStep = () => setCurrentStep((prev) => Math.min(prev + 1, STEP_KEYS.length));
+  const prevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 1));
 
-  // Load package data if subscribing from marketplace
-  const { data: packageData, loading: pkgLoading } = useAsyncData(
-    () => packageId ? marketplaceService.getAgencyPackageById(packageId) : Promise.resolve(null),
-    [packageId]
+  const { data: careRecipients, loading: recipientsLoading } = useAsyncData(
+    async () => {
+      if (isPatientCareSeeker) {
+        const uid = user?.id;
+        if (!uid) return [];
+        try {
+          const prof = await patientService.getProfile();
+          return [profileToPatient(prof, uid)];
+        } catch {
+          return [];
+        }
+      }
+      return guardianService.getPatients();
+    },
+    [isPatientCareSeeker, user?.id],
   );
 
-  // Auto-select service type from package category
-  const autoSelectedService = useMemo(() => {
-    if (!packageData) return null;
+  useEffect(() => {
+    const list = careRecipients ?? [];
+    if (list.length === 0) {
+      setSelectedPatientId(null);
+      return;
+    }
+    setSelectedPatientId((prev) => {
+      if (prev && list.some((p) => p.id === prev)) return prev;
+      return list[0]!.id;
+    });
+  }, [careRecipients]);
+
+  const { data: packageData, loading: pkgLoading } = useAsyncData(
+    () => (packageId ? marketplaceService.getAgencyPackageById(packageId) : Promise.resolve(null)),
+    [packageId],
+  );
+
+  const autoSelectedServiceKey = useMemo((): BookingServiceTypeKey => {
+    if (!packageData?.meta.category?.length) return DEFAULT_SERVICE_TYPE_KEY;
     const primaryCat = packageData.meta.category[0];
-    return categoryToServiceType[primaryCat] || "Full Day Care";
+    return CATEGORY_TO_SERVICE_TYPE_KEY[primaryCat] ?? DEFAULT_SERVICE_TYPE_KEY;
   }, [packageData]);
 
-  // Use auto-selected if user hasn't manually chosen
-  const activeService = selectedService || autoSelectedService;
+  const activeServiceKey = selectedServiceKey ?? autoSelectedServiceKey;
 
-  // Package pricing helpers
   const pkgPricing = packageData?.pricing as UCCFPricingOffer | undefined;
   const pkgBasePrice = pkgPricing?.base_price || 0;
   const pkgModel = pkgPricing?.pricing_model || "monthly";
   const pkgOvertimeRate = pkgPricing?.overtime_rate;
   const pkgIncludedHours = pkgPricing?.included_hours;
 
+  const platformFeeRate = getBookingPlatformFeeRate();
+  const platformFeeAmount = Math.round(pkgBasePrice * platformFeeRate);
+  const minPriceHintBdt = getBookingMinPriceHintBdt();
+  const bkashLogoUrl = getBkashLogoUrl();
+
+  const selectedPatient = useMemo(
+    () => careRecipients?.find((p) => p.id === selectedPatientId) ?? null,
+    [careRecipients, selectedPatientId],
+  );
+
+  const canLeavePatientStep =
+    recipientsLoading || (careRecipients?.length ?? 0) === 0
+      ? false
+      : !!selectedPatientId;
+
   const handleConfirm = async () => {
     if (packageId) {
       setSubscribing(true);
       try {
-        await marketplaceService.subscribeToPackage(packageId, subscriberId);
-        toast.success("Successfully subscribed to package!");
+        await marketplaceService.subscribeToPackage(
+          packageId,
+          subscriptionOwnerId,
+          selectedPatientId ?? undefined,
+          selectedPatient
+            ? { name: selectedPatient.name, phone: selectedPatient.phone }
+            : undefined,
+        );
+        toast.success(t("toastSubscribed"));
         setCompleted(true);
       } catch {
-        toast.error("Subscription failed. Please try again.");
+        toast.error(t("toastSubscribeFailed"));
       } finally {
         setSubscribing(false);
       }
     } else {
       setCompleted(true);
     }
+  };
+
+  const goNext = () => {
+    if (currentStep === 3 && !canLeavePatientStep) return;
+    nextStep();
   };
 
   if (pkgLoading && packageId) return <PageSkeleton />;
@@ -102,18 +182,22 @@ export default function BookingWizardPage() {
           <div className="w-24 h-24 bg-[#E8F9E7] rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle2 className="w-12 h-12 text-[#5FB865]" />
           </div>
-          <h2 className="text-3xl font-bold text-gray-800 mb-2">{packageId ? "Subscribed!" : "Booking Requested!"}</h2>
+          <h2 className="text-3xl font-bold text-gray-800 mb-2">
+            {packageId ? t("completionSubscribed") : t("completionBookingRequested")}
+          </h2>
           <p className="text-gray-500 mb-8">
             {packageId
-              ? `You've successfully subscribed to "${packageData?.meta.title || "the package"}". The agency will begin onboarding shortly.`
-              : "Dr. Rahat Khan has been notified and will respond within 30 minutes."}
+              ? t("completionPackageBody", {
+                  title: packageData?.meta.title ?? t("untitledPackage"),
+                })
+              : t("completionGenericBody")}
           </p>
           <Button
             onClick={() => navigate(packageId ? `${base}/marketplace-hub` : `${base}/dashboard`)}
             className="w-full h-14 rounded-2xl font-bold text-lg"
-            style={{ background: "radial-gradient(143.86% 887.35% at -10.97% -22.81%, #FEB4C5 0%, #DB869A 100%)" }}
+            style={{ background: "var(--cn-gradient-guardian, radial-gradient(143.86% 887.35% at -10.97% -22.81%, #FEB4C5 0%, #DB869A 100%))" }}
           >
-            {packageId ? "Back to Marketplace" : "Go to Dashboard"}
+            {packageId ? t("backToMarketplace") : t("goToDashboard")}
           </Button>
         </motion.div>
       </div>
@@ -122,11 +206,14 @@ export default function BookingWizardPage() {
 
   return (
     <div>
-      <PageHero gradient="radial-gradient(143.86% 887.35% at -10.97% -22.81%, #FEB4C5 0%, #DB869A 100%)" className="pt-12 pb-24 px-6">
+      <PageHero
+        gradient="radial-gradient(143.86% 887.35% at -10.97% -22.81%, #FEB4C5 0%, #DB869A 100%)"
+        className="pt-12 pb-24 px-6"
+      >
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center gap-4 mb-8">
             <h1 className="text-2xl font-bold text-white">
-              {packageId ? "Package Subscription" : "Booking Wizard"}
+              {packageId ? t("titlePackage") : t("titleGeneric")}
             </h1>
             {packageData && (
               <span className="px-3 py-1 rounded-full bg-white/20 text-white text-xs flex items-center gap-1.5">
@@ -134,57 +221,102 @@ export default function BookingWizardPage() {
               </span>
             )}
           </div>
-          <div className="flex justify-between relative"><div className="absolute top-1/2 left-0 w-full h-1 bg-white/20 -translate-y-1/2" /><div className="absolute top-1/2 left-0 h-1 bg-white -translate-y-1/2 transition-all duration-500" style={{ width: `${((currentStep - 1) / (steps.length - 1)) * 100}%` }} />{steps.map((step) => (<div key={step.id} className="relative z-10 flex flex-col items-center"><div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 ${currentStep >= step.id ? 'bg-white text-[#DB869A]' : 'bg-[#EAB1C1] text-white'}`}>{currentStep > step.id ? <CheckCircle2 className="w-6 h-6" /> : <step.icon className="w-5 h-5" />}</div><span className="text-[10px] font-bold text-white mt-2 uppercase tracking-wider">{step.name}</span></div>))}</div>
+          <div className="flex justify-between relative">
+            <div className="absolute top-1/2 left-0 w-full h-1 bg-white/20 -translate-y-1/2" />
+            <div
+              className="absolute top-1/2 left-0 h-1 bg-white -translate-y-1/2 transition-all duration-500"
+              style={{ width: `${((currentStep - 1) / (STEP_KEYS.length - 1)) * 100}%` }}
+            />
+            {STEP_KEYS.map((stepKey, i) => {
+              const stepNum = i + 1;
+              const Icon = STEP_ICONS[i]!;
+              return (
+                <div key={stepKey} className="relative z-10 flex flex-col items-center">
+                  <div
+                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 ${
+                      currentStep >= stepNum ? "bg-white text-[#DB869A]" : "bg-[#EAB1C1] text-white"
+                    }`}
+                  >
+                    {currentStep > stepNum ? (
+                      <CheckCircle2 className="w-6 h-6" />
+                    ) : (
+                      <Icon className="w-5 h-5" />
+                    )}
+                  </div>
+                  <span className="text-[10px] font-bold text-white mt-2 uppercase tracking-wider">
+                    {t(`steps.${stepKey}`)}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </PageHero>
       <div className="max-w-3xl mx-auto px-6 -mt-12">
         <div className="finance-card p-8">
           <AnimatePresence mode="wait">
-            <motion.div key={currentStep} initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -20, opacity: 0 }} transition={{ duration: 0.3 }}>
-              {/* Step 1: Service Details — auto-select from package */}
+            <motion.div
+              key={currentStep}
+              initial={{ x: 20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -20, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
               {currentStep === 1 && (
                 <div className="space-y-6">
-                  <h2 className="text-xl font-bold text-gray-800">Choose Service Type</h2>
+                  <h2 className="text-xl font-bold text-gray-800">{t("step1.title")}</h2>
                   {packageData && (
                     <div className="p-4 rounded-2xl bg-[#FFF5F7] border border-[#FEB4C5]/30 flex items-start gap-3">
                       <Package className="w-5 h-5 text-[#DB869A] mt-0.5 shrink-0" />
                       <div>
-                        <p className="text-sm font-bold text-gray-800">Pre-filled from: {packageData.meta.title}</p>
-                        <p className="text-xs text-gray-500 mt-0.5">
-                          Service type auto-selected based on package category. You can change it below.
+                        <p className="text-sm font-bold text-gray-800">
+                          {t("step1.prefilledTitle", { title: packageData.meta.title })}
                         </p>
+                        <p className="text-xs text-gray-500 mt-0.5">{t("step1.prefilledHint")}</p>
                       </div>
                     </div>
                   )}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {["Full Day Care", "Post-Op Recovery", "Daily Check-in", "Medical Support"].map((type) => {
-                      const isActive = activeService === type;
-                      const isAutoSelected = !selectedService && autoSelectedService === type;
+                    {BOOKING_SERVICE_TYPE_KEYS.map((key) => {
+                      const isActive = activeServiceKey === key;
+                      const isAutoSelected = !selectedServiceKey && autoSelectedServiceKey === key;
                       return (
                         <button
-                          key={type}
-                          onClick={() => setSelectedService(type)}
+                          key={key}
+                          type="button"
+                          onClick={() => setSelectedServiceKey(key)}
                           className={`p-6 rounded-2xl border-2 transition-all text-left group ${
-                            isActive ? "border-[#FEB4C5] bg-[#FFF5F7]" : "border-gray-100 hover:border-[#FEB4C5] hover:bg-[#FFF5F7]"
+                            isActive
+                              ? "border-[#FEB4C5] bg-[#FFF5F7]"
+                              : "border-gray-100 hover:border-[#FEB4C5] hover:bg-[#FFF5F7]"
                           }`}
                         >
-                          <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${
-                            isActive ? "bg-[#FEB4C5]/20" : "bg-gray-50 group-hover:bg-[#FEB4C5]/10"
-                          }`}>
-                            <Stethoscope className={`w-6 h-6 ${isActive ? "text-[#FEB4C5]" : "text-gray-400 group-hover:text-[#FEB4C5]"}`} />
+                          <div
+                            className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${
+                              isActive ? "bg-[#FEB4C5]/20" : "bg-gray-50 group-hover:bg-[#FEB4C5]/10"
+                            }`}
+                          >
+                            <Stethoscope
+                              className={`w-6 h-6 ${isActive ? "text-[#FEB4C5]" : "text-gray-400 group-hover:text-[#FEB4C5]"}`}
+                            />
                           </div>
                           <div className="flex items-center gap-2">
-                            <p className="font-bold text-gray-800">{type}</p>
+                            <p className="font-bold text-gray-800">{t(`serviceTypes.${key}`)}</p>
                             {isAutoSelected && (
                               <span className="px-1.5 py-0.5 rounded text-[10px] bg-[#FEB4C5]/20 text-[#DB869A]">
-                                From Package
+                                {t("step1.fromPackage")}
                               </span>
                             )}
                           </div>
                           <p className="text-xs text-gray-400 mt-1">
                             {packageData && isActive
-                              ? `৳${pkgBasePrice.toLocaleString()}/${formatPriceModel(pkgModel)}`
-                              : "Starting from ৳400/hr"}
+                              ? t("step1.priceFromPackage", {
+                                  amount: pkgBasePrice.toLocaleString(),
+                                  unit: formatPriceModel(pkgModel),
+                                })
+                              : minPriceHintBdt != null
+                                ? t("step1.priceStarting", { amount: String(minPriceHintBdt) })
+                                : "\u00A0"}
                           </p>
                           {isActive && <CheckCircle2 className="w-5 h-5 text-[#FEB4C5] mt-2" />}
                         </button>
@@ -194,43 +326,62 @@ export default function BookingWizardPage() {
                 </div>
               )}
 
-              {/* Step 2: Schedule — pre-fill from package */}
               {currentStep === 2 && (
                 <div className="space-y-6">
-                  <h2 className="text-xl font-bold text-gray-800">Select Date & Time</h2>
+                  <h2 className="text-xl font-bold text-gray-800">{t("step2.title")}</h2>
                   {packageData?.schedule && (
                     <div className="p-4 rounded-2xl bg-[#FFF5F7] border border-[#FEB4C5]/30">
-                      <p className="text-xs text-[#DB869A] mb-2 flex items-center gap-1.5"><Package className="w-3 h-3" /> Package Schedule</p>
+                      <p className="text-xs text-[#DB869A] mb-2 flex items-center gap-1.5">
+                        <Package className="w-3 h-3" /> {t("step2.packageSchedule")}
+                      </p>
                       <div className="flex gap-4 text-sm text-gray-700">
-                        <span>{packageData.schedule.hours_per_day}h/day</span>
-                        <span className="capitalize">{packageData.schedule.shift_type} shift</span>
-                        <span className="capitalize">{packageData.schedule.staff_pattern?.replace("_", " ")}</span>
+                        <span>
+                          {t("step2.hoursPerDay", { n: packageData.schedule.hours_per_day })}
+                        </span>
+                        <span className="capitalize">
+                          {t("step2.shift", { type: packageData.schedule.shift_type })}
+                        </span>
+                        <span className="capitalize">
+                          {t("step2.pattern", {
+                            pattern: packageData.schedule.staff_pattern?.replace("_", " ") ?? "",
+                          })}
+                        </span>
                       </div>
                     </div>
                   )}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div>
-                      <p className="text-sm font-bold text-gray-400 mb-4 uppercase">Start Date</p>
+                      <p className="text-sm font-bold text-gray-400 mb-4 uppercase">{t("step2.startDate")}</p>
                       <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100">
                         <Calendar className="w-10 h-10 text-[#FEB4C5] mb-2" />
                         <p className="text-lg font-bold text-gray-800 underline">
                           {packageData?.meta.start_date
-                            ? new Date(packageData.meta.start_date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
-                            : "March 18, 2026"}
+                            ? t("step2.startDateFormatted", {
+                                date: new Date(packageData.meta.start_date).toLocaleDateString(
+                                  undefined,
+                                  { month: "long", day: "numeric", year: "numeric" },
+                                ),
+                              })
+                            : t("step2.startDateTbd")}
                         </p>
                       </div>
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-gray-400 mb-4 uppercase">Start Time</p>
+                      <p className="text-sm font-bold text-gray-400 mb-4 uppercase">{t("step2.startTime")}</p>
                       <div className="grid grid-cols-2 gap-2">
-                        {["09:00 AM", "11:00 AM", "02:00 PM", "05:00 PM"].map(t => (
+                        {BOOKING_TIME_SLOT_KEYS.map((slotKey) => (
                           <button
-                            key={t}
-                            onClick={() => setSelectedTime(t)}
+                            key={slotKey}
+                            type="button"
+                            onClick={() => setSelectedTimeKey(slotKey)}
                             className={`p-3 rounded-xl border text-sm font-medium transition-all ${
-                              selectedTime === t ? "border-[#FEB4C5] bg-[#FFF5F7] text-[#DB869A]" : "border-gray-200 hover:border-[#FEB4C5]"
+                              selectedTimeKey === slotKey
+                                ? "border-[#FEB4C5] bg-[#FFF5F7] text-[#DB869A]"
+                                : "border-gray-200 hover:border-[#FEB4C5]"
                             }`}
-                          >{t}</button>
+                          >
+                            {t(`timeSlots.${slotKey}`)}
+                          </button>
                         ))}
                       </div>
                     </div>
@@ -238,38 +389,116 @@ export default function BookingWizardPage() {
                 </div>
               )}
 
-              {/* Step 3: Patient Info */}
               {currentStep === 3 && (
                 <div className="space-y-6">
-                  <h2 className="text-xl font-bold text-gray-800">Patient Details</h2>
-                  <div className="space-y-4">
-                    <div className="p-4 rounded-2xl border-2 border-[#FEB4C5] bg-[#FFF5F7] flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center"><User className="text-[#FEB4C5]" /></div>
-                      <div>
-                        <p className="font-bold text-gray-800">Mrs. Fatema Begum</p>
-                        <p className="text-xs text-gray-500">Age: 72 • Condition: Post-Op</p>
-                      </div>
-                      <CheckCircle2 className="w-6 h-6 text-[#FEB4C5] ml-auto" />
+                  <h2 className="text-xl font-bold text-gray-800">{t("patient.title")}</h2>
+                  <p className="text-sm text-gray-500">
+                    {isPatientCareSeeker ? t("patient.subtitlePatient") : t("patient.subtitleGuardian")}
+                  </p>
+                  {recipientsLoading ? (
+                    <div className="space-y-3 animate-pulse">
+                      <div className="h-20 rounded-2xl bg-gray-100" />
+                      <div className="h-20 rounded-2xl bg-gray-100" />
                     </div>
-                    <button className="w-full p-4 rounded-2xl border-2 border-dashed border-gray-200 text-gray-400 font-medium hover:bg-gray-50 transition-colors">+ Add New Patient</button>
-                  </div>
+                  ) : (careRecipients?.length ?? 0) === 0 ? (
+                    <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
+                      <p className="font-bold mb-2">{t("patient.emptyTitle")}</p>
+                      <p className="mb-4">
+                        {isPatientCareSeeker ? t("patient.emptyPatient") : t("patient.emptyGuardian")}
+                      </p>
+                      {isPatientCareSeeker ? (
+                        <Button
+                          type="button"
+                          className="rounded-2xl"
+                          onClick={() => navigate(`${base}/profile`)}
+                        >
+                          {t("patient.goToProfile")}
+                        </Button>
+                      ) : (
+                        <Button
+                          type="button"
+                          className="rounded-2xl"
+                          onClick={() =>
+                            navigate(`${base}/patient-intake`, {
+                              state: { returnTo: `${location.pathname}${location.search}` },
+                            })
+                          }
+                        >
+                          {t("patient.addPatient")}
+                        </Button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {(careRecipients ?? []).map((p) => {
+                        const isSel = p.id === selectedPatientId;
+                        const cond =
+                          p.conditions?.length > 0
+                            ? p.conditions.join(", ")
+                            : t("patient.noConditions");
+                        return (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => setSelectedPatientId(p.id)}
+                            className={`w-full p-4 rounded-2xl border-2 flex items-center gap-4 text-left transition-all ${
+                              isSel
+                                ? "border-[#FEB4C5] bg-[#FFF5F7]"
+                                : "border-gray-100 hover:border-[#FEB4C5]/50 hover:bg-gray-50"
+                            }`}
+                          >
+                            <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shrink-0 border border-gray-100">
+                              <User className="text-[#FEB4C5]" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-bold text-gray-800 truncate">{p.name}</p>
+                              <p className="text-xs text-gray-500">
+                                {t("patient.ageLabel")}: {p.age}
+                                {p.relation ? ` • ${p.relation}` : ""}
+                                {" • "}
+                                {cond}
+                              </p>
+                            </div>
+                            {isSel ? <CheckCircle2 className="w-6 h-6 text-[#FEB4C5] shrink-0" /> : null}
+                          </button>
+                        );
+                      })}
+                      {!isPatientCareSeeker ? (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            navigate(`${base}/patient-intake`, {
+                              state: { returnTo: `${location.pathname}${location.search}` },
+                            })
+                          }
+                          className="w-full p-4 rounded-2xl border-2 border-dashed border-gray-200 text-[#DB869A] font-medium hover:bg-[#FFF5F7] transition-colors"
+                        >
+                          {t("patient.addAnother")}
+                        </button>
+                      ) : null}
+                    </div>
+                  )}
                 </div>
               )}
 
-              {/* Step 4: Payment Summary — show package pricing */}
               {currentStep === 4 && (
                 <div className="space-y-6">
-                  <h2 className="text-xl font-bold text-gray-800">Payment Summary</h2>
+                  <h2 className="text-xl font-bold text-gray-800">{t("step4.title")}</h2>
 
-                  {/* Package info banner */}
                   {packageData && (
                     <div className="p-4 rounded-2xl bg-gradient-to-r from-[#FFF5F7] to-[#F0FFF0] border border-[#FEB4C5]/20 flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white text-xs" style={{ background: "var(--cn-gradient-agency, linear-gradient(135deg, #5FB865, #3D9942))" }}>
+                      <div
+                        className="w-10 h-10 rounded-xl flex items-center justify-center text-white text-xs"
+                        style={{ background: "var(--cn-gradient-agency, linear-gradient(135deg, #5FB865, #3D9942))" }}
+                      >
                         {packageData.agency_name.slice(0, 2)}
                       </div>
                       <div className="flex-1">
                         <p className="text-sm font-bold text-gray-800">{packageData.meta.title}</p>
-                        <p className="text-xs text-gray-500">{packageData.agency_name} • {packageData.meta.category.map(c => c.replace("_", " ")).join(", ")}</p>
+                        <p className="text-xs text-gray-500">
+                          {packageData.agency_name} •{" "}
+                          {packageData.meta.category.map((c) => c.replace("_", " ")).join(", ")}
+                        </p>
                       </div>
                       <CheckCircle2 className="w-5 h-5 text-[#5FB865]" />
                     </div>
@@ -280,68 +509,97 @@ export default function BookingWizardPage() {
                       <>
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-500">
-                            {activeService || packageData.meta.title}
-                            {pkgIncludedHours ? ` (${pkgIncludedHours}h included)` : ""}
+                            {t("step4.lineLabel", {
+                              label:
+                                t(`serviceTypes.${activeServiceKey}`) || packageData.meta.title,
+                              included: pkgIncludedHours
+                                ? t("step4.includedHours", { hours: pkgIncludedHours })
+                                : "",
+                            })}
                           </span>
                           <span className="font-bold text-gray-800">
-                            ৳{pkgBasePrice.toLocaleString()}/{formatPriceModel(pkgModel)}
+                            {t("step1.priceFromPackage", {
+                              amount: pkgBasePrice.toLocaleString(),
+                              unit: formatPriceModel(pkgModel),
+                            })}
                           </span>
                         </div>
-                        {pkgOvertimeRate && (
+                        {pkgOvertimeRate != null && (
                           <div className="flex justify-between text-sm">
-                            <span className="text-gray-500">Overtime Rate</span>
-                            <span className="font-bold text-gray-800">৳{pkgOvertimeRate}/hr</span>
+                            <span className="text-gray-500">{t("step4.overtimeLabel")}</span>
+                            <span className="font-bold text-gray-800">
+                              {t("step4.overtimeValue", { amount: String(pkgOvertimeRate) })}
+                            </span>
                           </div>
                         )}
                         {pkgPricing?.extra_charges?.length ? (
                           <div className="flex justify-between text-sm">
-                            <span className="text-gray-500">Extra charges may apply</span>
-                            <span className="text-xs text-gray-400">{pkgPricing.extra_charges.join(", ")}</span>
+                            <span className="text-gray-500">{tg("marketplace.extraChargesMayApply")}</span>
+                            <span className="text-xs text-gray-400">
+                              {pkgPricing.extra_charges.join(", ")}
+                            </span>
                           </div>
                         ) : null}
                         <div className="flex justify-between text-sm">
-                          <span className="text-gray-500">Platform Fee</span>
-                          <span className="font-bold text-gray-800">৳{Math.round(pkgBasePrice * 0.05).toLocaleString()}</span>
+                          <span className="text-gray-500">{t("step4.platformFee")}</span>
+                          <span className="font-bold text-gray-800">
+                            {t("step4.feeFormatted", { amount: platformFeeAmount.toLocaleString() })}
+                          </span>
                         </div>
                         <div className="border-t border-dashed border-gray-200 pt-3 flex justify-between">
-                          <span className="font-bold text-gray-800">Total</span>
+                          <span className="font-bold text-gray-800">{t("step4.total")}</span>
                           <span className="font-bold text-2xl text-[#7CE577]">
-                            ৳{(pkgBasePrice + Math.round(pkgBasePrice * 0.05)).toLocaleString()}/{formatPriceModel(pkgModel)}
+                            {t("step4.totalFormatted", {
+                              amount: (pkgBasePrice + platformFeeAmount).toLocaleString(),
+                              unit: formatPriceModel(pkgModel),
+                            })}
                           </span>
                         </div>
                       </>
                     ) : (
-                      <>
-                        <div className="flex justify-between text-sm"><span className="text-gray-500">Post-Op Recovery (4 hrs)</span><span className="font-bold text-gray-800">৳3,200</span></div>
-                        <div className="flex justify-between text-sm"><span className="text-gray-500">Platform Fee</span><span className="font-bold text-gray-800">৳150</span></div>
-                        <div className="border-t border-dashed border-gray-200 pt-3 flex justify-between"><span className="font-bold text-gray-800">Total</span><span className="font-bold text-2xl text-[#7CE577]">৳3,350</span></div>
-                      </>
+                      <div className="space-y-2">
+                        <p className="font-bold text-gray-800">{t("step4.genericSummaryTitle")}</p>
+                        <p className="text-sm text-gray-600">{t("step4.genericSummaryBody")}</p>
+                      </div>
                     )}
                   </div>
 
-                  {/* SLA preview for package */}
                   {packageData?.sla && (
                     <div className="bg-gray-50 rounded-2xl p-4 space-y-2">
-                      <p className="text-xs font-bold text-gray-400 uppercase">Service Guarantee</p>
+                      <p className="text-xs font-bold text-gray-400 uppercase">
+                        {tg("marketplace.serviceGuarantee")}
+                      </p>
                       <div className="grid grid-cols-2 gap-2 text-xs">
                         {packageData.sla.replacement_time_hours != null && (
                           <div className="flex items-center gap-1.5 text-gray-600">
-                            <CheckCircle2 className="w-3 h-3 text-[#5FB865]" /> {packageData.sla.replacement_time_hours}h replacement
+                            <CheckCircle2 className="w-3 h-3 text-[#5FB865]" />
+                            {t("step4.slaReplacement", {
+                              hours: String(packageData.sla.replacement_time_hours),
+                            })}
                           </div>
                         )}
                         {packageData.sla.emergency_response_minutes != null && (
                           <div className="flex items-center gap-1.5 text-gray-600">
-                            <CheckCircle2 className="w-3 h-3 text-[#5FB865]" /> {packageData.sla.emergency_response_minutes}min emergency
+                            <CheckCircle2 className="w-3 h-3 text-[#5FB865]" />
+                            {t("step4.slaEmergency", {
+                              minutes: String(packageData.sla.emergency_response_minutes),
+                            })}
                           </div>
                         )}
                         {packageData.sla.attendance_guarantee_percent != null && (
                           <div className="flex items-center gap-1.5 text-gray-600">
-                            <CheckCircle2 className="w-3 h-3 text-[#5FB865]" /> {packageData.sla.attendance_guarantee_percent}% attendance
+                            <CheckCircle2 className="w-3 h-3 text-[#5FB865]" />
+                            {t("step4.slaAttendance", {
+                              percent: String(packageData.sla.attendance_guarantee_percent),
+                            })}
                           </div>
                         )}
                         {packageData.sla.reporting_frequency && (
                           <div className="flex items-center gap-1.5 text-gray-600">
-                            <CheckCircle2 className="w-3 h-3 text-[#5FB865]" /> {packageData.sla.reporting_frequency} reports
+                            <CheckCircle2 className="w-3 h-3 text-[#5FB865]" />
+                            {t("step4.slaReports", {
+                              frequency: String(packageData.sla.reporting_frequency),
+                            })}
                           </div>
                         )}
                       </div>
@@ -349,20 +607,67 @@ export default function BookingWizardPage() {
                   )}
 
                   <div className="space-y-3">
-                    <p className="text-sm font-bold text-gray-400 uppercase">Payment Method</p>
+                    <p className="text-sm font-bold text-gray-400 uppercase">{t("step4.paymentMethod")}</p>
                     <div className="grid grid-cols-2 gap-3">
-                      <button className="p-4 rounded-xl border-2 border-[#FEB4C5] bg-[#FFF5F7] flex items-center gap-3"><img src="https://upload.wikimedia.org/wikipedia/commons/5/5c/Bkash_logo.png" className="h-5" alt="bkash" /><span className="font-bold text-[#DB869A]">bKash</span></button>
-                      <button className="p-4 rounded-xl border-2 border-gray-100 flex items-center gap-3"><CreditCard className="w-5 h-5 text-gray-400" /><span className="font-bold text-gray-600">Card</span></button>
+                      <button
+                        type="button"
+                        className="p-4 rounded-xl border-2 border-[#FEB4C5] bg-[#FFF5F7] flex items-center gap-3"
+                      >
+                        {bkashLogoUrl ? (
+                          <img src={bkashLogoUrl} className="h-5" alt="" />
+                        ) : null}
+                        <span className="font-bold text-[#DB869A]">{t("step4.paymentBkash")}</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="p-4 rounded-xl border-2 border-gray-100 flex items-center gap-3"
+                      >
+                        <CreditCard className="w-5 h-5 text-gray-400" />
+                        <span className="font-bold text-gray-600">{t("step4.paymentCard")}</span>
+                      </button>
                     </div>
                   </div>
                 </div>
               )}
             </motion.div>
           </AnimatePresence>
-          <div className="flex gap-4 mt-12 pt-8 border-t border-gray-100">{currentStep > 1 && (<Button variant="outline" onClick={prevStep} className="h-14 flex-1 rounded-2xl font-bold border-gray-200">Back</Button>)}<Button onClick={currentStep === steps.length ? handleConfirm : nextStep} className="h-14 flex-[2] rounded-2xl font-bold shadow-lg" disabled={subscribing} style={{ background: "radial-gradient(143.86% 887.35% at -10.97% -22.81%, #FEB4C5 0%, #DB869A 100%)" }}>{subscribing ? "Processing..." : currentStep === steps.length ? (packageId ? "Confirm Subscription" : "Confirm Booking") : "Next Step"}<ChevronRight className="ml-2 w-5 h-5" /></Button></div>
+          <div className="flex gap-4 mt-12 pt-8 border-t border-gray-100">
+            {currentStep > 1 && (
+              <Button
+                variant="outline"
+                onClick={prevStep}
+                className="h-14 flex-1 rounded-2xl font-bold border-gray-200"
+              >
+                {t("nav.back")}
+              </Button>
+            )}
+            <Button
+              onClick={currentStep === STEP_KEYS.length ? handleConfirm : goNext}
+              className="h-14 flex-[2] rounded-2xl font-bold shadow-lg"
+              disabled={subscribing || (currentStep === 3 && !canLeavePatientStep)}
+              style={{
+                background:
+                  "var(--cn-gradient-guardian, radial-gradient(143.86% 887.35% at -10.97% -22.81%, #FEB4C5 0%, #DB869A 100%))",
+              }}
+            >
+              {subscribing
+                ? t("nav.processing")
+                : currentStep === STEP_KEYS.length
+                  ? packageId
+                    ? t("nav.confirmPackage")
+                    : t("nav.confirmBooking")
+                  : t("nav.next")}
+              <ChevronRight className="ml-2 w-5 h-5" />
+            </Button>
+          </div>
         </div>
       </div>
-      <style dangerouslySetInnerHTML={{ __html: ".finance-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.4); border-radius: 2.5rem; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05); }" }} />
+      <style
+        dangerouslySetInnerHTML={{
+          __html:
+            ".finance-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.4); border-radius: 2.5rem; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05); }",
+        }}
+      />
     </div>
   );
 }

@@ -2,8 +2,8 @@
  * Search Service — global search across caregivers, agencies, jobs
  */
 import type { CaregiverProfile, Agency, Job } from "@/backend/models";
-import { MOCK_CAREGIVER_PROFILES, MOCK_AGENCIES, MOCK_MARKETPLACE_JOBS } from "@/backend/api/mock";
-import { USE_SUPABASE, sbRead, sb } from "./_sb";
+import { loadMockBarrel } from "@/backend/api/mock/loadMockBarrel";
+import { USE_SUPABASE, sbRead, sbData, dataCacheScope, useInAppMockDataset } from "./_sb";
 
 const delay = (ms = 300) => new Promise((r) => setTimeout(r, ms));
 
@@ -44,11 +44,11 @@ export const searchService = {
 
     if (USE_SUPABASE) {
       const pattern = `%${query}%`;
-      return sbRead(`search:${query}`, async () => {
+      return sbRead(`search:${dataCacheScope()}:${query}`, async () => {
         const [cg, ag, jo] = await Promise.all([
-          sb().from("caregiver_profiles").select("*").ilike("name", pattern).limit(20),
-          sb().from("agencies").select("*").ilike("name", pattern).limit(20),
-          sb().from("jobs").select("*").ilike("title", pattern).limit(20),
+          sbData().from("caregiver_profiles").select("*").ilike("name", pattern).limit(20),
+          sbData().from("agencies").select("*").ilike("name", pattern).limit(20),
+          sbData().from("jobs").select("*").ilike("title", pattern).limit(20),
         ]);
         return {
           caregivers: (cg.data || []).map(mapCaregiver),
@@ -59,6 +59,8 @@ export const searchService = {
     }
 
     await delay();
+    if (!useInAppMockDataset()) return { caregivers: [], agencies: [], jobs: [] };
+    const { MOCK_CAREGIVER_PROFILES, MOCK_AGENCIES, MOCK_MARKETPLACE_JOBS } = await loadMockBarrel();
     const q = query.toLowerCase();
     return {
       caregivers: MOCK_CAREGIVER_PROFILES.filter(

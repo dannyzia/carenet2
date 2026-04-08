@@ -1,7 +1,7 @@
 /**
  * AgencyBidManagementPage — Agency tracks all submitted bids, responds to counters
  */
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Link } from "react-router";
 import {
   Gavel, Clock, CheckCircle2, XCircle, RotateCcw, AlertTriangle,
@@ -16,6 +16,9 @@ import { useAriaToast } from "@/frontend/hooks/useAriaToast";
 import { useTranslation } from "react-i18next";
 import { ConfirmDialog } from "@/frontend/components/shared/ConfirmDialog";
 import type { CareContractBid, BidStatus } from "@/backend/models";
+import { useAuth } from "@/frontend/auth/AuthContext";
+import { USE_SUPABASE } from "@/backend/services/supabase";
+import { subscribeToCareContractBids } from "@/backend/services/realtime";
 
 type TabFilter = "all" | "pending" | "countered" | "accepted" | "rejected" | "withdrawn" | "expired";
 
@@ -53,6 +56,7 @@ export default function AgencyBidManagementPage() {
   useDocumentTitle(tDocTitle("pageTitles.agencyBidManagement", "Agency Bid Management"));
 
   const { t } = useTranslation("common");
+  const { user } = useAuth();
   const toast = useAriaToast();
   const [activeTab, setActiveTab] = useState<TabFilter>("all");
   const [respondingTo, setRespondingTo] = useState<string | null>(null);
@@ -62,9 +66,30 @@ export default function AgencyBidManagementPage() {
   const expiryLiveRef = useRef<HTMLDivElement>(null);
   const prevExpiredIdsRef = useRef<Set<string>>(new Set());
 
-  const { data: allBids, loading, refetch } = useAsyncData(() =>
-    marketplaceService.getMyBids("agency-current")
+  const { data: allBids, loading, refetch } = useAsyncData(
+    () => marketplaceService.getMyBids(user?.id ?? "agency-current"),
+    [user?.id],
   );
+
+  const bidContractIds = useMemo(
+    () => [...new Set((allBids ?? []).map((b) => b.contract_id).filter(Boolean))],
+    [allBids],
+  );
+  const bidContractIdsKey = bidContractIds.join(",");
+
+  useEffect(() => {
+    if (!USE_SUPABASE || !user?.id || bidContractIds.length === 0) return;
+    return subscribeToCareContractBids(bidContractIds, user.id, (payload) => {
+      void refetch();
+      if (payload.eventType === "UPDATE" && payload.newRecord && payload.oldRecord) {
+        const ns = String((payload.newRecord as { status?: string }).status ?? "");
+        const os = String((payload.oldRecord as { status?: string }).status ?? "");
+        if (ns && ns !== os) {
+          toast.success(t("agencyBids.bidStatusUpdated"));
+        }
+      }
+    });
+  }, [user?.id, bidContractIdsKey, bidContractIds, refetch, toast, t]);
 
   // Real-time countdown: re-render every 60s to update bid expiry displays
   useEffect(() => {

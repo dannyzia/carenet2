@@ -4,9 +4,10 @@ import { useTranslation } from "react-i18next";
 import { RealtimeStatusIndicator } from "@/frontend/components/RealtimeStatusIndicator";
 import { SubscriptionHealthBadge } from "@/frontend/components/SubscriptionHealthBadge";
 import { useChannelHealthToast } from "@/frontend/hooks/useChannelHealthToast";
+import { useAuth } from "@/frontend/auth/AuthContext";
 import { Link, useSearchParams } from "react-router";
 import { cn } from "@/frontend/theme/tokens";
-import { formatPoints, pointsToBDT, POINT_PACKAGES, DEFAULT_PLATFORM_FEE_PERCENT } from "@/frontend/utils/points";
+import { formatPoints, pointsToBDT, POINT_PACKAGES, DEFAULT_PLATFORM_FEE_PERCENT, POINTS_PER_BDT } from "@/frontend/utils/points";
 import { formatBDT } from "@/frontend/utils/currency";
 import { useState } from "react";
 import {
@@ -14,6 +15,7 @@ import {
   ShoppingCart, Gift, AlertTriangle, Shield, ChevronRight, Sparkles,
   CreditCard, ArrowRightLeft, Ban, Download, Loader2,
 } from "lucide-react";
+import { monetizationChannelName } from "@/backend/services/realtime";
 
 const TX_ICON_MAP: Record<string, { icon: typeof Wallet; color: string; bg: string }> = {
   purchase: { icon: ShoppingCart, color: "#5FB865", bg: "#7CE57720" },
@@ -31,6 +33,7 @@ const TX_ICON_MAP: Record<string, { icon: typeof Wallet; color: string; bg: stri
 
 export default function WalletPage() {
   const { t } = useTranslation("common");
+  const { user } = useAuth();
   useDocumentTitle(t("pageTitles.wallet", "Wallet"));
   const [searchParams] = useSearchParams();
   const role = searchParams.get("role") || "guardian";
@@ -40,11 +43,12 @@ export default function WalletPage() {
   const [buying, setBuying] = useState(false);
 
   // Service-layer backed data with real-time updates
-  const { wallet, transactions, loading, error, refetch, buyPoints, withdrawPoints } = useWallet(role);
+  const fallbackUserId = role === "guardian" ? "guardian-1" : role === "agency" ? "agency-1" : "caregiver-1";
+  const walletUserId = user?.id || fallbackUserId;
+  const { wallet, transactions, loading, error, refetch, buyPoints, withdrawPoints } = useWallet(role, walletUserId);
 
   // Derive the channel ID that useWallet subscribes to
-  const userId = role === "guardian" ? "guardian-1" : role === "agency" ? "agency-1" : "caregiver-1";
-  const realtimeChannelId = `monetization:${userId}`;
+  const realtimeChannelId = monetizationChannelName(walletUserId);
 
   // Fire toasts on channel health degradation
   useChannelHealthToast(realtimeChannelId, { channelLabel: "Wallet feed" });
@@ -94,7 +98,7 @@ export default function WalletPage() {
         <div>
           <h1 className="text-2xl" style={{ color: cn.text }}>
             <Wallet className="w-6 h-6 inline-block mr-2 -mt-1" />
-            CarePoints Wallet
+            {t("wallet.title")}
             <RealtimeStatusIndicator variant="dot" className="inline-block ml-2 align-middle" />
           </h1>
           <div className="text-sm flex flex-wrap items-center gap-1.5" style={{ color: cn.textSecondary }}>
@@ -124,7 +128,14 @@ export default function WalletPage() {
           {(role === "caregiver" || role === "agency") && (
             <button
               onClick={async () => {
-                await withdrawPoints(5000, "bkash", "01700000000");
+                const amountInput = window.prompt("Withdraw amount (CarePoints)");
+                if (!amountInput) return;
+                const amount = Number(amountInput);
+                if (!Number.isFinite(amount) || amount <= 0) return;
+                const method = window.prompt("Payment method (e.g. bkash/nagad/bank_transfer)") || "bkash";
+                const account = window.prompt("Destination account/number") || "";
+                if (!account.trim()) return;
+                await withdrawPoints(amount, method, account.trim());
               }}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm cn-touch-target border"
               style={{ borderColor: cn.border, color: cn.text }}>
@@ -139,7 +150,7 @@ export default function WalletPage() {
         <div className="absolute top-0 right-0 w-32 h-32 rounded-full opacity-10 -mr-8 -mt-8"
           style={{ background: "white" }} />
         <div className="relative z-10">
-          <p className="text-sm opacity-80">Available Balance</p>
+          <p className="text-sm opacity-80">{t("wallet.balance")}</p>
           <p className="text-4xl mt-1">{formatPoints(wallet.balance)}</p>
           <p className="text-sm opacity-70 mt-1">≈ {formatBDT(pointsToBDT(wallet.balance))}</p>
 
@@ -147,7 +158,7 @@ export default function WalletPage() {
             <div className="mt-4 p-3 rounded-xl bg-white/15 backdrop-blur-sm flex items-center gap-3">
               <AlertTriangle className="w-5 h-5 text-yellow-200 shrink-0" />
               <div>
-                <p className="text-sm">Platform Fee Due</p>
+                <p className="text-sm">{t("wallet.pendingDue")}</p>
                 <p className="text-xs opacity-80">
                   {formatPoints(wallet.pendingDue)} ({DEFAULT_PLATFORM_FEE_PERCENT}% of transactions)
                 </p>
@@ -159,8 +170,8 @@ export default function WalletPage() {
             <div className="mt-2 p-3 rounded-xl bg-red-500/20 backdrop-blur-sm flex items-center gap-3">
               <Ban className="w-5 h-5 text-red-200 shrink-0" />
               <div>
-                <p className="text-sm">Withheld by Admin</p>
-                <p className="text-xs opacity-80">{formatPoints(wallet.frozenAmount)} frozen</p>
+                <p className="text-sm">{t("wallet.withheldByAdmin")}</p>
+                <p className="text-xs opacity-80">{formatPoints(wallet.frozenAmount)} {t("wallet.frozen")}</p>
               </div>
             </div>
           )}
@@ -170,10 +181,10 @@ export default function WalletPage() {
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: "Total Earned", value: formatPoints(wallet.totalEarned, { compact: true }), icon: ArrowDownRight, color: "#5FB865", bg: "#7CE57720" },
-          { label: "Total Spent", value: formatPoints(wallet.totalSpent, { compact: true }), icon: ArrowUpRight, color: "#EF4444", bg: "#EF444420" },
-          { label: "Withdrawn", value: formatPoints(wallet.totalWithdrawn, { compact: true }), icon: CreditCard, color: "#7B5EA7", bg: "#8082ED20" },
-          { label: "Reg. Bonus", value: formatPoints(wallet.registrationBonus), icon: Gift, color: "#DB869A", bg: "#FEB4C520" },
+          { label: t("wallet.totalEarned"), value: formatPoints(wallet.totalEarned, { compact: true }), icon: ArrowDownRight, color: "#5FB865", bg: "#7CE57720" },
+          { label: t("wallet.totalSpent"), value: formatPoints(wallet.totalSpent, { compact: true }), icon: ArrowUpRight, color: "#EF4444", bg: "#EF444420" },
+          { label: t("wallet.totalWithdrawn"), value: formatPoints(wallet.totalWithdrawn, { compact: true }), icon: CreditCard, color: "#7B5EA7", bg: "#8082ED20" },
+          { label: t("wallet.regBonus"), value: formatPoints(wallet.registrationBonus), icon: Gift, color: "#DB869A", bg: "#FEB4C520" },
         ].map((s) => {
           const Icon = s.icon;
           return (
@@ -193,10 +204,10 @@ export default function WalletPage() {
         <div className="finance-card p-5">
           <h2 className="mb-4 flex items-center gap-2" style={{ color: cn.text }}>
             <Coins className="w-5 h-5" style={{ color: cn.amber }} />
-            Buy CarePoints
+            {t("wallet.buyPoints")}
           </h2>
           <p className="text-xs mb-4" style={{ color: cn.textSecondary }}>
-            1 BDT = 10 CarePoints · Bonus points on larger packages
+            1 BDT = {POINTS_PER_BDT} CarePoints · Bonus points on larger packages
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
             {POINT_PACKAGES.map((pkg) => (
@@ -262,13 +273,13 @@ export default function WalletPage() {
             <ArrowRightLeft className="w-5 h-5" style={{ color: cn.amber }} />
           </div>
           <div className="flex-1">
-            <p className="text-sm" style={{ color: cn.text }}>Conversion Rate</p>
+            <p className="text-sm" style={{ color: cn.text }}>{t("wallet.conversionRate")}</p>
             <p className="text-xs" style={{ color: cn.textSecondary }}>
-              10 CarePoints = ৳ 1 · Your balance = {formatBDT(pointsToBDT(wallet.balance))}
+              {POINTS_PER_BDT} CarePoints = ৳ 1 · Your balance = {formatBDT(pointsToBDT(wallet.balance))}
             </p>
           </div>
           <div className="text-right">
-            <p className="text-sm" style={{ color: cn.text }}>Fee Rate</p>
+            <p className="text-sm" style={{ color: cn.text }}>{t("wallet.feeRate")}</p>
             <p className="text-xs" style={{ color: cn.pink }}>{wallet.feePercent}% per transaction</p>
           </div>
         </div>
@@ -277,20 +288,26 @@ export default function WalletPage() {
       {/* Transaction History */}
       <div className="finance-card p-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
-          <h2 style={{ color: cn.text }}>Transaction History</h2>
+          <h2 style={{ color: cn.text }}>{t("wallet.transactionHistory")}</h2>
           <div className="flex gap-1 p-1 rounded-xl" style={{ background: cn.bgInput }}>
-            {(["all", "credits", "debits", "fees"] as const).map((t) => (
+            {(["all", "credits", "debits", "fees"] as const).map((tabKey) => (
               <button
-                key={t}
-                onClick={() => setTab(t)}
+                key={tabKey}
+                onClick={() => setTab(tabKey)}
                 className="px-3 py-1.5 rounded-lg text-xs transition-all cn-touch-target"
                 style={{
-                  background: tab === t ? cn.bgCard : "transparent",
-                  color: tab === t ? cn.text : cn.textSecondary,
-                  boxShadow: tab === t ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                  background: tab === tabKey ? cn.bgCard : "transparent",
+                  color: tab === tabKey ? cn.text : cn.textSecondary,
+                  boxShadow: tab === tabKey ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
                 }}
               >
-                {t.charAt(0).toUpperCase() + t.slice(1)}
+                {tabKey === "all"
+                  ? t("wallet.all")
+                  : tabKey === "credits"
+                  ? t("wallet.credits")
+                  : tabKey === "debits"
+                  ? t("wallet.debits")
+                  : t("wallet.fees")}
               </button>
             ))}
           </div>
@@ -299,7 +316,7 @@ export default function WalletPage() {
         <div className="space-y-1">
           {filteredTx.length === 0 && (
             <p className="text-center py-8 text-sm" style={{ color: cn.textSecondary }}>
-              No transactions in this category
+              {t("empty.noData")}
             </p>
           )}
           {filteredTx.map((t) => {
@@ -364,7 +381,7 @@ export default function WalletPage() {
             <Download className="w-5 h-5" style={{ color: cn.green }} />
           </div>
           <div className="flex-1">
-            <p className="text-sm" style={{ color: cn.text }}>Export Statement</p>
+            <p className="text-sm" style={{ color: cn.text }}>{t("wallet.exportStatement")}</p>
             <p className="text-xs" style={{ color: cn.textSecondary }}>PDF / CSV</p>
           </div>
           <ChevronRight className="w-4 h-4" style={{ color: cn.textSecondary }} />
@@ -374,7 +391,7 @@ export default function WalletPage() {
             <Shield className="w-5 h-5" style={{ color: cn.purple }} />
           </div>
           <div className="flex-1">
-            <p className="text-sm" style={{ color: cn.text }}>Fee Details</p>
+            <p className="text-sm" style={{ color: cn.text }}>{t("wallet.feeDetails")}</p>
             <p className="text-xs" style={{ color: cn.textSecondary }}>{wallet.feePercent}% platform fee</p>
           </div>
           <ChevronRight className="w-4 h-4" style={{ color: cn.textSecondary }} />

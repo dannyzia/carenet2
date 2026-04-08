@@ -6,109 +6,75 @@ import type {
   AgencyPlacement, DirectoryAgency, PlacementShift,
   CaregiverPayout, PayoutHistoryItem, SettlementPeriod,
   AgencyTransaction, AgencyClient, AgencyMonthlyData, AgencyPerformanceData,
-  ActiveShift, ShiftAlert, AgencyRevenuePoint, JobApplication, RosterCaregiver,
+  ActiveShift, ShiftAlert, AgencyRevenuePoint, AgencyDashboardSummary, JobApplication, RosterCaregiver,
   RequirementInboxItem, AgencySettings, StorefrontData, Branch,
   ClientCarePlanData, StaffAttendanceData, StaffHiringData,
   AgencyIncident,
+  DocumentVerificationItem,
 } from "@/backend/models";
+import { loadMockBarrel } from "@/backend/api/mock/loadMockBarrel";
+import { USE_SUPABASE, sbRead, sbWrite, sb, sbData, currentUserId, useInAppMockDataset } from "./_sb";
 import {
-  MOCK_AGENCIES,
-  MOCK_AGENCY_CAREGIVERS,
-  MOCK_AGENCY_JOBS,
-  MOCK_AGENCY_PLACEMENTS,
-  MOCK_DIRECTORY_AGENCIES,
-  MOCK_PLACEMENT_SHIFTS,
-  MOCK_CAREGIVER_PAYOUTS,
-  MOCK_PAYOUT_HISTORY,
-  MOCK_SETTLEMENT_PERIODS,
-  MOCK_AGENCY_TRANSACTIONS,
-  MOCK_AGENCY_CLIENTS,
-  MOCK_AGENCY_MONTHLY_DATA,
-  MOCK_AGENCY_PERFORMANCE_DATA,
-  MOCK_ACTIVE_SHIFTS,
-  MOCK_SHIFT_ALERTS,
-  MOCK_AGENCY_REVENUE_DATA,
-  MOCK_JOB_APPLICATIONS,
-  MOCK_CAREGIVER_ROSTER,
-  MOCK_REQUIREMENTS_INBOX,
-  MOCK_AGENCY_SETTINGS,
-  MOCK_STOREFRONT_DATA,
-  MOCK_BRANCHES,
-  MOCK_CLIENT_CARE_PLAN,
-  MOCK_STAFF_ATTENDANCE,
-  MOCK_STAFF_HIRING,
-  MOCK_AGENCY_INCIDENTS,
-} from "@/backend/api/mock";
-import { USE_SUPABASE, sbRead, sbWrite, sb, currentUserId } from "./_sb";
+  EMPTY_STOREFRONT,
+  EMPTY_AGENCY_SETTINGS_CARD,
+  EMPTY_BRANCHES,
+  EMPTY_STAFF_ATTENDANCE,
+  EMPTY_STAFF_HIRING,
+} from "./liveEmptyDefaults";
+import { marketplaceService } from "./marketplace.service";
+import { demoOfflineDelayAndPick } from "./demoOfflineMock";
 
 const delay = (ms = 200) => new Promise((r) => setTimeout(r, ms));
 
-function isDemoAuthMode(): boolean {
-  if (typeof window === "undefined") return false;
-
-  try {
-    const mode = window.localStorage.getItem("carenet-auth-mode");
-    if (mode === "demo") return true;
-
-    const rawUser = window.localStorage.getItem("carenet-auth");
-    if (!rawUser) return false;
-    const parsed = JSON.parse(rawUser) as { id?: string; email?: string };
-    return (
-      typeof parsed.id === "string" && parsed.id.startsWith("demo-")
-    ) || (
-      typeof parsed.email === "string" && parsed.email.endsWith("@carenet.demo")
-    );
-  } catch {
-    return false;
-  }
-}
-
-function shouldUseSupabase(): boolean {
-  return USE_SUPABASE && !isDemoAuthMode();
-}
+const emptyClientCarePlan: ClientCarePlanData = {
+  client: { name: "", age: 0, condition: "" },
+  plan: { goals: [], schedule: [], medications: [] },
+};
 
 export const agencyService = {
   /** Search agencies by keyword */
   async searchAgencies(query?: string): Promise<Agency[]> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       return sbRead(`ag:search:${query || "all"}`, async () => {
-        let q = sb().from("agencies").select("*");
+        let q = sbData().from("agencies").select("*");
         if (query) q = q.ilike("name", `%${query}%`);
         const { data, error } = await q.limit(50);
         if (error) throw error;
         return (data || []).map(mapAgency);
       });
     }
-    await delay();
-    if (!query) return MOCK_AGENCIES;
-    const q = query.toLowerCase();
-    return MOCK_AGENCIES.filter(
-      (a) =>
-        a.name.toLowerCase().includes(q) ||
-        a.specialties.some((s) => s.toLowerCase().includes(q)) ||
-        a.location.toLowerCase().includes(q)
-    );
+    return demoOfflineDelayAndPick(200, [] as Agency[], (m) => {
+      if (!query) return m.MOCK_AGENCIES;
+      const q = query.toLowerCase();
+      return m.MOCK_AGENCIES.filter(
+        (a) =>
+          a.name.toLowerCase().includes(q) ||
+          a.specialties.some((s) => s.toLowerCase().includes(q)) ||
+          a.location.toLowerCase().includes(q),
+      );
+    });
   },
 
   /** Get agency by ID */
   async getAgencyById(id: string): Promise<Agency | undefined> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       return sbRead(`ag:${id}`, async () => {
-        const { data, error } = await sb().from("agencies").select("*").eq("id", id).single();
+        const { data, error } = await sbData().from("agencies").select("*").eq("id", id).single();
         if (error) return undefined;
         return mapAgency(data);
       });
     }
-    await delay();
-    return MOCK_AGENCIES.find((a) => a.id === id);
+    return demoOfflineDelayAndPick(200, undefined as Agency | undefined, (m) =>
+      m.MOCK_AGENCIES.find((a) => a.id === id),
+    );
   },
 
   /** Get caregivers in the agency roster */
   async getCaregivers(): Promise<AgencyCaregiver[]> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       return sbRead("ag:caregivers", async () => {
         const userId = await currentUserId();
-        const { data, error } = await sb().from("caregiver_profiles")
+        const { data, error } = await sbData().from("caregiver_profiles")
           .select("*")
           .eq("agency_id", userId)
           .order("name", { ascending: true });
@@ -121,16 +87,15 @@ export const agencyService = {
         }));
       });
     }
-    await delay();
-    return MOCK_AGENCY_CAREGIVERS;
+    return demoOfflineDelayAndPick(200, [] as AgencyCaregiver[], (m) => m.MOCK_AGENCY_CAREGIVERS);
   },
 
   /** Get jobs managed by the agency */
   async getJobs(): Promise<AgencyJob[]> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       return sbRead("ag:jobs", async () => {
         const userId = await currentUserId();
-        const { data, error } = await sb().from("jobs")
+        const { data, error } = await sbData().from("jobs")
           .select("*")
           .eq("posted_by", userId)
           .order("created_at", { ascending: false });
@@ -142,16 +107,15 @@ export const agencyService = {
         }));
       });
     }
-    await delay();
-    return MOCK_AGENCY_JOBS;
+    return demoOfflineDelayAndPick(200, [] as AgencyJob[], (m) => m.MOCK_AGENCY_JOBS);
   },
 
   /** Get placements managed by the agency */
   async getPlacements(): Promise<AgencyPlacement[]> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       return sbRead("ag:placements", async () => {
         const userId = await currentUserId();
-        const { data, error } = await sb().from("placements")
+        const { data, error } = await sbData().from("placements")
           .select("*")
           .eq("agency_id", userId)
           .order("created_at", { ascending: false });
@@ -163,15 +127,14 @@ export const agencyService = {
         }));
       });
     }
-    await delay();
-    return MOCK_AGENCY_PLACEMENTS;
+    return demoOfflineDelayAndPick(200, [] as AgencyPlacement[], (m) => m.MOCK_AGENCY_PLACEMENTS);
   },
 
   /** Get agency directory listings for public page */
   async getDirectoryAgencies(): Promise<DirectoryAgency[]> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       return sbRead("ag:directory", async () => {
-        const { data, error } = await sb().from("agencies")
+        const { data, error } = await sbData().from("agencies")
           .select("*")
           .eq("verified", true)
           .order("rating", { ascending: false });
@@ -182,15 +145,14 @@ export const agencyService = {
         }));
       });
     }
-    await delay();
-    return MOCK_DIRECTORY_AGENCIES;
+    return demoOfflineDelayAndPick(200, [] as DirectoryAgency[], (m) => m.MOCK_DIRECTORY_AGENCIES);
   },
 
   /** Get shifts for a specific placement */
   async getPlacementShifts(placementId: string): Promise<PlacementShift[]> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       return sbRead(`ag:shifts:${placementId}`, async () => {
-        const { data, error } = await sb().from("shifts")
+        const { data, error } = await sbData().from("shifts")
           .select("*")
           .eq("placement_id", placementId)
           .order("date", { ascending: false });
@@ -203,18 +165,17 @@ export const agencyService = {
         }));
       });
     }
-    await delay();
-    return MOCK_PLACEMENT_SHIFTS;
+    return demoOfflineDelayAndPick(200, [] as PlacementShift[], (m) => m.MOCK_PLACEMENT_SHIFTS);
   },
 
   async getPayrollData(): Promise<{ payouts: CaregiverPayout[]; history: PayoutHistoryItem[]; settlements: SettlementPeriod[] }> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       return sbRead("ag:payroll", async () => {
         const userId = await currentUserId();
-        const { data: shifts, error: shiftsError } = await sb()
+        const { data: shifts, error: shiftsError } = await sbData()
           .from("shifts")
           .select("*, caregiver_profiles(name, type, rating)")
-          .in("placement_id", sb().from("placements").select("id").eq("agency_id", userId))
+          .in("placement_id", sbData().from("placements").select("id").eq("agency_id", userId))
           .eq("status", "completed")
           .order("date", { ascending: false });
         if (shiftsError) throw shiftsError;
@@ -225,15 +186,22 @@ export const agencyService = {
         };
       });
     }
-    await delay();
-    return { payouts: MOCK_CAREGIVER_PAYOUTS, history: MOCK_PAYOUT_HISTORY, settlements: MOCK_SETTLEMENT_PERIODS };
+    return demoOfflineDelayAndPick(
+      200,
+      { payouts: [] as CaregiverPayout[], history: [] as PayoutHistoryItem[], settlements: [] as SettlementPeriod[] },
+      (m) => ({
+        payouts: m.MOCK_CAREGIVER_PAYOUTS,
+        history: m.MOCK_PAYOUT_HISTORY,
+        settlements: m.MOCK_SETTLEMENT_PERIODS,
+      }),
+    );
   },
 
   async getTransactions(): Promise<AgencyTransaction[]> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       return sbRead("ag:transactions", async () => {
         const userId = await currentUserId();
-        const { data, error } = await sb().from("invoices")
+        const { data, error } = await sbData().from("invoices")
           .select("*")
           .eq("from_party_id", userId)
           .order("created_at", { ascending: false });
@@ -244,15 +212,42 @@ export const agencyService = {
         }));
       });
     }
-    await delay();
-    return MOCK_AGENCY_TRANSACTIONS;
+    return demoOfflineDelayAndPick(200, [] as AgencyTransaction[], (m) => m.MOCK_AGENCY_TRANSACTIONS);
+  },
+
+  async getPaymentsSummary(period = new Date()): Promise<{
+    monthLabel: string;
+    revenueBdt: number;
+    payrollBdt: number;
+    netProfitBdt: number;
+  }> {
+    const tx = await agencyService.getTransactions();
+    const asNumber = (value: string | number): number => {
+      if (typeof value === "number") return value;
+      const parsed = Number(String(value).replace(/[^\d.-]/g, ""));
+      return Number.isFinite(parsed) ? parsed : 0;
+    };
+    const revenueBdt = tx.reduce((sum, t) => {
+      const n = asNumber(t.amount);
+      return t.type === "credit" ? sum + Math.abs(n) : sum;
+    }, 0);
+    const payrollBdt = tx.reduce((sum, t) => {
+      const n = asNumber(t.amount);
+      return t.type === "debit" ? sum + Math.abs(n) : sum;
+    }, 0);
+    return {
+      monthLabel: period.toLocaleString("en-US", { month: "short" }),
+      revenueBdt,
+      payrollBdt,
+      netProfitBdt: revenueBdt - payrollBdt,
+    };
   },
 
   async getClients(): Promise<AgencyClient[]> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       return sbRead("ag:clients", async () => {
         const userId = await currentUserId();
-        const { data, error } = await sb().from("placements")
+        const { data, error } = await sbData().from("placements")
           .select("guardian_id, guardian_name, patient_name, care_type, status")
           .eq("agency_id", userId);
         if (error) throw error;
@@ -272,12 +267,11 @@ export const agencyService = {
         return Array.from(seen.values());
       });
     }
-    await delay();
-    return MOCK_AGENCY_CLIENTS;
+    return demoOfflineDelayAndPick(200, [] as AgencyClient[], (m) => m.MOCK_AGENCY_CLIENTS);
   },
 
   async getReportsData(): Promise<{ monthly: AgencyMonthlyData[]; performance: AgencyPerformanceData[] }> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       return sbRead("ag:reports", async () => {
         const userId = await currentUserId();
         const { data, error } = await sb().from("agency_monthly_overview")
@@ -293,12 +287,15 @@ export const agencyService = {
         };
       });
     }
-    await delay();
-    return { monthly: MOCK_AGENCY_MONTHLY_DATA, performance: MOCK_AGENCY_PERFORMANCE_DATA };
+    return demoOfflineDelayAndPick(
+      200,
+      { monthly: [] as AgencyMonthlyData[], performance: [] as AgencyPerformanceData[] },
+      (m) => ({ monthly: m.MOCK_AGENCY_MONTHLY_DATA, performance: m.MOCK_AGENCY_PERFORMANCE_DATA }),
+    );
   },
 
   async getShiftMonitoringData(): Promise<{ shifts: ActiveShift[]; alerts: ShiftAlert[] }> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       return sbRead("ag:monitoring", async () => {
         const userId = await currentUserId();
         const { data, error } = await sb().from("shift_monitoring_live")
@@ -322,12 +319,15 @@ export const agencyService = {
         return { shifts, alerts };
       });
     }
-    await delay();
-    return { shifts: MOCK_ACTIVE_SHIFTS, alerts: MOCK_SHIFT_ALERTS };
+    return demoOfflineDelayAndPick(
+      200,
+      { shifts: [] as ActiveShift[], alerts: [] as ShiftAlert[] },
+      (m) => ({ shifts: m.MOCK_ACTIVE_SHIFTS, alerts: m.MOCK_SHIFT_ALERTS }),
+    );
   },
 
   async getRevenueChartData(): Promise<AgencyRevenuePoint[]> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       return sbRead("ag:revenue", async () => {
         const userId = await currentUserId();
         const { data, error } = await sb().from("agency_revenue_monthly")
@@ -340,8 +340,45 @@ export const agencyService = {
         }));
       });
     }
+    return demoOfflineDelayAndPick(200, [] as AgencyRevenuePoint[], (m) => m.MOCK_AGENCY_REVENUE_DATA);
+  },
+
+  async getDashboardSummary(): Promise<AgencyDashboardSummary> {
+    const build = async (): Promise<AgencyDashboardSummary> => {
+      const agencyOwnerId = USE_SUPABASE ? await currentUserId() : "agency-001";
+      const [caregivers, clients, revenue, requirements, myPackages] = await Promise.all([
+        agencyService.getCaregivers(),
+        agencyService.getClients(),
+        agencyService.getRevenueChartData(),
+        agencyService.getRequirementsInbox(),
+        marketplaceService.getMyPackages(agencyOwnerId),
+      ]);
+      const activeCaregivers = caregivers.filter((c) => c.status === "active").length;
+      const activeClients = clients.length;
+      const last = revenue[revenue.length - 1];
+      const avgRating =
+        caregivers.length === 0
+          ? 0
+          : caregivers.reduce((s, c) => s + (Number(c.rating) || 0), 0) / caregivers.length;
+      const marketplacePackagesPublished = myPackages.filter((p) => p.status === "published").length;
+      const marketplacePackagesDraft = myPackages.filter((p) => p.status === "draft").length;
+      return {
+        activeCaregivers,
+        activeClients,
+        revenueMonthLabel: last?.month ?? "—",
+        revenueThisMonthBdt: last?.amount ?? 0,
+        avgRating: Math.round(avgRating * 10) / 10,
+        marketplacePackagesTotal: myPackages.length,
+        marketplacePackagesPublished,
+        marketplacePackagesDraft,
+        openCareRequirementsCount: requirements.length,
+      };
+    };
+    if (USE_SUPABASE) {
+      return sbRead("ag:dashboard-summary", build);
+    }
     await delay();
-    return MOCK_AGENCY_REVENUE_DATA;
+    return build();
   },
 
   async getJobApplications(_jobId?: string): Promise<JobApplication[]> {
@@ -360,15 +397,14 @@ export const agencyService = {
         }));
       });
     }
-    await delay();
-    return MOCK_JOB_APPLICATIONS;
+    return demoOfflineDelayAndPick(200, [] as JobApplication[], (m) => m.MOCK_JOB_APPLICATIONS);
   },
 
   async getCaregiverRoster(): Promise<RosterCaregiver[]> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       return sbRead("ag:roster", async () => {
         const userId = await currentUserId();
-        const { data, error } = await sb().from("caregiver_profiles")
+        const { data, error } = await sbData().from("caregiver_profiles")
           .select("*")
           .eq("agency_id", userId)
           .order("name", { ascending: true });
@@ -381,15 +417,14 @@ export const agencyService = {
         }));
       });
     }
-    await delay();
-    return MOCK_CAREGIVER_ROSTER;
+    return demoOfflineDelayAndPick(200, [] as RosterCaregiver[], (m) => m.MOCK_CAREGIVER_ROSTER);
   },
 
   async getRequirementsInbox(): Promise<RequirementInboxItem[]> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       return sbRead("ag:requirements", async () => {
         try {
-          const { data, error } = await sb().from("care_contracts")
+          const { data, error } = await sbData().from("care_contracts")
             .select("*")
             .eq("type", "request")
             .eq("status", "published")
@@ -404,19 +439,22 @@ export const agencyService = {
         }
       });
     }
-    await delay();
-    return MOCK_REQUIREMENTS_INBOX;
+    return demoOfflineDelayAndPick(200, [] as RequirementInboxItem[], (m) => m.MOCK_REQUIREMENTS_INBOX);
   },
 
   async getAgencySettings(): Promise<AgencySettings> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       return sbRead("ag:settings", async () => {
         const userId = await currentUserId();
-        const { data, error } = await sb().from("agencies")
+        const { data, error } = await sbData().from("agencies")
           .select("*")
           .eq("id", userId)
           .single();
-        if (error) return MOCK_AGENCY_SETTINGS;
+        if (error) {
+          return (useInAppMockDataset()
+            ? (await loadMockBarrel()).MOCK_AGENCY_SETTINGS
+            : EMPTY_AGENCY_SETTINGS_CARD) as AgencySettings;
+        }
         return {
           name: data.name,
           tagline: data.tagline,
@@ -429,57 +467,121 @@ export const agencyService = {
         };
       });
     }
-    await delay();
-    return MOCK_AGENCY_SETTINGS;
+    return demoOfflineDelayAndPick(
+      200,
+      EMPTY_AGENCY_SETTINGS_CARD as AgencySettings,
+      (m) => m.MOCK_AGENCY_SETTINGS,
+    );
   },
 
   async getStorefrontData(): Promise<StorefrontData> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       return sbRead("ag:storefront", async () => {
         const userId = await currentUserId();
-        const { data, error } = await sb().from("agencies")
+        const { data, error } = await sbData().from("agencies")
           .select("*")
           .eq("id", userId)
           .single();
-        if (error) return {
-          name: "", tagline: "", description: "", image: "",
-          location: "", phone: "", email: "", website: "",
-          specialties: [], serviceAreas: [], verified: false,
-          rating: 0, reviews: 0, responseTime: "", caregiverCount: 0,
-        };
+        if (error || !data) {
+          return useInAppMockDataset() ? (await loadMockBarrel()).MOCK_STOREFRONT_DATA : EMPTY_STOREFRONT;
+        }
+
+        const specialties = (data.specialties as string[]) || [];
+        const servicesFromSpecs = specialties.map((name, idx) => ({
+          id: `spec-${idx}`,
+          name,
+          price: 0,
+          description: "",
+          popular: idx === 0,
+        }));
+
+        const { data: staffRows } = await sbData()
+          .from("caregiver_profiles")
+          .select("id, name, title, type, image, rating, storefront_featured_rank")
+          .eq("agency_id", userId);
+
+        const revRes = await sbData()
+          .from("agency_reviews")
+          .select("rating, text, reviewer_name, reviewer_role, created_at")
+          .eq("agency_id", userId)
+          .order("created_at", { ascending: false })
+          .limit(10);
+        const reviewRows = revRes.error ? [] : (revRes.data || []);
+
+        const staffList = (staffRows || [])
+          .slice()
+          .sort((a, b) => {
+            const ar = a.storefront_featured_rank ?? 999;
+            const br = b.storefront_featured_rank ?? 999;
+            if (ar !== br) return ar - br;
+            return Number(b.rating ?? 0) - Number(a.rating ?? 0);
+          })
+          .slice(0, 8)
+          .map((row) => ({
+            id: row.id,
+            name: row.name ?? "—",
+            role: (row.title || row.type || "Caregiver") as string,
+            imageUrl: row.image || "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=80&w=200&h=200",
+          }));
+
+        const reviewItems = (reviewRows || []).map((r) => ({
+          rating: r.rating,
+          text: r.text || "",
+          authorName: r.reviewer_name || "—",
+          authorRole: r.reviewer_role || "Guardian",
+          createdAt: r.created_at || "",
+        }));
+
         return {
-          name: data.name,
-          tagline: data.tagline,
-          description: data.description || "",
-          image: data.image,
-          location: data.location,
-          phone: data.phone || "",
-          email: data.email || "",
-          website: data.website || "",
-          specialties: data.specialties || [],
-          serviceAreas: data.service_areas || [],
-          verified: data.verified,
-          rating: data.rating,
-          reviews: data.reviews,
-          responseTime: data.response_time,
-          caregiverCount: data.caregiver_count,
+          agency: {
+            name: data.name || "",
+            tagline: data.tagline || "",
+            rating: Number(data.rating ?? 0),
+            reviews: data.reviews ?? 0,
+            established: data.established ?? undefined,
+            responseTime: data.response_time ?? undefined,
+            location: data.location || undefined,
+            caregiverCount: data.caregiver_count ?? undefined,
+          },
+          services: servicesFromSpecs,
+          staff: staffList,
+          reviewItems,
         };
       });
     }
-    await delay();
-    return MOCK_STOREFRONT_DATA;
+    return demoOfflineDelayAndPick(200, EMPTY_STOREFRONT, (m) => m.MOCK_STOREFRONT_DATA);
   },
 
   async getBranches(): Promise<Branch[]> {
-    await delay();
-    return [];
+    if (USE_SUPABASE) {
+      return sbRead("ag:branches", async () => {
+        const userId = await currentUserId();
+        const { data, error } = await sbData()
+          .from("agency_branches")
+          .select("id, name, address, city, staff_count, active")
+          .eq("agency_id", userId);
+        if (error || !data || data.length === 0) {
+          return useInAppMockDataset() ? (await loadMockBarrel()).MOCK_BRANCHES : EMPTY_BRANCHES;
+        }
+        return data.map((b) => ({
+          id: b.id,
+          name: b.name ?? "Branch",
+          address: b.address ?? "",
+          city: b.city ?? "—",
+          staff: b.staff_count ?? 0,
+          active: b.active ?? true,
+          performance: b.active ? "Active" : "Inactive",
+        }));
+      });
+    }
+    return demoOfflineDelayAndPick(200, EMPTY_BRANCHES, (m) => m.MOCK_BRANCHES);
   },
 
   async getClientCarePlan(clientId: string): Promise<ClientCarePlanData> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       return sbRead(`ag:careplan:${clientId}`, async () => {
         const userId = await currentUserId();
-        const { data: placements, error: pErr } = await sb()
+        const { data: placements, error: pErr } = await sbData()
           .from("placements")
           .select("id, patient_name, care_type, start_date, status")
           .eq("agency_id", userId)
@@ -490,7 +592,7 @@ export const agencyService = {
           startDate: "", status: "", goals: [], tasks: [],
           schedule: [], notes: [],
         };
-        const { data: patients } = await sb()
+        const { data: patients } = await sbData()
           .from("patients")
           .select("*")
           .eq("placement_id", placements.id)
@@ -508,27 +610,76 @@ export const agencyService = {
         };
       });
     }
-    await delay();
-    return MOCK_CLIENT_CARE_PLAN;
+    return demoOfflineDelayAndPick(200, emptyClientCarePlan, (m) => m.MOCK_CLIENT_CARE_PLAN);
   },
 
   async getStaffAttendance(): Promise<StaffAttendanceData> {
-    await delay();
-    return { present: 0, absent: 0, late: 0, rate: 0 };
+    if (USE_SUPABASE) {
+      return sbRead("ag:attendance", async () => {
+        const userId = await currentUserId();
+        const { data, error } = await sbData()
+          .from("caregiver_profiles")
+          .select("id, full_name, specialty, status")
+          .eq("agency_id", userId)
+          .limit(20);
+        if (error || !data || data.length === 0) {
+          return useInAppMockDataset()
+            ? (await loadMockBarrel()).MOCK_STAFF_ATTENDANCE
+            : EMPTY_STAFF_ATTENDANCE;
+        }
+        return {
+          date: new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
+          staff: data.map((c) => ({
+            id: c.id,
+            name: c.full_name ?? "Unknown",
+            role: c.specialty ?? "Caregiver",
+            status: (c.status === "active" ? "present" : c.status === "suspended" ? "absent" : "late") as "present" | "absent" | "late",
+            checkIn: c.status === "active" ? "8:00 AM" : null,
+            checkOut: null,
+          })),
+        };
+      });
+    }
+    return demoOfflineDelayAndPick(200, EMPTY_STAFF_ATTENDANCE, (m) => m.MOCK_STAFF_ATTENDANCE);
   },
 
   async getStaffHiringData(): Promise<StaffHiringData> {
-    await delay();
-    return { applicants: 0, interviewed: 0, hired: 0, rejected: 0, pending: 0 };
+    if (USE_SUPABASE) {
+      return sbRead("ag:hiring", async () => {
+        const userId = await currentUserId();
+        const { data, error } = await sbData()
+          .from("job_postings")
+          .select("id, title, location, applicant_count, posted_at")
+          .eq("agency_id", userId)
+          .order("posted_at", { ascending: false })
+          .limit(10);
+        if (error || !data || data.length === 0) {
+          return useInAppMockDataset()
+            ? (await loadMockBarrel()).MOCK_STAFF_HIRING
+            : EMPTY_STAFF_HIRING;
+        }
+        return {
+          openPositions: data.map((p) => ({
+            id: p.id,
+            title: p.title ?? "Open Role",
+            location: p.location ?? "—",
+            applicants: p.applicant_count ?? 0,
+            posted: p.posted_at ? new Date(p.posted_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—",
+          })),
+          recentApplicants: [],
+        };
+      });
+    }
+    return demoOfflineDelayAndPick(200, EMPTY_STAFF_HIRING, (m) => m.MOCK_STAFF_HIRING);
   },
 
   // ─── Document Verification ───
 
-  async getVerificationQueue(): Promise<import("@/backend/models").DocumentVerificationItem[]> {
-    if (shouldUseSupabase()) {
+  async getVerificationQueue(): Promise<DocumentVerificationItem[]> {
+    if (USE_SUPABASE) {
       return sbRead("ag:verification", async () => {
         const userId = await currentUserId();
-        const { data: caregivers, error: cErr } = await sb()
+        const { data: caregivers, error: cErr } = await sbData()
           .from("caregiver_profiles")
           .select("id")
           .eq("agency_id", userId);
@@ -548,13 +699,11 @@ export const agencyService = {
         }));
       });
     }
-    const { MOCK_VERIFICATION_QUEUE } = await import("@/backend/api/mock");
-    await delay();
-    return MOCK_VERIFICATION_QUEUE;
+    return demoOfflineDelayAndPick(200, [] as DocumentVerificationItem[], (m) => m.MOCK_VERIFICATION_QUEUE);
   },
 
   async verifyDocument(docId: string, note: string): Promise<void> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       return sbWrite(async () => {
         const { error } = await sb().from("caregiver_documents").update({
           status: "approved", review_note: note, reviewed_at: new Date().toISOString(),
@@ -562,17 +711,23 @@ export const agencyService = {
         if (error) throw error;
       });
     }
+    if (!useInAppMockDataset()) {
+      throw new Error("[CareNet] Connect Supabase or use Demo Access for document verification.");
+    }
     await delay(300);
   },
 
   async rejectDocument(docId: string, note: string): Promise<void> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       return sbWrite(async () => {
         const { error } = await sb().from("caregiver_documents").update({
           status: "rejected", review_note: note, reviewed_at: new Date().toISOString(),
         }).eq("id", docId);
         if (error) throw error;
       });
+    }
+    if (!useInAppMockDataset()) {
+      throw new Error("[CareNet] Connect Supabase or use Demo Access for document verification.");
     }
     await delay(300);
   },
@@ -584,18 +739,17 @@ export const agencyService = {
     return [];
   },
 
-  async applyTemplate(templateId: string, placementId: string): Promise<void> {
-    await delay(400);
-  },
-
-  async applyTemplate(templateId: string, placementId: string): Promise<void> {
+  async applyTemplate(_templateId: string, _placementId: string): Promise<void> {
+    if (!useInAppMockDataset()) {
+      throw new Error("[CareNet] Connect Supabase or use Demo Access to apply care plan templates.");
+    }
     await delay(400);
   },
 
   // ─── Incidents (W09 — Agency Incidents Management) ───
 
   async getIncidents(): Promise<AgencyIncident[]> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       return sbRead("ag:incidents", async () => {
         const userId = await currentUserId();
         const { data, error } = await sb().from("incident_reports")
@@ -618,12 +772,11 @@ export const agencyService = {
         }));
       });
     }
-    await delay();
-    return MOCK_AGENCY_INCIDENTS;
+    return demoOfflineDelayAndPick(200, [] as AgencyIncident[], (m) => m.MOCK_AGENCY_INCIDENTS);
   },
 
   async resolveIncident(id: string, note: string): Promise<void> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       return sbWrite(async () => {
         const { error } = await sb().from("incident_reports").update({
           status: "resolved",
@@ -633,17 +786,23 @@ export const agencyService = {
         if (error) throw error;
       });
     }
+    if (!useInAppMockDataset()) {
+      throw new Error("[CareNet] Connect Supabase or use Demo Access for incident actions.");
+    }
     await delay(300);
   },
 
   async escalateIncident(id: string): Promise<void> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       return sbWrite(async () => {
         const { error } = await sb().from("incident_reports")
           .update({ status: "escalated" })
           .eq("id", id);
         if (error) throw error;
       });
+    }
+    if (!useInAppMockDataset()) {
+      throw new Error("[CareNet] Connect Supabase or use Demo Access for incident actions.");
     }
     await delay(300);
   },

@@ -38,9 +38,9 @@ export default function PatientMessagesPage() {
           <p className="text-sm" style={{ color: cn.text }}>Emergency Contact</p>
           <p className="text-xs" style={{ color: cn.textSecondary }}>Call 999 or contact your caregiver directly</p>
         </div>
-        <button className="p-2.5 rounded-xl text-white" style={{ background: "#EF4444" }}>
+        <a href="tel:999" className="p-2.5 rounded-xl text-white cn-touch-target" style={{ background: "#EF4444" }} aria-label="Call emergency">
           <Phone className="w-4 h-4" />
-        </button>
+        </a>
       </div>
     </div>
   );

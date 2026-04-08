@@ -12,6 +12,7 @@ import {
   isDemoUser,
 } from "./mockAuth";
 import { USE_SUPABASE, supabase } from "@/backend/services/supabase";
+import { getAuthEmailRedirectTo } from "@/frontend/auth/authEmailRedirect";
 import { clearAllDedup } from "@/backend/utils/dedup";
 import { stopDemoSimulation } from "@/backend/services/realtime";
 import { registerDeviceForPush } from "@/frontend/native/registerDevice";
@@ -182,28 +183,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (USE_SUPABASE) {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
-        if (error.message.toLowerCase().includes("email not confirmed")) {
-          return { success: false, error: "Please check your email and click the confirmation link before signing in." };
+        if (
+          error.message.toLowerCase().includes("email not confirmed") ||
+          error.message.toLowerCase().includes("invalid login credentials")
+        ) {
+          return {
+            success: false,
+            error:
+              "Invalid email or password. If you just signed up, make sure email confirmation is disabled in Supabase Auth settings, or confirm your email first.",
+          };
         }
         return { success: false, error: error.message };
       }
       if (data.user) {
-        // Check if MFA is enrolled
-        const { data: factors } = await supabase.auth.mfa.listFactors();
-        const totpFactors = factors?.totp || [];
-        if (totpFactors.length > 0) {
-          // Need MFA verification
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("id", data.user.id)
-            .single();
-          const appUser = mapSupabaseUser(data.user, profile, true);
-          pendingMfaUser.current = appUser;
-          return { success: true, needsMfa: true, user: appUser };
-        }
-        // No MFA — already set by onAuthStateChange listener
-        return { success: true };
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", data.user.id)
+          .single();
+        const appUser = mapSupabaseUser(data.user, profile, false);
+        setUser(appUser);
+        persistUser(appUser);
+        registerDeviceForPush().catch(() => {});
+        return { success: true, user: appUser };
       }
       return { success: false, error: "Login failed" };
     }
@@ -323,23 +325,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const normalizedEmail = data.email.trim().toLowerCase();
       const normalizedPhone = data.phone.trim();
 
-      const { data: existing } = await supabase
-        .from("profiles")
-        .select("id, email, phone")
-        .or(`email.eq.${normalizedEmail},phone.eq.${normalizedPhone}`)
-        .limit(1);
-
-      if (existing && existing.length > 0) {
-        if (existing.email === normalizedEmail) {
+      const redirectTo = getAuthEmailRedirectTo();
+      const { data: availRows, error: availErr } = await supabase.rpc("check_signup_availability", {
+        p_email: normalizedEmail,
+        p_phone: normalizedPhone,
+      });
+      if (!availErr && availRows && availRows.length > 0) {
+        const row = availRows[0] as { email_busy?: boolean; phone_busy?: boolean };
+        if (row.email_busy) {
           return { success: false, error: "This email is already registered. Sign in instead." };
         }
-        return { success: false, error: "This phone number is already registered." };
+        if (row.phone_busy) {
+          return { success: false, error: "This phone number is already registered." };
+        }
       }
 
       const { data: authData, error } = await supabase.auth.signUp({
-        email: data.email,
+        email: normalizedEmail,
         password: data.password,
         options: {
+          ...(redirectTo ? { emailRedirectTo: redirectTo } : {}),
           data: {
             name: data.name,
             role: data.role,
@@ -348,28 +353,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           },
         },
       });
-      if (error) return { success: false, error: error.message };
-      if (authData.user) {
-        // New users must set up MFA before accessing the app
-        const { data: enrollData, error: enrollErr } = await supabase.auth.mfa.enroll({ factorType: "totp" });
-        if (enrollErr || !enrollData?.totp) {
-          // Clean up the user if MFA enrollment fails - don't leave them stuck
-          await supabase.auth.signOut();
-          return { success: false, error: "Failed to set up 2FA. Please try again." };
+      if (error) {
+        if (
+          error.message.toLowerCase().includes("rate limit") ||
+          error.message.toLowerCase().includes("email rate limit")
+        ) {
+          return {
+            success: false,
+            error: "Too many signup attempts for this email. Please wait a few minutes and try again, or sign in if you already registered.",
+          };
         }
-        // Return MFA verification step
-        const appUser = mapSupabaseUser(authData.user, undefined, true);
-        pendingMfaUser.current = appUser;
-        return { 
-          success: true, 
-          needsMfa: true, 
-          user: appUser,
-          mfaFactorId: enrollData.id,
-          mfaQrCode: enrollData.totp.qr_code,
-          mfaSecret: enrollData.totp.secret,
+        return { success: false, error: error.message };
+      }
+      const signedUpUser = authData.user;
+      if (!signedUpUser) {
+        return { success: false, error: "Registration failed" };
+      }
+      // Supabase returns an obfuscated user with identities: [] when the email already exists
+      // (no error, and typically no new confirmation email).
+      const identities = signedUpUser.identities;
+      if (Array.isArray(identities) && identities.length === 0) {
+        return {
+          success: false,
+          error: "This email is already registered. Sign in instead.",
         };
       }
-      return { success: false, error: "Registration failed" };
+      if (authData.session) {
+        return { success: true, signedInWithoutEmailConfirmation: true };
+      }
+      return { success: true };
     }
 
     // Mock mode

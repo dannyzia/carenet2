@@ -46,11 +46,27 @@ export interface CareNote {
 export interface DashboardEarningsPoint { month: string; amount: number; }
 
 export interface RecentJob {
-  id: number; patient: string; type: string; date: string;
+  id: string | number; patient: string; type: string; date: string;
   status: "active" | "completed" | "cancelled"; amount: string;
 }
 
-export interface UpcomingScheduleItem { time: string; patient: string; type: string; duration: string; }
+export interface UpcomingScheduleItem {
+  shiftId?: string;
+  time: string; patient: string; type: string; duration: string;
+}
+
+/** Caregiver home dashboard headline metrics */
+export interface CaregiverDashboardSummary {
+  activeJobs: number;
+  avgRating: number;
+  reviewCount: number;
+  /** BDT amount for current month from earnings chart */
+  thisMonthBdt: number;
+  hoursThisMonth: number;
+  weekJobsDelta: number;
+  vsLastMonthPercent: number;
+  earningsTrendPercent: number;
+}
 
 // ─── Earnings ───
 export interface MonthlyEarningsPoint { month: string; earned: number; withdrawn: number; }
@@ -175,4 +191,7 @@ export interface SkillsAssessment {
 export interface TrainingModule {
   id: string; title: string; category: string; duration: string;
   progress: number; status: "in_progress" | "completed" | "not_started";
+  xpReward?: number;
+  thumbnailUrl?: string;
+  description?: string;
 }

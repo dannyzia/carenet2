@@ -68,6 +68,7 @@
     "bidExpiredAnnounce": "Bid on contract #{{id}} has expired",
     "bidOnContract": "Bid on Contract #{{id}}",
     "bidStatusChangedAnnounce": "Bid #{{id}} status changed to {{status}}",
+    "bidStatusUpdated": "বিডের স্ট্যাটাস আপডেট হয়েছে",
     "bidWithdrawn": "Bid withdrawn",
     "browseRequests": "Browse Requests",
     "cancel": "Cancel",
@@ -331,6 +332,17 @@
     "noMessages": "এখনও কোনো বার্তা নেই",
     "noNotifications": "কোনো নোটিফিকেশন নেই",
     "noResults": "কোনো ফলাফল পাওয়া যায়নি"
+  },
+  "agencyStorefrontPage": {
+    "agencyCoverAlt": "এজেন্সির কভার ছবি",
+    "bookInstitutionalCare": "প্রাতিষ্ঠানিক কেয়ার বুক করুন",
+    "getPersonalizedQuote": "ব্যক্তিগত কোটেশন নিন"
+  },
+  "trainingPortalUi": {
+    "leaderboardComingSoon": "লিডারবোর্ড এখনো উপলব্ধ নয়। সংযুক্ত হলে এখানে লাইভ ডেটা দেখাবে।"
+  },
+  "systemHealthUi": {
+    "noPerfSamples": "এখনও কোনো পারফরম্যান্স নমুনা নেই। টেলিমেট্রি উপলব্ধ হলে চার্ট পূর্ণ হবে।"
   },
   "error": {
     "forbidden": "এই পৃষ্ঠায় প্রবেশের অনুমতি আপনার নেই",

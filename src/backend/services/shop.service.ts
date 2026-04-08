@@ -5,29 +5,23 @@ import type {
   ShopProduct, WishlistItem,
   MerchantProduct, MerchantOrder, ShopFrontProduct, CustomerOrder,
   SalesChartDataPoint, CategoryDataPoint, MerchantChartDataPoint,
-  ShopDashboardOrder, MerchantFulfillmentData, InventoryItem,
+  ShopDashboardOrder, ShopDashboardStats, MerchantFulfillmentData, InventoryItem,
   ProductDetailData, CartItem, OrderTrackingData, ProductReviewDetail,
 } from "@/backend/models";
-import {
-  MOCK_SHOP_PRODUCTS,
-  MOCK_WISHLIST,
-  MOCK_MERCHANT_PRODUCTS,
-  MOCK_MERCHANT_ORDERS,
-  MOCK_SHOPFRONT_PRODUCTS,
-  MOCK_CUSTOMER_ORDERS,
-  MOCK_SHOP_SALES_DATA,
-  MOCK_SHOP_CATEGORY_DATA,
-  MOCK_MERCHANT_ANALYTICS_DATA,
-  MOCK_SHOP_DASHBOARD_ORDERS,
-  MOCK_MERCHANT_FULFILLMENT,
-  MOCK_INVENTORY,
-  MOCK_CART_ITEMS,
-  MOCK_ORDER_TRACKING,
-  MOCK_PRODUCT_REVIEWS,
-} from "@/backend/api/mock";
-import { USE_SUPABASE, sbRead, sb, currentUserId } from "./_sb";
+import { loadMockBarrel } from "@/backend/api/mock/loadMockBarrel";
+import { USE_SUPABASE, sbRead, sb, currentUserId, useInAppMockDataset } from "./_sb";
+import { EMPTY_SHOP_DASHBOARD_STATS } from "./liveEmptyDefaults";
+import { demoOfflineDelayAndPick } from "./demoOfflineMock";
 
-const delay = (ms = 200) => new Promise((r) => setTimeout(r, ms));
+function emptyProductDetail(id: string): ProductDetailData {
+  return { id, name: "", price: "", rating: 0, category: "", reviews: [] };
+}
+
+function emptyOrderTracking(orderId: string): OrderTrackingData {
+  return { id: orderId || "", status: "placed", items: [], timeline: [], tracking: "", courier: "" };
+}
+
+const emptyMerchantFulfillment: MerchantFulfillmentData = { pending: [], shipped: [] };
 
 function mapProduct(d: any): ShopProduct {
   return {
@@ -51,9 +45,9 @@ export const shopService = {
         return (data || []).map(mapProduct);
       });
     }
-    await delay();
-    if (!category) return MOCK_SHOP_PRODUCTS;
-    return MOCK_SHOP_PRODUCTS.filter((p) => p.category === category);
+    return demoOfflineDelayAndPick(200, [] as ShopProduct[], (m) =>
+      !category ? m.MOCK_SHOP_PRODUCTS : m.MOCK_SHOP_PRODUCTS.filter((p) => p.category === category),
+    );
   },
 
   /** Get product by ID */
@@ -65,8 +59,9 @@ export const shopService = {
         return mapProduct(data);
       });
     }
-    await delay();
-    return MOCK_SHOP_PRODUCTS.find((p) => p.id === id);
+    return demoOfflineDelayAndPick(200, undefined as ShopProduct | undefined, (m) =>
+      m.MOCK_SHOP_PRODUCTS.find((p) => p.id === id),
+    );
   },
 
   /** Get user's wishlist */
@@ -87,8 +82,7 @@ export const shopService = {
         }));
       });
     }
-    await delay();
-    return MOCK_WISHLIST;
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_WISHLIST);
   },
 
   async getMerchantProducts(): Promise<MerchantProduct[]> {
@@ -107,8 +101,7 @@ export const shopService = {
         }));
       });
     }
-    await delay();
-    return MOCK_MERCHANT_PRODUCTS;
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_MERCHANT_PRODUCTS);
   },
 
   async getMerchantOrders(): Promise<MerchantOrder[]> {
@@ -126,8 +119,7 @@ export const shopService = {
         }));
       });
     }
-    await delay();
-    return MOCK_MERCHANT_ORDERS;
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_MERCHANT_ORDERS);
   },
 
   async getShopFrontProducts(): Promise<ShopFrontProduct[]> {
@@ -142,8 +134,7 @@ export const shopService = {
         return (data || []).map(mapProduct);
       });
     }
-    await delay();
-    return MOCK_SHOPFRONT_PRODUCTS;
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_SHOPFRONT_PRODUCTS);
   },
 
   async getCustomerOrders(): Promise<CustomerOrder[]> {
@@ -161,8 +152,7 @@ export const shopService = {
         }));
       });
     }
-    await delay();
-    return MOCK_CUSTOMER_ORDERS;
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_CUSTOMER_ORDERS);
   },
 
   // ─── Analytics (aggregation — keep mock for now, will be Supabase views/RPCs) ───
@@ -181,8 +171,7 @@ export const shopService = {
         return Object.entries(byMonth).map(([month, total]) => ({ month, total }));
       });
     }
-    await delay();
-    return MOCK_SHOP_SALES_DATA;
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_SHOP_SALES_DATA);
   },
 
   async getShopCategoryData(): Promise<CategoryDataPoint[]> {
@@ -205,8 +194,7 @@ export const shopService = {
         }));
       });
     }
-    await delay();
-    return MOCK_SHOP_CATEGORY_DATA;
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_SHOP_CATEGORY_DATA);
   },
 
   async getMerchantAnalyticsData(): Promise<MerchantChartDataPoint[]> {
@@ -232,8 +220,7 @@ export const shopService = {
         }));
       });
     }
-    await delay();
-    return MOCK_MERCHANT_ANALYTICS_DATA;
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_MERCHANT_ANALYTICS_DATA);
   },
 
   async getShopDashboardOrders(): Promise<ShopDashboardOrder[]> {
@@ -256,8 +243,43 @@ export const shopService = {
         }));
       });
     }
-    await delay();
-    return MOCK_SHOP_DASHBOARD_ORDERS;
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_SHOP_DASHBOARD_ORDERS);
+  },
+
+  async getDashboardStats(): Promise<ShopDashboardStats> {
+    if (USE_SUPABASE) {
+      return sbRead("shop:dashboard-stats", async () => {
+        const userId = await currentUserId();
+        const demoBase = useInAppMockDataset()
+          ? (await loadMockBarrel()).MOCK_SHOP_DASHBOARD_STATS
+          : EMPTY_SHOP_DASHBOARD_STATS;
+        const { data: products, error: pe } = await sb().from("shop_products").select("stock").eq("merchant_id", userId);
+        const { data: orders, error: oe } = await sb().from("shop_orders").select("total, status").eq("merchant_id", userId);
+        if (pe || oe) {
+          return useInAppMockDataset() ? demoBase : EMPTY_SHOP_DASHBOARD_STATS;
+        }
+        const activeProducts = (products || []).filter((p: { stock?: number }) => (p.stock ?? 0) > 0).length;
+        const totalSalesBdt = (orders || []).reduce((s: number, o: { total?: number }) => s + Number(o.total || 0), 0);
+        const newOrders = (orders || []).filter((o: { status?: string }) =>
+          ["pending", "processing", "confirmed"].includes(String(o.status || "").toLowerCase())
+        ).length;
+        if (useInAppMockDataset()) {
+          return {
+            ...demoBase,
+            totalSalesBdt: totalSalesBdt || demoBase.totalSalesBdt,
+            activeProducts: activeProducts || demoBase.activeProducts,
+            newOrders: newOrders || demoBase.newOrders,
+          };
+        }
+        return {
+          ...EMPTY_SHOP_DASHBOARD_STATS,
+          totalSalesBdt,
+          activeProducts,
+          newOrders,
+        };
+      });
+    }
+    return demoOfflineDelayAndPick(200, EMPTY_SHOP_DASHBOARD_STATS, (m) => m.MOCK_SHOP_DASHBOARD_STATS);
   },
 
   async getMerchantFulfillment(): Promise<MerchantFulfillmentData> {
@@ -283,8 +305,7 @@ export const shopService = {
         };
       });
     }
-    await delay();
-    return MOCK_MERCHANT_FULFILLMENT;
+    return demoOfflineDelayAndPick(200, emptyMerchantFulfillment, (m) => m.MOCK_MERCHANT_FULFILLMENT);
   },
 
   async getInventory(): Promise<InventoryItem[]> {
@@ -303,8 +324,7 @@ export const shopService = {
         }));
       });
     }
-    await delay();
-    return MOCK_INVENTORY;
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_INVENTORY);
   },
 
   async getProductDetail(id: string): Promise<ProductDetailData> {
@@ -333,9 +353,10 @@ export const shopService = {
         };
       });
     }
-    await delay();
-    const product = MOCK_SHOP_PRODUCTS.find(p => p.id === id) ?? MOCK_SHOP_PRODUCTS[0];
-    return { ...product, reviews: MOCK_PRODUCT_REVIEWS };
+    return demoOfflineDelayAndPick(200, emptyProductDetail(id), (m) => {
+      const product = m.MOCK_SHOP_PRODUCTS.find((p) => p.id === id) ?? m.MOCK_SHOP_PRODUCTS[0];
+      return { ...product, reviews: m.MOCK_PRODUCT_REVIEWS };
+    });
   },
 
   async getCartItems(): Promise<CartItem[]> {
@@ -344,8 +365,7 @@ export const shopService = {
         return [];
       });
     }
-    await delay();
-    return MOCK_CART_ITEMS;
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_CART_ITEMS);
   },
 
   async getOrderTracking(orderId: string): Promise<OrderTrackingData> {
@@ -363,8 +383,10 @@ export const shopService = {
         };
       });
     }
-    await delay();
-    return { ...MOCK_ORDER_TRACKING, id: orderId || MOCK_ORDER_TRACKING.id };
+    return demoOfflineDelayAndPick(200, emptyOrderTracking(orderId), (m) => ({
+      ...m.MOCK_ORDER_TRACKING,
+      id: orderId || m.MOCK_ORDER_TRACKING.id,
+    }));
   },
 
   async getProductReviews(productId: string): Promise<ProductReviewDetail[]> {
@@ -385,7 +407,6 @@ export const shopService = {
         }));
       });
     }
-    await delay();
-    return MOCK_PRODUCT_REVIEWS;
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_PRODUCT_REVIEWS);
   },
 };

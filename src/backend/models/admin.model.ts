@@ -16,7 +16,24 @@ export interface PendingItem { type: string; count: number; color: string; path:
 
 export interface ActivityItem { text: string; time: string; type: string; }
 
+export interface AdminDashboardSummary {
+  totalUsers: number;
+  totalUsersChangeLabel: string;
+  activeCaregivers: number;
+  activeCaregiversChangeLabel: string;
+  revenueMonthLabel: string;
+  revenueThisMonthBdt: number;
+  revenueChangeLabel: string;
+  platformGrowthPercent: number;
+  platformGrowthChangeLabel: string;
+  pointsInCirculation: number;
+  pendingDuesCp: number;
+  contractsTotal: number;
+  platformRevenueCp: number;
+}
+
 export interface AdminDashboardData {
+  summary: AdminDashboardSummary;
   userGrowth: UserGrowthPoint[];
   revenueData: RevenuePoint[];
   pieData: PieSlice[];
@@ -93,6 +110,13 @@ export interface SystemPerformancePoint { time: string; latency: number; cpu: nu
 // ─── Moderator ───
 export interface ModerationQueueItem {
   id: number; type: string; content: string; reporter: string; time: string; priority: string;
+}
+
+export interface ModeratorDashboardStats {
+  pendingReviews: number;
+  openReports: number;
+  contentFlags: number;
+  resolvedToday: number;
 }
 
 export interface FlaggedContent {
@@ -176,6 +200,16 @@ export interface AuditLogsStat { label: string; val: string; }
 export interface AuditLogsData {
   stats: AuditLogsStat[];
   logs: AuditLogEntry[];
+}
+
+/** Recent high-severity rows from audit_logs for System Health */
+export interface SecurityAlertItem {
+  id: string;
+  title: string;
+  detail: string;
+  severity: "warning" | "critical";
+  timeLabel: string;
+  source?: string;
 }
 
 export interface CMSContentItem {

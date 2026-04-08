@@ -6,57 +6,19 @@ import type {
   HealthReportDataPoint, ScheduleEvent, UpcomingEvent,
   PatientDashboardVital, PatientDashboardMedication, PatientAppointment,
   MedicalRecord, PatientCondition, CareHistoryEntry,
-  PatientProfile, EmergencyData, PrivacyData,
+  PatientProfile,
+  EmergencyData,
+  PrivacyData,
 } from "@/backend/models";
-import {
-  MOCK_VITALS_DATA,
-  MOCK_MEDICATION_REMINDERS,
-  MOCK_HEALTH_REPORT_DATA,
-  MOCK_TODAY_EVENTS,
-  MOCK_UPCOMING_EVENTS,
-  MOCK_PATIENT_DASHBOARD_VITALS,
-  MOCK_PATIENT_DASHBOARD_MEDICATIONS,
-  MOCK_PATIENT_APPOINTMENTS,
-  MOCK_MEDICAL_RECORDS,
-  MOCK_PATIENT_CONDITIONS,
-  MOCK_PATIENT_ALLERGIES,
-  MOCK_CARE_HISTORY,
-  MOCK_PATIENT_PROFILE,
-  MOCK_EMERGENCY_DATA,
-  MOCK_PRIVACY_DATA,
-} from "@/backend/api/mock";
-import { USE_SUPABASE, sbRead, sbWrite, sb, currentUserId } from "./_sb";
+import { USE_SUPABASE, sbRead, sbWrite, sb, sbData, currentUserId, useInAppMockDataset } from "./_sb";
+import { demoOfflineDelayAndPick } from "./demoOfflineMock";
 
 const delay = (ms = 200) => new Promise((r) => setTimeout(r, ms));
-
-function isDemoAuthMode(): boolean {
-  if (typeof window === "undefined") return false;
-
-  try {
-    const mode = window.localStorage.getItem("carenet-auth-mode");
-    if (mode === "demo") return true;
-
-    const rawUser = window.localStorage.getItem("carenet-auth");
-    if (!rawUser) return false;
-    const parsed = JSON.parse(rawUser) as { id?: string; email?: string };
-    return (
-      typeof parsed.id === "string" && parsed.id.startsWith("demo-")
-    ) || (
-      typeof parsed.email === "string" && parsed.email.endsWith("@carenet.demo")
-    );
-  } catch {
-    return false;
-  }
-}
-
-function shouldUseSupabase(): boolean {
-  return USE_SUPABASE && !isDemoAuthMode();
-}
 
 export const patientService = {
   /** Get vitals time-series for charts */
   async getVitalsData(patientId?: string): Promise<VitalsReading[]> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       const pid = patientId || "me";
       return sbRead(`vitals:${pid}`, async () => {
         const userId = patientId || await currentUserId();
@@ -74,13 +36,12 @@ export const patientService = {
         }));
       });
     }
-    await delay();
-    return MOCK_VITALS_DATA;
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_VITALS_DATA);
   },
 
   /** Get medication reminders for today */
   async getMedicationReminders(): Promise<MedicationReminder[]> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       return sbRead("med-reminders", async () => {
         const userId = await currentUserId();
         const { data, error } = await sb().from("prescriptions")
@@ -99,12 +60,11 @@ export const patientService = {
         }));
       });
     }
-    await delay();
-    return MOCK_MEDICATION_REMINDERS;
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_MEDICATION_REMINDERS);
   },
 
   async getHealthReportData(): Promise<HealthReportDataPoint[]> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       return sbRead("health-report", async () => {
         const userId = await currentUserId();
         const { data, error } = await sb().from("patient_vitals")
@@ -120,12 +80,11 @@ export const patientService = {
         }));
       });
     }
-    await delay();
-    return MOCK_HEALTH_REPORT_DATA;
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_HEALTH_REPORT_DATA);
   },
 
   async getTodayEvents(): Promise<ScheduleEvent[]> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       return sbRead("today-events", async () => {
         const userId = await currentUserId();
         const today = new Date().toISOString().split("T")[0];
@@ -146,12 +105,11 @@ export const patientService = {
         }));
       });
     }
-    await delay();
-    return MOCK_TODAY_EVENTS;
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_TODAY_EVENTS);
   },
 
   async getUpcomingEvents(): Promise<UpcomingEvent[]> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       return sbRead("upcoming-events", async () => {
         const userId = await currentUserId();
         const today = new Date().toISOString().split("T")[0];
@@ -171,24 +129,26 @@ export const patientService = {
         }));
       });
     }
-    await delay();
-    return MOCK_UPCOMING_EVENTS;
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_UPCOMING_EVENTS);
   },
 
   /** Mark a medication as taken */
   async markMedicationTaken(medId: number): Promise<void> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       return sbWrite(async () => {
         // Would update a medication_tracking table — not yet created
         console.log(`[patient.service] Medication ${medId} marked as taken (Supabase)`);
       });
+    }
+    if (!useInAppMockDataset()) {
+      throw new Error("[CareNet] Connect Supabase or use Demo Access.");
     }
     await delay(100);
     console.log(`[patient.service] Medication ${medId} marked as taken`);
   },
 
   async getDashboardVitals(): Promise<PatientDashboardVital[]> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       return sbRead("dashboard-vitals", async () => {
         const userId = await currentUserId();
         const { data, error } = await sb().from("patient_vitals")
@@ -207,12 +167,11 @@ export const patientService = {
         ];
       });
     }
-    await delay();
-    return MOCK_PATIENT_DASHBOARD_VITALS;
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_PATIENT_DASHBOARD_VITALS);
   },
 
   async getDashboardMedications(): Promise<PatientDashboardMedication[]> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       return sbRead("dashboard-meds", async () => {
         const userId = await currentUserId();
         const { data, error } = await sb().from("prescriptions")
@@ -228,12 +187,11 @@ export const patientService = {
         }));
       });
     }
-    await delay();
-    return MOCK_PATIENT_DASHBOARD_MEDICATIONS;
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_PATIENT_DASHBOARD_MEDICATIONS);
   },
 
   async getAppointments(): Promise<PatientAppointment[]> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       return sbRead("appointments", async () => {
         const userId = await currentUserId();
         const { data, error } = await sb().from("daily_tasks")
@@ -254,12 +212,11 @@ export const patientService = {
         }));
       });
     }
-    await delay();
-    return MOCK_PATIENT_APPOINTMENTS;
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_PATIENT_APPOINTMENTS);
   },
 
   async getMedicalRecords(): Promise<MedicalRecord[]> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       return sbRead("medical-records", async () => {
         const userId = await currentUserId();
         const { data, error } = await sb().from("medical_records")
@@ -277,15 +234,14 @@ export const patientService = {
         }));
       });
     }
-    await delay();
-    return MOCK_MEDICAL_RECORDS;
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_MEDICAL_RECORDS);
   },
 
   async getConditions(): Promise<PatientCondition[]> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       return sbRead("conditions", async () => {
         const userId = await currentUserId();
-        const { data, error } = await sb().from("patients")
+        const { data, error } = await sbData().from("patients")
           .select("conditions")
           .eq("id", userId)
           .single();
@@ -299,15 +255,14 @@ export const patientService = {
         }));
       });
     }
-    await delay();
-    return MOCK_PATIENT_CONDITIONS;
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_PATIENT_CONDITIONS);
   },
 
   async getAllergies(): Promise<string[]> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       return sbRead("allergies", async () => {
         const userId = await currentUserId();
-        const { data, error } = await sb().from("patients")
+        const { data, error } = await sbData().from("patients")
           .select("conditions")
           .eq("id", userId)
           .single();
@@ -315,15 +270,14 @@ export const patientService = {
         return data?.conditions || [];
       });
     }
-    await delay();
-    return MOCK_PATIENT_ALLERGIES;
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_PATIENT_ALLERGIES);
   },
 
   async getCareHistory(): Promise<CareHistoryEntry[]> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       return sbRead("care-history", async () => {
         const userId = await currentUserId();
-        const { data, error } = await sb().from("shifts")
+        const { data, error } = await sbData().from("shifts")
           .select("*, caregiver_profiles!shifts_caregiver_id_fkey(name)")
           .eq("patient_id", userId)
           .eq("status", "completed")
@@ -342,15 +296,14 @@ export const patientService = {
         }));
       });
     }
-    await delay();
-    return MOCK_CARE_HISTORY;
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_CARE_HISTORY);
   },
 
   async getProfile(): Promise<PatientProfile> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       return sbRead("patient-profile", async () => {
         const userId = await currentUserId();
-        const { data, error } = await sb().from("patients")
+        const { data, error } = await sbData().from("patients")
           .select("*")
           .eq("id", userId)
           .single();
@@ -364,15 +317,25 @@ export const patientService = {
         };
       });
     }
-    await delay();
-    return MOCK_PATIENT_PROFILE;
+    const emptyProf: PatientProfile = {
+      name: "",
+      age: 0,
+      gender: "",
+      phone: "",
+      email: "",
+      address: "",
+      bloodType: "",
+      emergencyContact: { name: "", relation: "", phone: "" },
+      guardian: { name: "", role: "", since: "" },
+    };
+    return demoOfflineDelayAndPick(200, emptyProf, (m) => m.MOCK_PATIENT_PROFILE);
   },
 
   async getEmergencyData(): Promise<EmergencyData> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       return sbRead("emergency-data", async () => {
         const userId = await currentUserId();
-        const { data: patient, error: pErr } = await sb().from("patients")
+        const { data: patient, error: pErr } = await sbData().from("patients")
           .select("blood_group, conditions")
           .eq("id", userId)
           .single();
@@ -395,13 +358,17 @@ export const patientService = {
         };
       });
     }
-    await delay();
-    return MOCK_EMERGENCY_DATA;
+    const emptyEm: EmergencyData = {
+      contacts: [],
+      medical: { bloodGroup: "", allergies: "", chronic: "" },
+      location: "",
+    };
+    return demoOfflineDelayAndPick(200, emptyEm, (m) => m.MOCK_EMERGENCY_DATA);
   },
 
   /** Log an SOS event (local mock ring buffer or Supabase sos_events). */
   async triggerSos(payload?: { note?: string; lat?: number; lng?: number }): Promise<{ id: string }> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       return sbWrite(async () => {
         const userId = await currentUserId();
         const { data, error } = await sb().from("sos_events").insert({
@@ -413,6 +380,9 @@ export const patientService = {
         if (error) throw error;
         return { id: data.id };
       });
+    }
+    if (!useInAppMockDataset()) {
+      throw new Error("[CareNet] Connect Supabase or use Demo Access for SOS.");
     }
     await delay(150);
     const id = `sos-${Date.now()}`;
@@ -430,11 +400,10 @@ export const patientService = {
   },
 
   async getPrivacyData(): Promise<PrivacyData> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       return { authorized: [], accessLogs: [] };
     }
-    await delay();
-    return MOCK_PRIVACY_DATA;
+    return demoOfflineDelayAndPick(200, { authorized: [], accessLogs: [] } as PrivacyData, (m) => m.MOCK_PRIVACY_DATA);
   },
 };
 

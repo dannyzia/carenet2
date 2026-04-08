@@ -67,7 +67,7 @@ export function useContracts(
     const userId = role === "guardian" ? "guardian-1" : role === "agency" ? "agency-1" : "caregiver-1";
 
     const unsub = subscribeToMonetization(userId, (event) => {
-      if (event.table === "contracts" && event.type === "UPDATE") {
+      if (event.table === "care_contracts" && event.type === "UPDATE") {
         const p = event.payload;
         const contractId = (p.contract_number || p.id) as string;
         setContracts((prev) => prev.map((c) => {
@@ -87,7 +87,7 @@ export function useContracts(
         });
       }
 
-      if (event.table === "contract_offers" && event.type === "INSERT") {
+      if (event.table === "care_contract_bids" && event.type === "INSERT") {
         const p = event.payload;
         toast.info(t("contracts.toasts.newOffer"), {
           description: t("contracts.toasts.newOfferDesc", { name: p.offered_by_name, rate: formatPoints((p.points_per_day as number) || 0) }),
@@ -159,7 +159,7 @@ export function useContractDetail(contractId: string | undefined): UseContractDe
 
     // Use the "all" subscription since we don't know the userId context here
     const unsub = subscribeToAllMonetization((event) => {
-      if (event.table === "contracts" && event.type === "UPDATE") {
+      if (event.table === "care_contracts" && event.type === "UPDATE") {
         const p = event.payload;
         const evtId = (p.contract_number || p.id) as string;
         if (evtId === contractId) {
@@ -179,7 +179,7 @@ export function useContractDetail(contractId: string | undefined): UseContractDe
         }
       }
 
-      if (event.table === "contract_offers" && event.type === "INSERT") {
+      if (event.table === "care_contract_bids" && event.type === "INSERT") {
         const p = event.payload;
         if (p.contract_id === contractId) {
           toast.info(t("contracts.toasts.newOfferOnContract"), {
@@ -365,7 +365,7 @@ export function useAdminContracts(
   // Real-time: watch all contract changes
   useEffect(() => {
     const unsub = subscribeToAllMonetization((event) => {
-      if (event.table === "contracts" || event.table === "contract_offers") {
+      if (event.table === "care_contracts" || event.table === "care_contract_bids") {
         // Just refetch for simplicity in admin view
         fetchData();
       }

@@ -5,7 +5,7 @@ import type {
   GuardianPlacement, AgencyPlacement, CaregiverReview,
   RoleConversation, InlineChatMessage, ModeratorReview, ModeratorReport,
   DirectoryAgency, PlacementShift, AuditChartDataPoint,
-  ModerationQueueItem, FlaggedContent, SystemPerformancePoint,
+  ModerationQueueItem, ModeratorDashboardStats, FlaggedContent, SystemPerformancePoint,
   AuditLogsData, CMSPageData, DisputeData, PolicyData, PromoData,
   SupportTicketData, UserInspectorData, VerificationCaseData, AdminSettingsData,
   ModeratorSanction, ModeratorEscalation, ContractDispute,
@@ -13,6 +13,21 @@ import type {
 
 /** Admin dashboard aggregate data */
 export const MOCK_ADMIN_DASHBOARD: AdminDashboardData = {
+  summary: {
+    totalUsers: 5034,
+    totalUsersChangeLabel: "+12% this month",
+    activeCaregivers: 1520,
+    activeCaregiversChangeLabel: "142 pending verify",
+    revenueMonthLabel: "Mar",
+    revenueThisMonthBdt: 289000,
+    revenueChangeLabel: "+23% vs Feb",
+    platformGrowthPercent: 18,
+    platformGrowthChangeLabel: "Month-over-month",
+    pointsInCirculation: 10_200_000,
+    pendingDuesCp: 31020,
+    contractsTotal: 5,
+    platformRevenueCp: 20020,
+  },
   userGrowth: [
     { month: "Oct", caregivers: 820, guardians: 1100, patients: 650 },
     { month: "Nov", caregivers: 960, guardians: 1280, patients: 720 },
@@ -239,6 +254,13 @@ export const MOCK_AUDIT_CHART_DATA: AuditChartDataPoint[] = [
   { day: "20", rev: 140000, payout: 105000 }, { day: "25", rev: 210000, payout: 165000 },
   { day: "30", rev: 195000, payout: 150000 },
 ];
+
+export const MOCK_MODERATOR_DASHBOARD_STATS: ModeratorDashboardStats = {
+  pendingReviews: 18,
+  openReports: 8,
+  contentFlags: 5,
+  resolvedToday: 12,
+};
 
 // ─── Moderator Dashboard Queue ───
 export const MOCK_MODERATION_QUEUE: ModerationQueueItem[] = [

@@ -2,12 +2,18 @@
 import React, { useState, useEffect } from "react";
 import { UserPlus, Heart, Calendar, FileText, ShieldAlert, ChevronRight, Stethoscope, Activity, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { Button } from "@/frontend/components/ui/button";
-import { useNavigate, useSearchParams } from "react-router";
+import { useNavigate, useSearchParams, useLocation } from "react-router";
 import { PageHero } from "@/frontend/components/PageHero";
 import { cn } from "@/frontend/theme/tokens";
 import { useDocumentTitle } from "@/frontend/hooks";
 import { useTranslation } from "react-i18next";
 import { USE_SUPABASE, sbWrite, sb, currentUserId } from "@/backend/services/_sb";
+
+function sanitizeInternalReturnTo(raw: string | null | undefined): string | null {
+  if (!raw || typeof raw !== "string" || !raw.startsWith("/")) return null;
+  if (!raw.startsWith("/guardian/") && !raw.startsWith("/patient/")) return null;
+  return raw;
+}
 
 const MEDICAL_CONDITIONS = [
   "Diabetes", "Hypertension", "Dementia", "Post-Stroke", 
@@ -20,8 +26,12 @@ export default function PatientIntakePage() {
   useDocumentTitle(tDocTitle("pageTitles.patientIntake", "Patient Intake"));
 
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const editId = searchParams.get("edit");
+  const returnTo =
+    sanitizeInternalReturnTo((location.state as { returnTo?: string } | null)?.returnTo) ??
+    sanitizeInternalReturnTo(searchParams.get("returnTo"));
   const isEditing = !!editId;
 
   const [loading, setLoading] = useState(false);
@@ -139,8 +149,7 @@ export default function PatientIntakePage() {
         patients.push(newPatient);
         localStorage.setItem("mock_patients", JSON.stringify(patients));
       }
-      // On success, go to patients list
-      navigate("/guardian/patients");
+      navigate(returnTo ?? "/guardian/patients");
     } catch (err: any) {
       console.error("Failed to create patient:", err);
       alert(err.message || "Failed to create patient");

@@ -1,0 +1,249 @@
+[
+  {
+    "task_id": "agency-realtime-bids",
+    "priority": "high",
+    "dependencies": [],
+    "objective": "Add Supabase Realtime subscription on the agency side so agencies see bid accept/reject/counter events without polling.",
+    "inputs": [
+      "src/backend/services/realtime.ts — subscribeToCareContractBids()",
+      "Agency marketplace/bid pages (agency dashboard or bid list view)",
+      "Existing guardian-side pattern in GuardianMarketplaceHubPage.tsx and BidReviewPage.tsx"
+    ],
+    "constraints": [
+      "USE_SUPABASE guard — no-op in mock mode",
+      "Must not duplicate channels if the component re-renders",
+      "Unsubscribe on unmount"
+    ],
+    "deliverables": [
+      "Agency bid list page subscribes to care_contract_bids for the agency's own bids",
+      "UI updates (refetch or toast) when guardian accepts, rejects, or counters"
+    ],
+    "definition_of_done": [
+      "Agency logs in, submits a bid; guardian accepts → agency page updates without manual refresh",
+      "No console errors on mount/unmount cycle",
+      "Works in both Supabase and mock mode (mock = no-op)"
+    ],
+    "validation_steps": [
+      "Open two browser tabs: guardian + agency",
+      "Agency submits bid → guardian sees toast (already done)",
+      "Guardian accepts bid → agency page reflects updated bid status"
+    ],
+    "failure_conditions": [
+      "Channel leak: subscribing without cleanup on unmount",
+      "Subscribing when USE_SUPABASE is false and crashing",
+      "Showing stale data after accept/reject"
+    ]
+  },
+  {
+    "task_id": "cron-bid-expiry",
+    "priority": "high",
+    "dependencies": [],
+    "objective": "Schedule the marketplace-expire-bids Edge Function to run periodically so stale bids auto-expire.",
+    "inputs": [
+      "supabase/functions/marketplace-expire-bids/index.ts (already deployed)",
+      "SUPABASE_SERVICE_ROLE_KEY",
+      "Supabase Dashboard → Database → Extensions → pg_cron (or external scheduler)"
+    ],
+    "constraints": [
+      "Must use Bearer SERVICE_ROLE_KEY auth",
+      "Interval: every 15–60 minutes (pick based on bid expiry window — currently 12–24h)",
+      "Idempotent: multiple runs don't double-expire"
+    ],
+    "deliverables": [
+      "pg_cron job or external cron calling POST to marketplace-expire-bids endpoint",
+      "Verified: bids with expires_at in the past move to 'expired' status"
+    ],
+    "definition_of_done": [
+      "Create a bid with expires_at = now() - interval '1 hour'",
+      "Wait for cron tick (or trigger manually)",
+      "Bid status is 'expired'"
+    ],
+    "validation_steps": [
+      "Insert test bid with past expires_at via SQL editor",
+      "Invoke function manually: curl -X POST with Bearer token",
+      "Confirm bid status changed to 'expired'",
+      "Confirm cron schedule is registered (select * from cron.job)"
+    ],
+    "failure_conditions": [
+      "Cron never fires (misconfigured schedule or missing extension)",
+      "Auth fails (wrong key or missing Bearer prefix)",
+      "Function crashes on empty result set"
+    ]
+  },
+  {
+    "task_id": "rls-manual-qa",
+    "priority": "high",
+    "dependencies": [],
+    "objective": "Manually verify RLS policies on care_contracts and care_contract_bids by testing as guardian, agency, and unauthenticated roles.",
+    "inputs": [
+      "Live Supabase project with deployed RLS policies (cc_select_marketplace, cc_insert_own, cc_update_own, cc_delete_own, ccb_select, ccb_insert, ccb_update, ccb_delete)",
+      "At least one guardian account and one agency account"
+    ],
+    "constraints": [
+      "Do not disable RLS during testing",
+      "Test with real Supabase client (browser console or Postman with JWT)"
+    ],
+    "deliverables": [
+      "Test report: which queries return expected rows, which are correctly blocked",
+      "Fix any policy that leaks data or blocks legitimate access"
+    ],
+    "definition_of_done": [
+      "Guardian sees own requests + published listings only",
+      "Agency sees published requests + own offers only",
+      "Bids visible only to request owner + bidding agency",
+      "Bid INSERT blocked if contract is not published/bidding/matched",
+      "Unauthenticated user sees nothing (RLS blocks all)"
+    ],
+    "validation_steps": [
+      "As guardian: .from('care_contracts').select('*') → only own + published",
+      "As agency: .from('care_contracts').select('*') → published requests + own offers",
+      "As guardian: .from('care_contract_bids').select('*') → only bids on own requests",
+      "As agency: .from('care_contract_bids').select('*') → only own bids",
+      "As agency: insert bid on a draft contract → expect RLS error",
+      "As agency: insert bid on a published contract → expect success"
+    ],
+    "failure_conditions": [
+      "Guardian can see another guardian's draft requests",
+      "Agency can see bids from other agencies on requests they haven't bid on",
+      "Bid INSERT succeeds on a draft or cancelled contract",
+      "Any query returns rows belonging to another user"
+    ]
+  },
+  {
+    "task_id": "billing-and-payment-flow",
+    "priority": "medium",
+    "dependencies": ["rls-manual-qa"],
+    "objective": "Build the bill generation → payment confirmation → receipt verification flow using existing invoices + payment_proofs tables. No external gateway — payer confirms manual payment (bank/bKash/Nagad) with reference number, receiver confirms receipt.",
+    "inputs": [
+      "Existing DB tables: invoices (from/to party, status, line items), payment_proofs (method, reference_number, screenshot_url, status), invoice_line_items",
+      "Invoice statuses: unpaid → proof_submitted → verified → paid",
+      "Payment proof methods: bkash, nagad, rocket, bank_transfer, cash",
+      "src/backend/services/billing.service.ts (existing service)",
+      "src/backend/models/billing.model.ts (existing model)"
+    ],
+    "constraints": [
+      "No external payment gateway integration — manual payment confirmation only",
+      "Every entity (guardian, agency, caregiver) must have a Bills & Payments section",
+      "Invoice generated after care contract reaches 'completed' status",
+      "Payer submits: amount, payment method (bKash/Nagad/Rocket/bank/cash), reference number, optional screenshot",
+      "Receiver gets notification → confirms receipt → invoice moves to 'verified' then 'paid'",
+      "Wallets table does NOT exist yet — decide whether to add a ledger or rely on invoice history as the financial record"
+    ],
+    "deliverables": [
+      "Bill generation: system creates invoice row when contract completes (or manually by agency)",
+      "Payer view: see unpaid bills, submit payment proof (amount, method, reference number, screenshot)",
+      "Receiver view: see pending proofs, confirm or reject receipt",
+      "Notification: real-time notification to receiver when proof is submitted, to payer when receipt is confirmed/rejected",
+      "Bills & Payments page accessible from guardian, agency, and caregiver dashboards",
+      "RLS: invoice parties only; payment proof parties only (already in schema)"
+    ],
+    "definition_of_done": [
+      "Contract completes → invoice auto-generated with correct line items and total",
+      "Guardian opens Bills page → sees unpaid invoice → submits payment proof with bKash reference",
+      "Agency gets notification → opens Bills page → sees proof → clicks 'Confirm Receipt'",
+      "Invoice status: unpaid → proof_submitted → verified",
+      "Both parties can view payment history"
+    ],
+    "validation_steps": [
+      "Complete a care contract → verify invoice row created in invoices table",
+      "As payer: submit payment proof → verify payment_proofs row with correct method and reference",
+      "As receiver: confirm receipt → verify invoice status updated to 'verified'",
+      "Verify notification sent on proof submission and on receipt confirmation",
+      "Verify RLS: payer cannot see other users' invoices; receiver cannot see other receivers' proofs"
+    ],
+    "failure_conditions": [
+      "Invoice generated with wrong party IDs or amounts",
+      "Payment proof accepted without required fields (method, reference_number)",
+      "Receiver can confirm receipt on someone else's invoice",
+      "No notification sent — receiver never knows payment was submitted",
+      "Duplicate invoices generated for same completed contract"
+    ],
+    "product_decisions": {
+      "wallet_ledger": "Decide: add a wallets table for running balance per entity, or use invoice history only. Recommendation: start with invoice history — wallets add complexity (credits, debits, reconciliation) that isn't needed until you have volume.",
+      "auto_vs_manual_invoice": "Decide: auto-generate invoice on contract completion, or let agency create manually. Recommendation: auto-generate with manual override (agency can edit line items before sending).",
+      "payment_methods": "Supported: bKash, Nagad, Rocket, bank_transfer, cash (already in payment_proofs CHECK constraint)."
+    }
+  },
+  {
+    "task_id": "matching-engine-scoring",
+    "priority": "medium",
+    "dependencies": ["rls-manual-qa"],
+    "objective": "Replace the matching-run stub with real scoring logic using a config-driven weights JSON file. Rank agencies by city overlap, category fit, and price range.",
+    "inputs": [
+      "supabase/functions/matching-run/index.ts (stub deployed)",
+      "care_contracts table (request: city, categories, pricing)",
+      "care_contracts table (offers: agency packages with city, category, base_price)",
+      "Spec: packages-1.md §1.4 Matching Engine"
+    ],
+    "constraints": [
+      "Run server-side only (Edge Function or DB function) — not in browser",
+      "Respect RLS: caller must own the contract or be admin",
+      "Return top N matches with explainable scores",
+      "Weights and signals must be in a JSON config file (not hardcoded) so they can be tuned without code changes"
+    ],
+    "deliverables": [
+      "src/config/matching-weights.json — signal weights config: { city_match: 40, category_overlap: 35, price_fit: 25 }",
+      "matching-run Edge Function reads weights from config and scores agencies",
+      "Score formula: city_score (exact match = full weight, else 0), category_score (overlap ratio * weight), price_score (within budget = full weight, within 20% overshoot = half, else 0)",
+      "Response includes per-agency score breakdown with reasons",
+      "Optional: persist scores in a match_scores table for caching"
+    ],
+    "definition_of_done": [
+      "POST /matching-run with a published request contract_id → returns ranked agencies with scores",
+      "Agencies in same city score higher than those outside",
+      "Agencies matching all requested categories score higher",
+      "Scores are deterministic for same input data",
+      "Changing matching-weights.json values changes scores without code deployment"
+    ],
+    "validation_steps": [
+      "Create a request in Dhaka for elderly + chronic care",
+      "Create 3 agency packages: Dhaka+elderly, Dhaka+baby, Chittagong+elderly",
+      "Call matching-run → Dhaka+elderly ranks first",
+      "Verify score breakdown in response",
+      "Change city_match weight in JSON → re-run → scores shift proportionally"
+    ],
+    "failure_conditions": [
+      "Returning agencies the caller can't see (RLS bypass)",
+      "Non-deterministic scores on same data",
+      "Timeout on large dataset (optimize query if > 2s)",
+      "Missing score explanation (opaque ranking)",
+      "Hardcoded weights that require code changes to tune"
+    ]
+  },
+  {
+    "task_id": "lifecycle-integration-test",
+    "priority": "low",
+    "dependencies": [],
+    "objective": "Write an integration test against the real Supabase DB proving the lifecycle trigger rejects invalid transitions.",
+    "inputs": [
+      "Linked Supabase project with lifecycle trigger deployed",
+      "Vitest or Playwright test harness",
+      "Test user credentials (guardian)"
+    ],
+    "constraints": [
+      "Test against live DB (not mock)",
+      "Clean up test data after each run",
+      "Must not interfere with production data"
+    ],
+    "deliverables": [
+      "Test file: insert draft contract, try update to 'active' → expect Postgres error",
+      "Test: draft → published → bidding → locked (valid path) → succeeds",
+      "Test: insert with status = 'active' → expect INSERT trigger rejection"
+    ],
+    "definition_of_done": [
+      "Test passes in CI with USE_SUPABASE=true",
+      "Invalid transitions produce check_violation error",
+      "Valid transitions succeed without error"
+    ],
+    "validation_steps": [
+      "npx vitest run <test-file> with live Supabase credentials",
+      "All assertions pass",
+      "No leftover test rows in care_contracts"
+    ],
+    "failure_conditions": [
+      "Test passes even when trigger is missing (false positive)",
+      "Test data leaks into production",
+      "Flaky due to network or auth timeout"
+    ]
+  }
+]

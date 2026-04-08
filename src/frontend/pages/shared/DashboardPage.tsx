@@ -15,6 +15,7 @@ import { useDocumentTitle } from "@/frontend/hooks";
  */
 export default function DashboardPage() {
   const { t: tDocTitle } = useTranslation("common");
+  const { t: tDash } = useTranslation("dashboard");
   useDocumentTitle(tDocTitle("pageTitles.dashboard", "Dashboard"));
 
   const navigate = useTransitionNavigate();
@@ -42,7 +43,7 @@ export default function DashboardPage() {
           style={{ borderColor: cn.pink, borderTopColor: "transparent" }}
         />
         <p className="text-sm" style={{ color: cn.textSecondary }}>
-          Redirecting to your dashboard...
+          {tDash("shared.redirecting")}
         </p>
       </div>
     </div>

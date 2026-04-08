@@ -48,7 +48,12 @@ export type ContractStatus =
   | "active"
   | "completed"
   | "rated"
-  | "cancelled";
+  | "cancelled"
+  /** Operational anomalies (DB + lifecycle; see contractLifecycle.ts) */
+  | "no_show"
+  | "replacement_required"
+  | "escalated"
+  | "refunded";
 
 export type BidStatus = "pending" | "accepted" | "rejected" | "countered" | "expired" | "withdrawn";
 

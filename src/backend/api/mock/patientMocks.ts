@@ -55,9 +55,9 @@ export const MOCK_UPCOMING_EVENTS: UpcomingEvent[] = [
 
 // ─── Patient Dashboard Data ───
 export const MOCK_PATIENT_DASHBOARD_VITALS: PatientDashboardVital[] = [
-  { label: "Blood Pressure", value: "130/85", unit: "mmHg", color: "#DB869A", status: "Slightly High", trend: "\u25B2" },
-  { label: "Blood Glucose", value: "142", unit: "mg/dL", color: "#E8A838", status: "Borderline", trend: "\u2192" },
-  { label: "Pulse Rate", value: "72", unit: "bpm", color: "#5FB865", status: "Normal", trend: "\u2192" },
+  { vitalKey: "bloodPressure", label: "Blood Pressure", value: "130/85", unit: "mmHg", color: "#DB869A", status: "Slightly High", trend: "\u25B2" },
+  { vitalKey: "bloodGlucose", label: "Blood Glucose", value: "142", unit: "mg/dL", color: "#E8A838", status: "Borderline", trend: "\u2192" },
+  { vitalKey: "pulseRate", label: "Pulse Rate", value: "72", unit: "bpm", color: "#5FB865", status: "Normal", trend: "\u2192" },
 ];
 export const MOCK_PATIENT_DASHBOARD_MEDICATIONS: PatientDashboardMedication[] = [
   { name: "Metformin 500mg", time: "8:00 AM", taken: true },

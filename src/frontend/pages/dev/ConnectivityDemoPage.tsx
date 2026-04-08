@@ -43,6 +43,7 @@ import {
   _unregisterChannel,
   getChannelHeartbeats,
   CHANNEL_STALE_PRESETS,
+  adminMonetizationChannelName,
 } from "@/backend/services/realtime";
 import { ChannelHealthSparkline } from "@/frontend/components/shared/ChannelHealthSparkline";
 import { useTranslation } from "react-i18next";
@@ -126,12 +127,14 @@ function SimButton({
 // Per-Channel Heartbeat Simulation
 // ═══════════════════════════════════════════════════════════════════════
 
-const PRESET_CHANNELS = [
-  { id: "wallet:demo-user", preset: "wallet" as const, label: "Wallet (30s)" },
-  { id: "contracts:demo-user", preset: "contract" as const, label: "Contract (45s)" },
-  { id: "admin:monetization", preset: "admin" as const, label: "Admin (120s)" },
-  { id: "general:notifications", preset: "default" as const, label: "Default (60s)" },
-] as const;
+function getHeartbeatPresetChannels() {
+  return [
+    { id: "wallet:demo-user", preset: "wallet" as const, label: "Wallet (30s)" },
+    { id: "contracts:demo-user", preset: "contract" as const, label: "Contract (45s)" },
+    { id: adminMonetizationChannelName(), preset: "admin" as const, label: "Admin (120s)" },
+    { id: "general:notifications", preset: "default" as const, label: "Default (60s)" },
+  ];
+}
 
 function ChannelSimCard({ info }: { info: ConnectivityDebugInfo }) {
   const [registered, setRegistered] = useState<Set<string>>(new Set());
@@ -151,17 +154,18 @@ function ChannelSimCard({ info }: { info: ConnectivityDebugInfo }) {
   }, []);
 
   const handleUnregisterAll = useCallback(() => {
-    for (const ch of PRESET_CHANNELS) {
+    for (const ch of getHeartbeatPresetChannels()) {
       _unregisterChannel(ch.id);
     }
     setRegistered(new Set());
   }, []);
 
   const handleRegisterAll = useCallback(() => {
-    for (const ch of PRESET_CHANNELS) {
+    const presets = getHeartbeatPresetChannels();
+    for (const ch of presets) {
       _registerChannel(ch.id, CHANNEL_STALE_PRESETS[ch.preset]);
     }
-    setRegistered(new Set(PRESET_CHANNELS.map((c) => c.id)));
+    setRegistered(new Set(presets.map((c) => c.id)));
   }, []);
 
   const handleTargetedMessage = useCallback((channelId: string) => {
@@ -197,7 +201,7 @@ function ChannelSimCard({ info }: { info: ConnectivityDebugInfo }) {
 
       {/* Individual channel controls */}
       <div className="space-y-1.5">
-        {PRESET_CHANNELS.map((ch) => {
+        {getHeartbeatPresetChannels().map((ch) => {
           const isRegistered = registered.has(ch.id);
           const liveState = info.channelHeartbeats.find((h) => h.channelId === ch.id);
           const statusColor = liveState
@@ -561,7 +565,7 @@ export default function ConnectivityDemoPage() {
   const handleSimulateOffer = useCallback(() => {
     simulateNewOffer({
       contract_id: `CTR-2026-${String(Math.floor(Math.random() * 9999)).padStart(4, "0")}`,
-      offered_by_name: ["CareFirst Agency", "HomeCare BD", "NursePlus", "CareNet Pro"][
+      offered_by_name: ["Mock_CareFirst Agency", "HomeCare BD", "NursePlus", "CareNet Pro"][
         Math.floor(Math.random() * 4)
       ],
       points_per_day: Math.floor(Math.random() * 5000) + 4000,

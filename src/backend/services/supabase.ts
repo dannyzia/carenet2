@@ -3,8 +3,8 @@
  * ────────────────────────
  * Uses @supabase/supabase-js with env vars injected by Figma Make / Vercel.
  *
- * Toggle USE_SUPABASE to switch between real Supabase and mock data.
- * When env vars are missing, falls back to mock mode automatically.
+ * Toggle USE_SUPABASE: real PostgREST when URL/key are set (and not Playwright mock mode).
+ * When env vars are missing, services return empty shapes unless the user is a demo session.
  */
 
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
@@ -14,14 +14,19 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "";
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
 
 /**
- * Playwright sets `VITE_PLAYWRIGHT_E2E` on the dev server; vite.config `define` injects this
- * so mock mode works even when `import.meta.env` omits ad-hoc VITE_* keys.
+ * Playwright sets `VITE_PLAYWRIGHT_E2E` on the dev server; vite.config `define` also injects
+ * `__CARENET_PLAYWRIGHT_E2E__` so bundled code forces mock mode. We check both: some dev/preview
+ * paths expose the env var while `define` is missing from a prebundle edge case.
  */
-declare const __CARENET_PLAYWRIGHT_E2E__: boolean;
-const E2E_FORCE_MOCK = typeof __CARENET_PLAYWRIGHT_E2E__ !== "undefined" && __CARENET_PLAYWRIGHT_E2E__;
+declare const __CARENET_PLAYWRIGHT_E2E__: boolean | undefined;
+
+function isPlaywrightE2EMock(): boolean {
+  if (import.meta.env.VITE_PLAYWRIGHT_E2E === "true") return true;
+  return typeof __CARENET_PLAYWRIGHT_E2E__ !== "undefined" && !!__CARENET_PLAYWRIGHT_E2E__;
+}
 
 /** Set to true to use real Supabase. Auto-disables if env vars are missing. */
-export const USE_SUPABASE = !E2E_FORCE_MOCK && !!(SUPABASE_URL && SUPABASE_ANON_KEY);
+export const USE_SUPABASE = !isPlaywrightE2EMock() && !!(SUPABASE_URL && SUPABASE_ANON_KEY);
 
 // ─── Singleton client ───
 let _client: SupabaseClient | null = null;
@@ -31,7 +36,7 @@ export function getSupabaseClient(): SupabaseClient {
 
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     console.log(
-      "[CareNet] Supabase not configured. Using mock data.\n" +
+      "[CareNet] Supabase URL/key not set — API layers return empty data unless you use Demo Access (@carenet.demo).\n" +
       "Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to connect."
     );
     // Return a minimal client that won't crash — services check USE_SUPABASE first

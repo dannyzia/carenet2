@@ -2,10 +2,10 @@
  * Notification Service — business logic layer
  */
 import type { AppNotification } from "@/backend/models";
-import { MOCK_NOTIFICATIONS } from "@/backend/api/mock";
 import { emitBillingNotification } from "@/frontend/hooks/useBillingNotifications";
 import { USE_SUPABASE, getSupabaseClient } from "./supabase";
-import { sbRead, sbWrite, sb, currentUserId } from "./_sb";
+import { sbRead, sbWrite, sb, currentUserId, useInAppMockDataset } from "./_sb";
+import { demoOfflineDelayAndPick } from "./demoOfflineMock";
 
 const delay = (ms = 200) => new Promise((r) => setTimeout(r, ms));
 
@@ -46,6 +46,8 @@ async function pushBillingNotification(payload: {
     return;
   }
 
+  if (!useInAppMockDataset()) return;
+
   // Mock mode: emit locally so the hook fires a toast
   emitBillingNotification({
     id: `bn-${Date.now()}`,
@@ -82,8 +84,7 @@ export const notificationService = {
         }));
       });
     }
-    await delay();
-    return MOCK_NOTIFICATIONS;
+    return demoOfflineDelayAndPick(200, [] as AppNotification[], (m) => m.MOCK_NOTIFICATIONS);
   },
 
   /** Mark a notification as read */

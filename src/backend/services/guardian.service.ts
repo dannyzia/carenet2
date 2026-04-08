@@ -5,70 +5,127 @@ import type {
   Patient, SpendingDataPoint, FamilyMember,
   GuardianPlacement,
   GuardianDashboardPatient, CareRequirementMessage, WizardAgency,
+  CareRequirement,
   GuardianTransaction, GuardianInvoice, GuardianAppointment,
   GuardianTodayEvent, PastCaregiverReview, ReceivedReview,
   PlacementShiftHistory, CaregiverTimelineEntry, GuardianActivity,
+  GuardianDashboardAlert, GuardianDashboardSummary,
   AgencyPublicProfile, CaregiverPublicProfile, ComparisonCaregiver,
-  GuardianProfile, InvoiceDetail,
+  GuardianProfile,
+  InvoiceDetail,
+  CareContract,
 } from "@/backend/models";
 import {
-  MOCK_INCIDENT_HISTORY,
-  MOCK_GUARDIAN_PATIENTS,
-  MOCK_GUARDIAN_SPENDING,
-  MOCK_FAMILY_MEMBERS,
-  MOCK_GUARDIAN_PLACEMENTS,
-  MOCK_GUARDIAN_DASHBOARD_PATIENTS,
-  MOCK_CARE_REQUIREMENT_MESSAGES,
-  MOCK_WIZARD_AGENCIES,
-  MOCK_GUARDIAN_TRANSACTIONS,
-  MOCK_GUARDIAN_INVOICES,
-  MOCK_GUARDIAN_APPOINTMENTS,
-  MOCK_GUARDIAN_TODAY_EVENTS,
-  MOCK_PAST_CAREGIVERS,
-  MOCK_RECEIVED_REVIEWS,
-  MOCK_PLACEMENT_SHIFT_HISTORY,
-  MOCK_CAREGIVER_TIMELINE,
-  MOCK_GUARDIAN_RECENT_ACTIVITY,
-  MOCK_AGENCY_PUBLIC_PROFILE,
-  MOCK_CAREGIVER_PUBLIC_PROFILE,
-  MOCK_COMPARISON_CAREGIVERS,
-  MOCK_GUARDIAN_PROFILE,
-  MOCK_INVOICE_DETAIL,
-} from "@/backend/api/mock";
-import { USE_SUPABASE, sbRead, sbWrite, sb, currentUserId } from "./_sb";
+  USE_SUPABASE,
+  sbRead,
+  sbWrite,
+  sb,
+  sbData,
+  currentUserId,
+  dataCacheScope,
+  withDemoExpiry,
+  useInAppMockDataset,
+} from "./_sb";
+import { marketplaceService } from "./marketplace.service";
+import { loadMockBarrel } from "@/backend/api/mock/loadMockBarrel";
+import { demoOfflineDelayAndPick } from "./demoOfflineMock";
 
 const delay = (ms = 200) => new Promise((r) => setTimeout(r, ms));
 
-function isDemoAuthMode(): boolean {
-  if (typeof window === "undefined") return false;
-
-  try {
-    const mode = window.localStorage.getItem("carenet-auth-mode");
-    if (mode === "demo") return true;
-
-    const rawUser = window.localStorage.getItem("carenet-auth");
-    if (!rawUser) return false;
-    const parsed = JSON.parse(rawUser) as { id?: string; email?: string };
-    return (
-      typeof parsed.id === "string" && parsed.id.startsWith("demo-")
-    ) || (
-      typeof parsed.email === "string" && parsed.email.endsWith("@carenet.demo")
-    );
-  } catch {
-    return false;
-  }
+function normalizeStoredMockPatient(raw: unknown): Patient | null {
+  if (!raw || typeof raw !== "object") return null;
+  const p = raw as Record<string, unknown>;
+  const id = p.id != null ? String(p.id) : null;
+  const name = typeof p.name === "string" ? p.name : "";
+  if (!id || !name.trim()) return null;
+  const g =
+    p.gender === "Male" || p.gender === "Female" || p.gender === "Other"
+      ? p.gender
+      : "Other";
+  const st = String(p.status ?? "active").toLowerCase();
+  const status: Patient["status"] =
+    st === "inactive" || st === "discharged" ? st : "active";
+  return {
+    id,
+    name,
+    age: typeof p.age === "number" ? p.age : parseInt(String(p.age), 10) || 0,
+    gender: g,
+    relation: typeof p.relation === "string" ? p.relation : undefined,
+    bloodGroup: typeof p.bloodGroup === "string" ? p.bloodGroup : undefined,
+    dob: typeof p.dob === "string" ? p.dob : undefined,
+    location: typeof p.location === "string" ? p.location : "",
+    phone: typeof p.phone === "string" ? p.phone : undefined,
+    emergencyContactName:
+      typeof p.emergencyContactName === "string" ? p.emergencyContactName : undefined,
+    conditions: Array.isArray(p.conditions)
+      ? p.conditions.filter((c): c is string => typeof c === "string")
+      : [],
+    status,
+    avatar: typeof p.avatar === "string" ? p.avatar : undefined,
+    color: typeof p.color === "string" ? p.color : undefined,
+  };
 }
 
-function shouldUseSupabase(): boolean {
-  return USE_SUPABASE && !isDemoAuthMode();
+/** Map marketplace care_contract row shape → Care Requirements list card (guardian UI). */
+function mapCareContractToCareRequirement(c: CareContract): CareRequirement {
+  const listStatus = ((): CareRequirement["status"] => {
+    switch (c.status) {
+      case "draft": return "draft";
+      case "published":
+      case "bidding": return "submitted";
+      case "matched": return "reviewing";
+      case "locked":
+      case "booked": return "job-created";
+      case "active": return "active";
+      case "completed":
+      case "rated": return "completed";
+      case "cancelled": return "cancelled";
+      default: return "submitted";
+    }
+  })();
+  const cats = Array.isArray(c.meta?.category) ? c.meta!.category!.filter(Boolean).map(String) : [];
+  const careType = cats.length > 0 ? cats.join(", ") : (c.meta?.title ? String(c.meta.title).slice(0, 80) : "Care request");
+  const sched = c.schedule as { start_date?: string; pattern?: string; shift_type?: string } | undefined;
+  const scheduleParts: string[] = [];
+  if (sched?.start_date) scheduleParts.push(String(sched.start_date));
+  if (sched?.pattern) scheduleParts.push(String(sched.pattern));
+  if (sched?.shift_type) scheduleParts.push(`${sched.shift_type} shift`);
+  const schedule = scheduleParts.length > 0 ? scheduleParts.join(" · ") : "Schedule TBD";
+  const pr = c.pricing as { budget_min?: number; budget_max?: number; pricing_model?: string } | undefined;
+  const bm = pr?.budget_min != null ? Number(pr.budget_min) : null;
+  const bx = pr?.budget_max != null ? Number(pr.budget_max) : null;
+  const budget =
+    bm != null || bx != null
+      ? `\u09F3 ${(bm ?? 0).toLocaleString()} – \u09F3 ${(bx ?? 0).toLocaleString()}${pr?.pricing_model === "daily" ? "/day" : pr?.pricing_model === "hourly" ? "/hr" : "/mo"}`
+      : "Budget TBD";
+  const submitted = new Date(c.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  const note =
+    c.status === "published" || c.status === "bidding"
+      ? "Posted to marketplace — agencies can bid"
+      : c.status === "draft"
+        ? "Draft — not yet published"
+        : c.meta?.title
+          ? String(c.meta.title).slice(0, 120)
+          : "";
+  return {
+    id: c.id,
+    patient: c.party?.name || "Patient",
+    careType,
+    agency: "Marketplace / agencies",
+    schedule,
+    budget,
+    submitted,
+    status: listStatus,
+    note,
+  };
 }
 
 export const guardianService = {
   async getPatients(): Promise<Patient[]> {
-    if (shouldUseSupabase()) {
-      return sbRead("gd:patients", async () => {
+    if (USE_SUPABASE) {
+      return sbRead(`gd:patients:${dataCacheScope()}`, async () => {
         const userId = await currentUserId();
-        const { data, error } = await sb().from("patients")
+        const { data, error } = await sbData().from("patients")
           .select("*")
           .eq("guardian_id", userId)
           .order("created_at", { ascending: false });
@@ -83,21 +140,31 @@ export const guardianService = {
         }));
       });
     }
-    // Mock mode - check localStorage first, then fallback to static mocks
-    const stored = typeof localStorage !== "undefined" ? localStorage.getItem("mock_patients") : null;
-    const storedPatients = stored ? JSON.parse(stored) : [];
-    if (storedPatients.length > 0) {
-      return storedPatients;
+    if (!useInAppMockDataset()) return [];
+    // Mock mode — only patients this guardian added (localStorage); no global demo list
+    let parsed: unknown[] = [];
+    if (typeof localStorage !== "undefined") {
+      const stored = localStorage.getItem("mock_patients");
+      if (stored) {
+        try {
+          const raw = JSON.parse(stored) as unknown;
+          parsed = Array.isArray(raw) ? raw : [];
+        } catch {
+          parsed = [];
+        }
+      }
     }
     await delay();
-    return MOCK_GUARDIAN_PATIENTS;
+    return parsed
+      .map(normalizeStoredMockPatient)
+      .filter((x): x is Patient => x != null);
   },
 
   async getSpendingData(): Promise<SpendingDataPoint[]> {
-    if (shouldUseSupabase()) {
-      return sbRead("gd:spending", async () => {
+    if (USE_SUPABASE) {
+      return sbRead(`gd:spending:${dataCacheScope()}`, async () => {
         const userId = await currentUserId();
-        const { data, error } = await sb().from("invoices")
+        const { data, error } = await sbData().from("invoices")
           .select("issued_date, total, status")
           .eq("to_party_id", userId)
           .order("issued_date", { ascending: true });
@@ -116,26 +183,24 @@ export const guardianService = {
         }));
       });
     }
-    await delay();
-    return MOCK_GUARDIAN_SPENDING;
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_GUARDIAN_SPENDING);
   },
 
   async getFamilyMembers(): Promise<FamilyMember[]> {
-    if (shouldUseSupabase()) {
-      return sbRead("gd:family", async () => {
+    if (USE_SUPABASE) {
+      return sbRead(`gd:family:${dataCacheScope()}`, async () => {
         // No dedicated family_members table yet — return empty for real users
         return [];
       });
     }
-    await delay();
-    return MOCK_FAMILY_MEMBERS;
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_FAMILY_MEMBERS);
   },
 
   async getPlacements(): Promise<GuardianPlacement[]> {
-    if (shouldUseSupabase()) {
-      return sbRead("gd:placements", async () => {
+    if (USE_SUPABASE) {
+      return sbRead(`gd:placements:${dataCacheScope()}`, async () => {
         const userId = await currentUserId();
-        const { data, error } = await sb().from("placements")
+        const { data, error } = await sbData().from("placements")
           .select("*")
           .eq("guardian_id", userId)
           .order("created_at", { ascending: false });
@@ -148,15 +213,14 @@ export const guardianService = {
         }));
       });
     }
-    await delay();
-    return MOCK_GUARDIAN_PLACEMENTS;
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_GUARDIAN_PLACEMENTS);
   },
 
   async getDashboardPatients(): Promise<GuardianDashboardPatient[]> {
-    if (shouldUseSupabase()) {
-      return sbRead("gd:dashboard-patients", async () => {
+    if (USE_SUPABASE) {
+      return sbRead(`gd:dashboard-patients:${dataCacheScope()}`, async () => {
         const userId = await currentUserId();
-        const { data, error } = await sb().from("patients")
+        const { data, error } = await sbData().from("patients")
           .select("id, name, age, conditions, status")
           .eq("guardian_id", userId)
           .order("created_at", { ascending: false });
@@ -172,25 +236,81 @@ export const guardianService = {
         }));
       });
     }
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_GUARDIAN_DASHBOARD_PATIENTS);
+  },
+
+  async getDashboardAlerts(): Promise<GuardianDashboardAlert[]> {
+    if (USE_SUPABASE) {
+      return sbRead(`gd:dashboard-alerts:${dataCacheScope()}`, async () => []);
+    }
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_GUARDIAN_DASHBOARD_ALERTS);
+  },
+
+  async getDashboardSummary(): Promise<GuardianDashboardSummary> {
+    if (USE_SUPABASE) {
+      return sbRead(`gd:dashboard-summary:${dataCacheScope()}`, async () => {
+        const [placements, spending] = await Promise.all([
+          guardianService.getPlacements(),
+          guardianService.getSpendingData(),
+        ]);
+        const activePlacements = placements.filter((p) =>
+          String(p.status).toLowerCase().includes("active")
+        ).length;
+        const lastSpend = spending[spending.length - 1]?.amount ?? 0;
+        if (useInAppMockDataset()) {
+          const base = (await loadMockBarrel()).MOCK_GUARDIAN_DASHBOARD_SUMMARY;
+          return {
+            activePlacements: activePlacements || placements.length || base.activePlacements,
+            monthlySpendBdt: lastSpend || base.monthlySpendBdt,
+            totalSessions: base.totalSessions,
+          };
+        }
+        return {
+          activePlacements: activePlacements || placements.length,
+          monthlySpendBdt: lastSpend,
+          totalSessions: 0,
+        };
+      });
+    }
     await delay();
-    return MOCK_GUARDIAN_DASHBOARD_PATIENTS;
+    const placements = await guardianService.getPlacements();
+    const active = placements.filter((p) => String(p.status).toLowerCase().includes("active")).length;
+    if (!useInAppMockDataset()) {
+      return {
+        activePlacements: active || placements.length,
+        monthlySpendBdt: 0,
+        totalSessions: 0,
+      };
+    }
+    const base = (await loadMockBarrel()).MOCK_GUARDIAN_DASHBOARD_SUMMARY;
+    return {
+      ...base,
+      activePlacements: active || base.activePlacements,
+    };
+  },
+
+  async getCareRequirements(): Promise<CareRequirement[]> {
+    if (USE_SUPABASE) {
+      const contracts = await marketplaceService.getMyRequests();
+      return contracts.map(mapCareContractToCareRequirement);
+    }
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_CARE_REQUIREMENTS);
   },
 
   async getCareRequirementMessages(_reqId: string): Promise<CareRequirementMessage[]> {
-    if (shouldUseSupabase()) {
-      return sbRead(`gd:care-req-msgs:${_reqId}`, async () => {
+    if (USE_SUPABASE) {
+      return sbRead(`gd:care-req-msgs:${dataCacheScope()}:${_reqId}`, async () => {
         // Care requirement messages are a messaging feature not yet in the schema
         return [];
       });
     }
-    await delay();
-    return MOCK_CARE_REQUIREMENT_MESSAGES;
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_CARE_REQUIREMENT_MESSAGES);
   },
 
   async getWizardAgencies(): Promise<WizardAgency[]> {
-    if (shouldUseSupabase()) {
-      return sbRead("gd:wizard-agencies", async () => {
-        const { data, error } = await sb().from("agencies")
+    if (USE_SUPABASE) {
+      return sbRead(`gd:wizard-agencies:${dataCacheScope()}`, async () => {
+        const { data, error } = await sbData().from("agencies")
           .select("id, name, rating, reviews, location, specialties, verified")
           .eq("verified", true)
           .order("rating", { ascending: false })
@@ -207,15 +327,14 @@ export const guardianService = {
         }));
       });
     }
-    await delay();
-    return MOCK_WIZARD_AGENCIES;
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_WIZARD_AGENCIES);
   },
 
   async getPaymentTransactions(): Promise<GuardianTransaction[]> {
-    if (shouldUseSupabase()) {
-      return sbRead("gd:transactions", async () => {
+    if (USE_SUPABASE) {
+      return sbRead(`gd:transactions:${dataCacheScope()}`, async () => {
         const userId = await currentUserId();
-        const { data, error } = await sb().from("invoices")
+        const { data, error } = await sbData().from("invoices")
           .select("id, description, issued_date, total, status, from_party_name, to_party_id")
           .eq("to_party_id", userId)
           .order("issued_date", { ascending: false });
@@ -231,15 +350,14 @@ export const guardianService = {
         }));
       });
     }
-    await delay();
-    return MOCK_GUARDIAN_TRANSACTIONS;
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_GUARDIAN_TRANSACTIONS);
   },
 
   async getInvoices(): Promise<GuardianInvoice[]> {
-    if (shouldUseSupabase()) {
-      return sbRead("gd:invoices", async () => {
+    if (USE_SUPABASE) {
+      return sbRead(`gd:invoices:${dataCacheScope()}`, async () => {
         const userId = await currentUserId();
-        const { data, error } = await sb().from("invoices")
+        const { data, error } = await sbData().from("invoices")
           .select("id, type, description, subtotal, total, status, issued_date, due_date, from_party_name, from_party_role")
           .eq("to_party_id", userId)
           .order("issued_date", { ascending: false });
@@ -258,15 +376,14 @@ export const guardianService = {
         }));
       });
     }
-    await delay();
-    return MOCK_GUARDIAN_INVOICES;
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_GUARDIAN_INVOICES);
   },
 
   async getScheduleAppointments(): Promise<GuardianAppointment[]> {
-    if (shouldUseSupabase()) {
-      return sbRead("gd:schedule-appointments", async () => {
+    if (USE_SUPABASE) {
+      return sbRead(`gd:schedule-appointments:${dataCacheScope()}`, async () => {
         const userId = await currentUserId();
-        const { data, error } = await sb().from("placements")
+        const { data, error } = await sbData().from("placements")
           .select("id, patient_name, caregiver_name, care_type, schedule, status")
           .eq("guardian_id", userId)
           .eq("status", "active");
@@ -281,23 +398,22 @@ export const guardianService = {
         }));
       });
     }
-    await delay();
-    return MOCK_GUARDIAN_APPOINTMENTS;
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_GUARDIAN_APPOINTMENTS);
   },
 
   async getScheduleTodayEvents(): Promise<GuardianTodayEvent[]> {
-    if (shouldUseSupabase()) {
-      return sbRead("gd:today-events", async () => {
+    if (USE_SUPABASE) {
+      return sbRead(`gd:today-events:${dataCacheScope()}`, async () => {
         const userId = await currentUserId();
         const today = new Date().toISOString().slice(0, 10);
-        const { data, error } = await sb().from("shifts")
+        const { data, error } = await sbData().from("shifts")
           .select("id, date, start_time, end_time, status, caregiver_id, patient_id")
           .eq("date", today);
         if (error) throw error;
         // Filter to shifts where the patient belongs to this guardian
         const patientIds = (data || []).map((s: any) => s.patient_id).filter(Boolean);
         if (patientIds.length === 0) return [];
-        const { data: patients } = await sb().from("patients")
+        const { data: patients } = await sbData().from("patients")
           .select("id, name")
           .in("id", patientIds)
           .eq("guardian_id", userId);
@@ -312,13 +428,12 @@ export const guardianService = {
           }));
       });
     }
-    await delay();
-    return MOCK_GUARDIAN_TODAY_EVENTS;
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_GUARDIAN_TODAY_EVENTS);
   },
 
   async getReviewsData(): Promise<{ pastCaregivers: PastCaregiverReview[]; receivedReviews: ReceivedReview[] }> {
-    if (shouldUseSupabase()) {
-      return sbRead("gd:reviews", async () => {
+    if (USE_SUPABASE) {
+      return sbRead(`gd:reviews:${dataCacheScope()}`, async () => {
         const userId = await currentUserId();
         // Reviews given by this guardian
         const { data: given, error: err1 } = await sb().from("caregiver_reviews")
@@ -339,14 +454,20 @@ export const guardianService = {
         };
       });
     }
-    await delay();
-    return { pastCaregivers: MOCK_PAST_CAREGIVERS, receivedReviews: MOCK_RECEIVED_REVIEWS };
+    return demoOfflineDelayAndPick(
+      200,
+      { pastCaregivers: [], receivedReviews: [] },
+      (m) => ({
+        pastCaregivers: m.MOCK_PAST_CAREGIVERS,
+        receivedReviews: m.MOCK_RECEIVED_REVIEWS,
+      }),
+    );
   },
 
   async getPlacementDetail(_placementId: string): Promise<{ shiftHistory: PlacementShiftHistory[]; caregiverTimeline: CaregiverTimelineEntry[] }> {
-    if (shouldUseSupabase()) {
-      return sbRead(`gd:placement-detail:${_placementId}`, async () => {
-        const { data: shifts, error } = await sb().from("shifts")
+    if (USE_SUPABASE) {
+      return sbRead(`gd:placement-detail:${dataCacheScope()}:${_placementId}`, async () => {
+        const { data: shifts, error } = await sbData().from("shifts")
           .select("id, date, start_time, end_time, status, check_in_time, check_out_time")
           .eq("placement_id", _placementId)
           .order("date", { ascending: false })
@@ -365,36 +486,41 @@ export const guardianService = {
         };
       });
     }
-    await delay();
-    return { shiftHistory: MOCK_PLACEMENT_SHIFT_HISTORY, caregiverTimeline: MOCK_CAREGIVER_TIMELINE };
+    return demoOfflineDelayAndPick(
+      200,
+      { shiftHistory: [], caregiverTimeline: [] },
+      (m) => ({
+        shiftHistory: m.MOCK_PLACEMENT_SHIFT_HISTORY,
+        caregiverTimeline: m.MOCK_CAREGIVER_TIMELINE,
+      }),
+    );
   },
 
   async getRecentActivity(): Promise<GuardianActivity[]> {
-    if (shouldUseSupabase()) {
-      return sbRead("gd:recent-activity", async () => {
+    if (USE_SUPABASE) {
+      return sbRead(`gd:recent-activity:${dataCacheScope()}`, async () => {
         // Aggregate recent activity from shifts and invoices
         const userId = await currentUserId();
-        const { data: recentShifts } = await sb().from("shifts")
+        const { data: recentShifts } = await sbData().from("shifts")
           .select("id, date, status, check_in_time")
           .order("updated_at", { ascending: false })
           .limit(5);
         return (recentShifts || []).map((s: any) => ({
-          id: s.id,
           text: `Shift on ${s.date || "today"} — ${s.status}`,
           time: s.check_in_time || s.date || "",
           iconType: "calendar" as const,
           color: "var(--cn-purple)",
+          link: "/guardian/schedule",
         }));
       });
     }
-    await delay();
-    return MOCK_GUARDIAN_RECENT_ACTIVITY;
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_GUARDIAN_RECENT_ACTIVITY);
   },
 
   async getAgencyPublicProfile(id: string): Promise<AgencyPublicProfile> {
-    if (shouldUseSupabase()) {
-      return sbRead(`gd:agency-profile:${id}`, async () => {
-        const { data, error } = await sb().from("agencies")
+    if (USE_SUPABASE) {
+      return sbRead(`gd:agency-profile:${dataCacheScope()}:${id}`, async () => {
+        const { data, error } = await sbData().from("agencies")
           .select("*")
           .eq("id", id)
           .single();
@@ -415,14 +541,31 @@ export const guardianService = {
         };
       });
     }
-    await delay();
-    return { ...MOCK_AGENCY_PUBLIC_PROFILE, id };
+    return demoOfflineDelayAndPick(
+      200,
+      {
+        id,
+        name: "",
+        tagline: "",
+        established: 0,
+        rating: 0,
+        reviewCount: 0,
+        location: "",
+        phone: "",
+        email: "",
+        about: "",
+        services: [],
+        caregivers: [],
+        reviews: [],
+      } as AgencyPublicProfile,
+      (m) => ({ ...m.MOCK_AGENCY_PUBLIC_PROFILE, id }),
+    );
   },
 
   async getCaregiverPublicProfile(id: string): Promise<CaregiverPublicProfile> {
-    if (shouldUseSupabase()) {
-      return sbRead(`gd:caregiver-profile:${id}`, async () => {
-        const { data, error } = await sb().from("caregiver_profiles")
+    if (USE_SUPABASE) {
+      return sbRead(`gd:caregiver-profile:${dataCacheScope()}:${id}`, async () => {
+        const { data, error } = await sbData().from("caregiver_profiles")
           .select("*")
           .eq("id", id)
           .single();
@@ -446,26 +589,43 @@ export const guardianService = {
         };
       });
     }
-    await delay();
-    return MOCK_CAREGIVER_PUBLIC_PROFILE;
+    return demoOfflineDelayAndPick(
+      200,
+      {
+        name: "",
+        type: "",
+        rating: 0,
+        reviews: 0,
+        location: "",
+        price: "",
+        experience: "",
+        verified: false,
+        agency: { id: "", name: "" },
+        bio: "",
+        specialties: [],
+        education: [],
+        languages: [],
+        image: "",
+      } as CaregiverPublicProfile,
+      (m) => m.MOCK_CAREGIVER_PUBLIC_PROFILE,
+    );
   },
 
   async getCaregiverComparison(): Promise<ComparisonCaregiver[]> {
-    if (shouldUseSupabase()) {
-      return sbRead("gd:caregiver-comparison", async () => {
+    if (USE_SUPABASE) {
+      return sbRead(`gd:caregiver-comparison:${dataCacheScope()}`, async () => {
         // Return empty — comparison requires specific context (e.g. a bid)
         return [];
       });
     }
-    await delay();
-    return MOCK_COMPARISON_CAREGIVERS;
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_COMPARISON_CAREGIVERS);
   },
 
   async getGuardianProfile(): Promise<GuardianProfile> {
-    if (shouldUseSupabase()) {
-      return sbRead("gd:profile", async () => {
+    if (USE_SUPABASE) {
+      return sbRead(`gd:profile:${dataCacheScope()}`, async () => {
         const userId = await currentUserId();
-        const { data, error } = await sb().from("guardian_profiles")
+        const { data, error } = await sbData().from("guardian_profiles")
           .select("*")
           .eq("id", userId)
           .single();
@@ -478,19 +638,30 @@ export const guardianService = {
         };
       });
     }
-    await delay();
-    return MOCK_GUARDIAN_PROFILE;
+    return demoOfflineDelayAndPick(
+      200,
+      {
+        name: "",
+        phone: "",
+        email: "",
+        location: "",
+        relation: "",
+        bio: "",
+        emergencyContact: "",
+      } as GuardianProfile,
+      (m) => m.MOCK_GUARDIAN_PROFILE,
+    );
   },
 
   async getInvoiceDetail(id: string): Promise<InvoiceDetail> {
-    if (shouldUseSupabase()) {
-      return sbRead(`gd:invoice:${id}`, async () => {
-        const { data, error } = await sb().from("invoices")
+    if (USE_SUPABASE) {
+      return sbRead(`gd:invoice:${dataCacheScope()}:${id}`, async () => {
+        const { data, error } = await sbData().from("invoices")
           .select("*")
           .eq("id", id)
           .single();
         if (error) throw error;
-        const { data: lineItems } = await sb().from("invoice_line_items")
+        const { data: lineItems } = await sbData().from("invoice_line_items")
           .select("*")
           .eq("invoice_id", id);
         const d = data as any;
@@ -506,8 +677,29 @@ export const guardianService = {
         };
       });
     }
-    await delay();
-    return { ...MOCK_INVOICE_DETAIL, id: id || MOCK_INVOICE_DETAIL.id };
+    const emptyInv: InvoiceDetail = {
+      id: id || "",
+      status: "unpaid",
+      billedTo: { name: "", guardianId: "" },
+      agency: { name: "", agencyId: "", placementId: "" },
+      period: { from: "", to: "" },
+      issuedDate: "",
+      dueDate: "",
+      paidDate: "",
+      paidVia: "",
+      lineItems: [],
+      subtotal: 0,
+      platformFee: 0,
+      platformFeeRate: 0,
+      vat: 0,
+      vatRate: 0,
+      earlyDiscount: 0,
+      total: 0,
+    };
+    return demoOfflineDelayAndPick(200, emptyInv, (m) => ({
+      ...m.MOCK_INVOICE_DETAIL,
+      id: id || m.MOCK_INVOICE_DETAIL.id,
+    }));
   },
 
   async reportIncident(data: {
@@ -519,7 +711,7 @@ export const guardianService = {
     immediateAction: string;
     photos: string[];
   }): Promise<{ id: string }> {
-    if (shouldUseSupabase()) {
+    if (USE_SUPABASE) {
       return sbWrite(async () => {
         const userId = await currentUserId();
         const { data: row, error } = await sb().from("incident_reports").insert({
@@ -538,6 +730,9 @@ export const guardianService = {
         return { id: row.id };
       });
     }
+    if (!useInAppMockDataset()) {
+      throw new Error("[CareNet] Connect Supabase or use Demo Access to report incidents.");
+    }
     await delay(400);
     return { id: `inc-${crypto.randomUUID().slice(0, 8)}` };
   },
@@ -545,8 +740,8 @@ export const guardianService = {
   async getIncidentHistory(): Promise<
     Array<{ id: string; type: string; severity: string; date: string; status: string; patient: string }>
   > {
-    if (shouldUseSupabase()) {
-      return sbRead("gd:incidents", async () => {
+    if (USE_SUPABASE) {
+      return sbRead(`gd:incidents:${dataCacheScope()}`, async () => {
         const { data, error } = await sb().from("incident_reports")
           .select("*, patients!incident_reports_patient_id_fkey(name)")
           .order("created_at", { ascending: false });
@@ -561,7 +756,6 @@ export const guardianService = {
         }));
       });
     }
-    await delay();
-    return MOCK_INCIDENT_HISTORY;
+    return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_INCIDENT_HISTORY);
   },
 };
