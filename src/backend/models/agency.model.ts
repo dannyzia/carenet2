@@ -24,6 +24,9 @@ export interface Agency {
 export interface AgencyPlacement {
   id: string; patient: string; guardian: string; careType: string;
   caregiver: string; startDate: string; status: string;
+  /** Optional link to operational caregiving job + assignment (convergence). */
+  caregivingJobId?: string | null;
+  caregivingAssignmentId?: string | null;
 }
 
 export interface PlacementShift {

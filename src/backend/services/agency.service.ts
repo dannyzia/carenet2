@@ -168,10 +168,65 @@ export const agencyService = {
           id: d.id, patient: d.patient_name, guardian: d.guardian_name,
           careType: d.care_type, caregiver: d.caregiver_name,
           startDate: d.start_date, status: d.status,
+          caregivingJobId: d.caregiving_job_id ?? null,
+          caregivingAssignmentId: d.caregiving_assignment_id ?? null,
         }));
       });
     }
     return demoOfflineDelayAndPick(200, [] as AgencyPlacement[], (m) => m.MOCK_AGENCY_PLACEMENTS);
+  },
+
+  /** Single placement for agency detail (includes caregiving job link when present). */
+  async getPlacementById(placementId: string): Promise<AgencyPlacement | undefined> {
+    if (USE_SUPABASE) {
+      return sbRead(`ag:placement:${placementId}`, async () => {
+        const userId = await currentUserId();
+        const { data, error } = await sbData()
+          .from("placements")
+          .select("*")
+          .eq("id", placementId)
+          .eq("agency_id", userId)
+          .maybeSingle();
+        if (error) throw error;
+        if (!data) return undefined;
+        const d = data as Record<string, unknown>;
+        return {
+          id: String(d.id),
+          patient: String(d.patient_name ?? ""),
+          guardian: String(d.guardian_name ?? ""),
+          careType: String(d.care_type ?? ""),
+          caregiver: String(d.caregiver_name ?? ""),
+          startDate: d.start_date != null ? String(d.start_date) : "",
+          status: String(d.status ?? ""),
+          caregivingJobId: d.caregiving_job_id != null ? String(d.caregiving_job_id) : null,
+          caregivingAssignmentId: d.caregiving_assignment_id != null ? String(d.caregiving_assignment_id) : null,
+        };
+      });
+    }
+    const m = await loadMockBarrel();
+    return m.MOCK_AGENCY_PLACEMENTS.find((p) => p.id === placementId);
+  },
+
+  /** Link a placement to a caregiving job + assignment for shift / ops alignment. */
+  async updatePlacementCaregivingLink(
+    placementId: string,
+    link: { caregivingJobId: string | null; caregivingAssignmentId: string | null },
+  ): Promise<void> {
+    if (!USE_SUPABASE) {
+      throw new Error("[CareNet] Placement links require Supabase.");
+    }
+    return sbWrite(async () => {
+      const userId = await currentUserId();
+      const { error } = await sbData()
+        .from("placements")
+        .update({
+          caregiving_job_id: link.caregivingJobId,
+          caregiving_assignment_id: link.caregivingAssignmentId,
+        })
+        .eq("id", placementId)
+        .eq("agency_id", userId);
+      if (error) throw error;
+    });
   },
 
   /** Get agency directory listings for public page */

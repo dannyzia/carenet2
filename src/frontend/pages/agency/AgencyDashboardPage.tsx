@@ -1,16 +1,10 @@
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import {
-  Users,
-  CreditCard,
-  Star,
   ArrowRight,
   Coins,
   Handshake,
   FileText,
   Package,
-  Plus,
-  UserCircle,
-  Heart,
+  Briefcase,
 } from "lucide-react";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
@@ -21,20 +15,48 @@ import {
   getContractDashboardSummary,
   marketplaceService,
   packageEngagementService,
+  caregivingJobService,
 } from "@/backend/services";
 import { PageSkeleton } from "@/frontend/components/shared/PageSkeleton";
 import { useEffect } from "react";
 import { useAriaToast } from "@/frontend/hooks/useAriaToast";
 import { useAuth } from "@/frontend/auth/AuthContext";
 import { cn as cnTokens } from "@/frontend/theme/tokens";
-import { DashboardStatLink } from "@/frontend/components/shared/DashboardStatLink";
 import { formatBdtCompactLakh, formatCarePoints, formatDashboardDate } from "@/frontend/utils/dashboardFormat";
 import i18n from "@/frontend/i18n";
+import { USE_SUPABASE } from "@/backend/services/supabase";
 
 const TERMINAL_PACKAGE_ENGAGEMENT = new Set(["accepted", "declined", "withdrawn", "expired"]);
 
 function isOpenPackageEngagementStatus(status: string): boolean {
   return !TERMINAL_PACKAGE_ENGAGEMENT.has(status);
+}
+
+type MetricRowProps = {
+  href: string;
+  label: string;
+  value: string;
+  hint?: string;
+};
+
+function AgencyOverviewMetricRow({ href, label, value, hint }: MetricRowProps) {
+  return (
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 py-3.5">
+      <Link
+        to={href}
+        className="text-sm font-semibold no-underline cn-touch-target focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cn-teal)] focus-visible:ring-offset-2 rounded-sm hover:underline underline-offset-2"
+        style={{ color: cnTokens.teal }}
+      >
+        {label}
+      </Link>
+      <div className="text-right sm:text-right">
+        <p className="text-lg font-bold tabular-nums" style={{ color: cnTokens.text }}>{value}</p>
+        {hint ? (
+          <p className="text-xs mt-0.5" style={{ color: cnTokens.textSecondary }}>{hint}</p>
+        ) : null}
+      </div>
+    </div>
+  );
 }
 
 export default function AgencyDashboardPage() {
@@ -47,8 +69,6 @@ export default function AgencyDashboardPage() {
   const currencySym = t("dashboard:shared.currencySymbol");
   const cpSuffix = t("dashboard:shared.carePointsSuffix");
 
-  const { data: caregivers, loading: lC } = useAsyncData(() => agencyService.getCaregivers());
-  const { data: revenueData, loading: lR } = useAsyncData(() => agencyService.getRevenueChartData());
   const { data: summary, loading: lS } = useAsyncData(() => agencyService.getDashboardSummary());
   const { data: wallet, loading: lW } = useAsyncData(() => getMyWallet("agency"));
   const { data: contractSum, loading: lCt } = useAsyncData(() => getContractDashboardSummary("agency"));
@@ -62,13 +82,23 @@ export default function AgencyDashboardPage() {
     () => packageEngagementService.listAgencyCaregiverEngagements(),
     [],
   );
+  const { data: openReqCount, loading: lOpenReq } = useAsyncData(() => marketplaceService.countOpenBoardRequirements(), []);
   const loadingLeads = lEc || lEg;
   const familyInterestCount = (clientEngagements ?? []).filter((e) => isOpenPackageEngagementStatus(e.status)).length;
   const caregiverApplicationsCount = (cgEngagements ?? []).filter((e) => isOpenPackageEngagementStatus(e.status)).length;
 
-  const loading = lC || lR || lS || lW || lCt;
+  const { data: cjJobs, loading: lCj } = useAsyncData(() => caregivingJobService.listJobsWithAssignments(), []);
+  const { data: agencyJobs, loading: lAj } = useAsyncData(() => agencyService.getJobs(), []);
+
+  const loading = lS || lW || lCt || lCj || lAj;
+
   const walletBal = wallet?.balance ?? 0;
   const walletDue = wallet?.pendingDue ?? 0;
+
+  const activeCjCount = (cjJobs ?? []).filter((j) => j.status === "active").length;
+  const activeRecruitmentJobs = (agencyJobs ?? []).filter((j) => j.status !== "closed" && j.status !== "filled").length;
+  const activeJobsCount = USE_SUPABASE ? activeCjCount : activeRecruitmentJobs;
+  const activeJobsHref = USE_SUPABASE ? "/agency/caregiving-jobs" : "/agency/job-management";
 
   useEffect(() => {
     const unsubscribe = marketplaceService.onPackageSubscription((_agencyId, packageTitle) => {
@@ -80,7 +110,7 @@ export default function AgencyDashboardPage() {
     return unsubscribe;
   }, [toast, t]);
 
-  if (loading || !caregivers || !revenueData || !summary) {
+  if (loading || !summary) {
     return <PageSkeleton cards={4} />;
   }
 
@@ -92,6 +122,8 @@ export default function AgencyDashboardPage() {
 
   const revenueDisplay = formatBdtCompactLakh(summary.revenueThisMonthBdt, locale, currencySym);
   const ratingDisplay = `${summary.avgRating.toFixed(1)} ${t("dashboard:agency.starSuffix")}`;
+  const revenueHint = t("dashboard:agency.revenueMonth", { month: summary.revenueMonthLabel });
+
   return (
     <div className="space-y-6">
       <div>
@@ -104,126 +136,166 @@ export default function AgencyDashboardPage() {
       </div>
 
       <section
-        className="cn-card-flat p-5 md:p-6 space-y-5"
-        style={{ borderColor: "color-mix(in srgb, var(--cn-teal) 25%, var(--cn-border-light))" }}
-        aria-labelledby="agency-packages-hub-heading"
+        className="grid grid-cols-1 md:grid-cols-2 gap-4"
+        aria-labelledby="agency-marketplace-cards"
       >
-        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-          <div className="space-y-1 min-w-0">
-            <h2 id="agency-packages-hub-heading" className="text-lg font-semibold" style={{ color: cnTokens.text }}>
-              {t("dashboard:agency.packagesHubTitle")}
-            </h2>
-            <p className="text-sm" style={{ color: cnTokens.textSecondary }}>
-              {t("dashboard:agency.packagesHubSubtitle")}
-            </p>
-          </div>
-          <Link
-            to="/agency/package-create"
-            className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-white text-sm font-semibold no-underline shrink-0 cn-touch-target focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cn-teal)] focus-visible:ring-offset-2"
-            style={{ background: "var(--cn-gradient-agency)" }}
-          >
-            <Plus className="w-5 h-5" aria-hidden />
-            {t("dashboard:agency.createPackage")}
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <span id="agency-marketplace-cards" className="sr-only">
+          {t("dashboard:agency.packagesHubTitle")}
+        </span>
+        <div
+          className="cn-card-flat p-5 md:p-6 space-y-3"
+          style={{ borderColor: "color-mix(in srgb, var(--cn-teal) 25%, var(--cn-border-light))" }}
+        >
           <Link
             to="/agency/care-packages"
-            className="rounded-xl p-4 no-underline transition-colors hover:bg-[color-mix(in_srgb,var(--cn-text)_4%,transparent)] cn-touch-target focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cn-purple)]"
-            style={{ background: cnTokens.purpleBg }}
+            className="block no-underline cn-touch-target focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cn-purple)] rounded-lg -m-1 p-1"
           >
-            <div className="flex items-center gap-2 mb-1">
-              <Package className="w-4 h-4 shrink-0" style={{ color: cnTokens.purple }} aria-hidden />
-              <span className="text-xs font-medium uppercase tracking-wide" style={{ color: cnTokens.textSecondary }}>
-                {t("dashboard:agency.publishedPackagesShort")}
-              </span>
+            <div className="flex items-center gap-2 mb-2">
+              <Package className="w-5 h-5 shrink-0" style={{ color: cnTokens.purple }} aria-hidden />
+              <h2 className="text-base font-semibold" style={{ color: cnTokens.text }}>
+                {t("dashboard:agency.convergencePackagesCardTitle")}
+              </h2>
             </div>
-            <p className="text-2xl font-bold tabular-nums" style={{ color: cnTokens.text }}>
+            <p className="text-sm mb-3" style={{ color: cnTokens.textSecondary }}>
+              {t("dashboard:agency.convergencePackagesCardSubtitle")}
+            </p>
+            <p className="text-3xl font-bold tabular-nums mb-3" style={{ color: cnTokens.text }}>
               {summary.marketplacePackagesPublished}
             </p>
-            <p className="text-xs mt-1 flex items-center gap-1" style={{ color: cnTokens.purple }}>
-              {t("dashboard:agency.viewMyPackages")}
-              <ArrowRight className="w-3 h-3" aria-hidden />
+            <p className="text-sm flex items-center gap-1" style={{ color: cnTokens.purple }}>
+              {t("dashboard:agency.convergencePackagesCrossLink")}
+              <ArrowRight className="w-4 h-4" aria-hidden />
             </p>
           </Link>
+          <p className="text-xs pt-3 border-t border-[color-mix(in_srgb,var(--cn-text)_12%,transparent)] flex flex-wrap gap-x-3 gap-y-1" style={{ color: cnTokens.textSecondary }}>
+            <span>
+              {t("dashboard:agency.familyInterestShort")}:{" "}
+              <strong style={{ color: cnTokens.text }}>{loadingLeads ? "—" : familyInterestCount}</strong>{" "}
+              <Link to="/agency/package-leads?tab=clients" className="underline underline-offset-2" style={{ color: cnTokens.pink }}>
+                {t("dashboard:agency.viewPackageLeads")}
+              </Link>
+            </span>
+            <span>
+              {t("dashboard:agency.caregiverApplicationsShort")}:{" "}
+              <strong style={{ color: cnTokens.text }}>{loadingLeads ? "—" : caregiverApplicationsCount}</strong>{" "}
+              <Link to="/agency/package-leads?tab=caregivers" className="underline underline-offset-2" style={{ color: cnTokens.teal }}>
+                {t("dashboard:agency.viewPackageLeads")}
+              </Link>
+            </span>
+          </p>
+          <p className="text-xs" style={{ color: cnTokens.textSecondary }}>
+            <Link to="/agency/care-requirement-board" className="underline underline-offset-2" style={{ color: cnTokens.teal }}>
+              {t("dashboard:agency.convergencePackagesHint")}
+            </Link>
+          </p>
+        </div>
 
+        <div
+          className="cn-card-flat p-5 md:p-6 space-y-3"
+          style={{ borderColor: "color-mix(in srgb, var(--cn-pink) 25%, var(--cn-border-light))" }}
+        >
           <Link
-            to="/agency/package-leads?tab=clients"
-            className="rounded-xl p-4 no-underline transition-colors hover:bg-[color-mix(in_srgb,var(--cn-text)_4%,transparent)] cn-touch-target focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cn-pink)]"
-            style={{ background: cnTokens.pinkBg }}
+            to="/agency/care-requirement-board"
+            className="block no-underline cn-touch-target focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cn-pink)] rounded-lg -m-1 p-1"
           >
-            <div className="flex items-center gap-2 mb-1">
-              <Heart className="w-4 h-4 shrink-0" style={{ color: cnTokens.pink }} aria-hidden />
-              <span className="text-xs font-medium uppercase tracking-wide" style={{ color: cnTokens.textSecondary }}>
-                {t("dashboard:agency.familyInterestShort")}
-              </span>
+            <div className="flex items-center gap-2 mb-2">
+              <FileText className="w-5 h-5 shrink-0" style={{ color: cnTokens.pink }} aria-hidden />
+              <h2 className="text-base font-semibold" style={{ color: cnTokens.text }}>
+                {t("dashboard:agency.convergenceRequirementsCardTitle")}
+              </h2>
             </div>
-            <p className="text-2xl font-bold tabular-nums" style={{ color: cnTokens.text }}>
-              {loadingLeads ? "—" : familyInterestCount}
+            <p className="text-sm mb-3" style={{ color: cnTokens.textSecondary }}>
+              {t("dashboard:agency.convergenceRequirementsCardSubtitle")}
             </p>
-            <p className="text-xs mt-1 flex items-center gap-1" style={{ color: cnTokens.pink }}>
-              {t("dashboard:agency.viewPackageLeads")}
-              <ArrowRight className="w-3 h-3" aria-hidden />
+            <p className="text-3xl font-bold tabular-nums mb-3" style={{ color: cnTokens.text }}>
+              {lOpenReq ? "—" : String(openReqCount ?? 0)}
+            </p>
+            <p className="text-sm flex items-center gap-1" style={{ color: cnTokens.pink }}>
+              {t("dashboard:agency.convergenceRequirementsCrossLink")}
+              <ArrowRight className="w-4 h-4" aria-hidden />
             </p>
           </Link>
-
-          <Link
-            to="/agency/package-leads?tab=caregivers"
-            className="rounded-xl p-4 no-underline transition-colors hover:bg-[color-mix(in_srgb,var(--cn-text)_4%,transparent)] cn-touch-target focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cn-teal)]"
-            style={{ background: cnTokens.tealBg }}
-          >
-            <div className="flex items-center gap-2 mb-1">
-              <UserCircle className="w-4 h-4 shrink-0" style={{ color: cnTokens.teal }} aria-hidden />
-              <span className="text-xs font-medium uppercase tracking-wide" style={{ color: cnTokens.textSecondary }}>
-                {t("dashboard:agency.caregiverApplicationsShort")}
-              </span>
-            </div>
-            <p className="text-2xl font-bold tabular-nums" style={{ color: cnTokens.text }}>
-              {loadingLeads ? "—" : caregiverApplicationsCount}
-            </p>
-            <p className="text-xs mt-1 flex items-center gap-1" style={{ color: cnTokens.teal }}>
-              {t("dashboard:agency.viewPackageLeads")}
-              <ArrowRight className="w-3 h-3" aria-hidden />
-            </p>
-          </Link>
+          <p className="text-xs pt-3 border-t border-[color-mix(in_srgb,var(--cn-text)_12%,transparent)]" style={{ color: cnTokens.textSecondary }}>
+            <Link to="/agency/package-create" className="underline underline-offset-2" style={{ color: cnTokens.teal }}>
+              {t("dashboard:agency.convergenceRequirementsHint")}
+            </Link>
+          </p>
         </div>
       </section>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <DashboardStatLink
-          to="/agency/caregivers"
-          label={t("dashboard:agency.activeCaregivers")}
-          value={String(summary.activeCaregivers)}
-          icon={Users}
-          iconColor="var(--cn-teal)"
-          iconBg="var(--cn-teal-bg)"
-        />
-        <DashboardStatLink
-          to="/agency/clients"
-          label={t("dashboard:agency.activeClients")}
-          value={String(summary.activeClients)}
-          icon={Users}
-          iconColor="var(--cn-pink)"
-          iconBg="var(--cn-pink-bg)"
-        />
-        <DashboardStatLink
-          to="/agency/reports"
-          label={t("dashboard:agency.revenueMonth", { month: summary.revenueMonthLabel })}
-          value={revenueDisplay}
-          icon={CreditCard}
-          iconColor="var(--cn-green)"
-          iconBg="var(--cn-green-bg)"
-        />
-        <DashboardStatLink
-          to="/agency/caregivers"
-          label={t("dashboard:agency.avgRating")}
-          value={ratingDisplay}
-          icon={Star}
-          iconColor="var(--cn-amber)"
-          iconBg="var(--cn-amber-bg)"
-        />
-      </div>
+      <section
+        className="cn-card-flat p-5 md:p-6"
+        style={{ borderColor: "color-mix(in srgb, var(--cn-teal) 20%, var(--cn-border-light))" }}
+        aria-labelledby="agency-overview-heading"
+      >
+        <h2 id="agency-overview-heading" className="sr-only">
+          {t("dashboard:agency.overviewCardTitle")}
+        </h2>
+
+        <div className="pb-1">
+          <Link
+            to={activeJobsHref}
+            className="flex items-start gap-3 rounded-xl p-3 -m-1 no-underline cn-touch-target focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cn-teal)] focus-visible:ring-offset-2 hover:bg-[color-mix(in_srgb,var(--cn-teal)_8%,transparent)]"
+          >
+            <div
+              className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+              style={{ background: cnTokens.tealBg }}
+            >
+              <Briefcase className="w-5 h-5" style={{ color: cnTokens.teal }} aria-hidden />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold hover:underline underline-offset-2" style={{ color: cnTokens.teal }}>
+                {t("dashboard:agency.activeJobs")}
+              </p>
+              <p className="text-3xl font-bold tabular-nums mt-1" style={{ color: cnTokens.text }}>
+                {lCj || lAj ? "—" : String(activeJobsCount)}
+              </p>
+              <p className="text-xs mt-1" style={{ color: cnTokens.textSecondary }}>
+                {USE_SUPABASE ? t("dashboard:agency.activeJobsHintCj") : t("dashboard:agency.activeJobsHintRecruitment")}
+              </p>
+            </div>
+            <ArrowRight className="w-4 h-4 shrink-0 mt-1" style={{ color: cnTokens.textSecondary }} aria-hidden />
+          </Link>
+        </div>
+
+        <div
+          className="mt-4 pt-2 border-t border-[color-mix(in_srgb,var(--cn-text)_12%,transparent)] divide-y divide-[color-mix(in_srgb,var(--cn-text)_10%,transparent)]"
+        >
+          <AgencyOverviewMetricRow
+            href="/agency/caregivers"
+            label={t("dashboard:agency.activeCaregivers")}
+            value={String(summary.activeCaregivers)}
+          />
+          <AgencyOverviewMetricRow
+            href="/agency/clients"
+            label={t("dashboard:agency.activeClients")}
+            value={String(summary.activeClients)}
+          />
+          <AgencyOverviewMetricRow
+            href="/agency/reports"
+            label={t("dashboard:agency.revenueLinkLabel")}
+            value={revenueDisplay}
+            hint={revenueHint}
+          />
+          <AgencyOverviewMetricRow
+            href="/wallet?role=agency"
+            label={t("dashboard:shared.carePointsBalance")}
+            value={formatCarePoints(walletBal, locale, cpSuffix)}
+            hint={
+              walletDue > 0
+                ? t("dashboard:shared.feeDue", {
+                    amount: formatCarePoints(walletDue, locale, cpSuffix),
+                  })
+                : undefined
+            }
+          />
+          <AgencyOverviewMetricRow
+            href="/agency/caregivers"
+            label={t("dashboard:agency.avgRating")}
+            value={ratingDisplay}
+          />
+        </div>
+      </section>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <Link
@@ -253,9 +325,11 @@ export default function AgencyDashboardPage() {
               {formatCarePoints(walletBal, locale, cpSuffix)}
             </p>
             <p className="text-xs" style={{ color: cnTokens.amber }}>
-              {t("dashboard:shared.feeDue", {
-                amount: formatCarePoints(walletDue, locale, cpSuffix),
-              })}
+              {walletDue > 0
+                ? t("dashboard:shared.feeDue", {
+                    amount: formatCarePoints(walletDue, locale, cpSuffix),
+                  })
+                : t("dashboard:shared.invoicesProofsShort")}
             </p>
           </div>
           <ArrowRight className="w-4 h-4 shrink-0" style={{ color: cnTokens.textSecondary }} aria-hidden />
@@ -276,70 +350,6 @@ export default function AgencyDashboardPage() {
           </div>
           <ArrowRight className="w-4 h-4 shrink-0" style={{ color: cnTokens.textSecondary }} aria-hidden />
         </Link>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="cn-card-flat p-5 lg:col-span-2">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold" style={{ color: cnTokens.text }}>
-              {t("dashboard:shared.monthlyRevenue", { symbol: currencySym })}
-            </h2>
-            <Link
-              to="/agency/reports"
-              className="text-xs hover:underline cn-touch-target"
-              style={{ color: cnTokens.teal }}
-            >
-              {t("dashboard:shared.viewReports")}
-            </Link>
-          </div>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={revenueData}>
-              <XAxis dataKey="month" tick={{ fontSize: 12, fill: "var(--cn-text-secondary)" }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 12, fill: "var(--cn-text-secondary)" }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v / 1000}k`} />
-              <Tooltip formatter={(v: number) => [`${currencySym} ${v.toLocaleString(locale)}`, t("dashboard:shared.revenue")]} />
-              <Bar dataKey="amount" fill="var(--cn-teal)" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-        <div className="cn-card-flat p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold" style={{ color: cnTokens.text }}>{t("dashboard:agency.topCaregivers")}</h2>
-            <Link to="/agency/caregivers" className="text-xs hover:underline cn-touch-target" style={{ color: cnTokens.teal }}>
-              {t("dashboard:shared.viewAll")}
-            </Link>
-          </div>
-          <div className="space-y-3">
-            {caregivers.slice(0, 3).map((c) => (
-              <Link
-                key={c.name}
-                to="/agency/caregivers"
-                className="flex items-center gap-3 rounded-lg p-1 -m-1 no-underline hover:bg-[color-mix(in_srgb,var(--cn-text)_4%,transparent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cn-pink)]"
-              >
-                <div
-                  className="w-9 h-9 rounded-full flex items-center justify-center text-white font-semibold text-sm shrink-0"
-                  style={{ background: "var(--cn-gradient-agency)" }}
-                >
-                  {c.name.charAt(0)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate" style={{ color: cnTokens.text }}>{c.name}</p>
-                  <p className="text-xs" style={{ color: cnTokens.textSecondary }}>
-                    {t("dashboard:agency.starSuffix")} {c.rating} · {t("dashboard:agency.jobsCount", { count: c.jobs })}
-                  </p>
-                </div>
-                <span
-                  className="cn-badge shrink-0 text-[0.7rem]"
-                  style={{
-                    background: c.status === "active" ? cnTokens.greenBg : cnTokens.amberBg,
-                    color: c.status === "active" ? cnTokens.green : cnTokens.amber,
-                  }}
-                >
-                  {c.status}
-                </span>
-              </Link>
-            ))}
-          </div>
-        </div>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">

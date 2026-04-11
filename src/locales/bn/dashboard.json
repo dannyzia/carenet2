@@ -34,6 +34,11 @@
     "revenueMonth": "আয় ({{month}})",
     "avgRating": "গড় রেটিং",
     "starSuffix": "★",
+    "overviewCardTitle": "এজেন্সি সারসংক্ষেপ",
+    "activeJobs": "সক্রিয় কাজ",
+    "activeJobsHintCj": "অপারেশনাল কেয়ারগিভিং জব (GAC + CAC)।",
+    "activeJobsHintRecruitment": "আপনার জব বোর্ডে খোলা পদ।",
+    "revenueLinkLabel": "আয়",
     "topCaregivers": "শীর্ষ কেয়ারগিভার",
     "manageCaregivers": "কেয়ারগিভার পরিচালনা",
     "viewClients": "ক্লায়েন্ট দেখুন",
@@ -53,7 +58,15 @@
     "familyInterestShort": "পরিবারের আগ্রহ",
     "caregiverApplicationsShort": "কেয়ারগিভার আবেদন",
     "viewMyPackages": "প্যাকেজ পরিচালনা",
-    "viewPackageLeads": "লিড দেখুন"
+    "viewPackageLeads": "লিড দেখুন",
+    "convergencePackagesCardTitle": "আমাদের যত্ন প্যাকেজ",
+    "convergencePackagesCardSubtitle": "আপনার এজেন্সির প্রকাশিত তালিকা",
+    "convergencePackagesCrossLink": "প্যাকেজ পরিচালনা",
+    "convergenceRequirementsCardTitle": "পরিবারের যত্নের চাহিদা",
+    "convergenceRequirementsCardSubtitle": "বিডের জন্য খোলা অভিভাবকের অনুরোধ",
+    "convergenceRequirementsCrossLink": "চাহিদার বোর্ড খুলুন",
+    "convergencePackagesHint": "বিড করার মতো পরিবারের চাহিদা খুঁজছেন?",
+    "convergenceRequirementsHint": "পরিবর্তে যত্ন প্যাকেজ তৈরি করতে চান?"
   },
   "caregiver": {
     "greeting": "সুপ্রভাত, {{name}}!",
@@ -96,7 +109,14 @@
     "condition": "অবস্থা: {{detail}}",
     "caregiverLabel": "কেয়ারগিভার: {{name}}",
     "ageLabel": "বয়স {{age}}",
-    "alertTapHint": "বিস্তারিত কেয়ার লগ খুলুন।"
+    "alertTapHint": "বিস্তারিত কেয়ার লগ খুলুন।",
+    "marketplacePackagesCardTitle": "এজেন্সির যত্ন প্যাকেজ",
+    "marketplacePackagesCardSubtitle": "বুক করার জন্য প্রস্তুত পরিকল্পনা",
+    "marketplacePackagesCrossLink": "সব প্যাকেজ দেখুন",
+    "marketplaceRequirementsCardTitle": "আমার যত্নের চাহিদা",
+    "marketplaceRequirementsCardSubtitle": "আপনার পোস্ট করা কাস্টম যত্নের অনুরোধ",
+    "marketplaceRequirementsCrossLink": "আমার চাহিদা পরিচালনা",
+    "marketplaceRequirementsHint": "এজেন্সি প্যাকেজ দেখতে চান?"
   },
   "admin": {
     "title": "অ্যাডমিন ড্যাশবোর্ড",

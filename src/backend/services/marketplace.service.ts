@@ -31,6 +31,20 @@ import { billingService } from "./billing.service";
 
 const delay = (ms = 200) => new Promise((r) => setTimeout(r, ms));
 
+/** Row shape for UCCF care_contracts list (booked+ marketplace convergence). */
+export type UccfContractListRow = {
+  id: string;
+  title: string;
+  status: string;
+  type: string;
+  source_type: string | null;
+  contract_party_scope: string | null;
+  gac_kind: string | null;
+  staffing_channel: string | null;
+  financial_status: string | null;
+  updated_at: string;
+};
+
 /** Demo / in-memory packages use ids like `pkg-001`. With Supabase enabled, these must never be loaded or subscribed as if they were DB rows. */
 function isMockStylePackageId(id: string): boolean {
   return /^pkg-/i.test(String(id).trim());
@@ -1067,5 +1081,96 @@ export const marketplaceService = {
         },
       ],
     };
+  },
+
+  /** Published agency offers (packages) — exact count for dashboards. */
+  async countPublishedOffers(): Promise<number> {
+    if (!USE_SUPABASE) {
+      await ensureMkMock();
+      return (agencyPackages ?? []).filter((p) => p.status === "published").length;
+    }
+    return sbRead(`marketplace:count-offers:${dataCacheScope()}`, async () => {
+      const { count, error } = await sbData()
+        .from("care_contracts")
+        .select("*", { count: "exact", head: true })
+        .eq("type", "offer")
+        .eq("status", "published");
+      if (error) throw error;
+      return count ?? 0;
+    });
+  },
+
+  /** Guardian: active requirements they still have on the board (published → locked). */
+  async countMyActiveRequirements(): Promise<number> {
+    if (!USE_SUPABASE) {
+      await ensureMkMock();
+      return (careRequests ?? []).filter(
+        (r) =>
+          r.meta?.type === "request" &&
+          ["published", "bidding", "matched", "locked"].includes(r.status),
+      ).length;
+    }
+    const uid = await currentUserId();
+    return sbRead(`marketplace:count-my-req:${dataCacheScope()}:${uid}`, async () => {
+      const { count, error } = await sbData()
+        .from("care_contracts")
+        .select("*", { count: "exact", head: true })
+        .eq("owner_id", uid)
+        .eq("type", "request")
+        .in("status", ["published", "bidding", "matched", "locked"]);
+      if (error) throw error;
+      return count ?? 0;
+    });
+  },
+
+  /** Agency board: open guardian requirements agencies can bid on. */
+  async countOpenBoardRequirements(): Promise<number> {
+    if (!USE_SUPABASE) {
+      await ensureMkMock();
+      return (await this.getCareRequests()).length;
+    }
+    return sbRead(`marketplace:count-board-req:${dataCacheScope()}`, async () => {
+      const { count, error } = await sbData()
+        .from("care_contracts")
+        .select("*", { count: "exact", head: true })
+        .eq("type", "request")
+        .in("status", ["published", "bidding", "matched"]);
+      if (error) throw error;
+      return count ?? 0;
+    });
+  },
+
+  /** Current user: UCCF contracts at booked+ (marketplace + engagement outcomes). */
+  async listMyUccfContractsBookedPlus(): Promise<UccfContractListRow[]> {
+    if (!USE_SUPABASE) {
+      return [];
+    }
+    const uid = await currentUserId();
+    return sbRead(`marketplace:uccf-contracts-me:${dataCacheScope()}:${uid}`, async () => {
+      const { data, error } = await sbData()
+        .from("care_contracts")
+        .select(
+          "id, title, status, type, source_type, contract_party_scope, gac_kind, staffing_channel, financial_status, updated_at",
+        )
+        .in("status", ["booked", "active", "completed", "rated"])
+        .or(`owner_id.eq.${uid},agency_id.eq.${uid}`)
+        .order("updated_at", { ascending: false });
+      if (error) throw error;
+      return (data || []).map((r) => {
+        const row = r as Record<string, unknown>;
+        return {
+          id: String(row.id),
+          title: String(row.title ?? ""),
+          status: String(row.status ?? ""),
+          type: String(row.type ?? ""),
+          source_type: row.source_type != null ? String(row.source_type) : null,
+          contract_party_scope: row.contract_party_scope != null ? String(row.contract_party_scope) : null,
+          gac_kind: row.gac_kind != null ? String(row.gac_kind) : null,
+          staffing_channel: row.staffing_channel != null ? String(row.staffing_channel) : null,
+          financial_status: row.financial_status != null ? String(row.financial_status) : null,
+          updated_at: String(row.updated_at ?? ""),
+        };
+      });
+    });
   },
 };

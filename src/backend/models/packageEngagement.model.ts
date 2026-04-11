@@ -38,6 +38,7 @@ export interface PackageClientEngagement {
   client_user_id: string;
   agency_user_id: string;
   status: PackageClientEngagementStatus;
+  contract_id?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -58,6 +59,7 @@ export interface PackageCaregiverEngagement {
   caregiver_user_id: string;
   agency_user_id: string;
   status: PackageCaregiverEngagementStatus;
+  contract_id?: string | null;
   created_at: string;
   updated_at: string;
 }

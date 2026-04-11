@@ -1,11 +1,11 @@
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-import { Heart, Calendar, CreditCard, MessageSquare, Star, AlertCircle, Activity, User, Coins, Handshake, Plus, FileText, ArrowRight } from "lucide-react";
+import { Heart, Calendar, CreditCard, MessageSquare, Star, AlertCircle, Activity, User, Coins, Handshake, Plus, FileText, ArrowRight, Package, ClipboardList } from "lucide-react";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/frontend/theme/tokens";
 import { useAsyncData, useDocumentTitle } from "@/frontend/hooks";
 import { useAuth } from "@/frontend/auth/AuthContext";
-import { guardianService, getMyWallet, getContractDashboardSummary } from "@/backend/services";
+import { guardianService, getMyWallet, getContractDashboardSummary, marketplaceService } from "@/backend/services";
 import { PageSkeleton } from "@/frontend/components/shared/PageSkeleton";
 import type { LucideIcon } from "lucide-react";
 import { DashboardStatLink } from "@/frontend/components/shared/DashboardStatLink";
@@ -33,6 +33,13 @@ export default function GuardianDashboardPage() {
   const { data: wallet, loading: lW } = useAsyncData(() => getMyWallet("guardian"));
   const { data: contractSum, loading: lCt } = useAsyncData(() => getContractDashboardSummary("guardian"));
   const contractSafe = contractSum ?? { activeCount: 0, pendingOffersCount: 0 };
+  const { data: mpDash, loading: lMp } = useAsyncData(
+    async () => ({
+      packages: await marketplaceService.countPublishedOffers(),
+      requirements: await marketplaceService.countMyActiveRequirements(),
+    }),
+    [],
+  );
 
   if (lS || lP || lA || lAl || lG || lW || lCt || !spendingData || !patients || !recentActivity || !alerts || !gSummary) {
     return <PageSkeleton />;
@@ -56,14 +63,73 @@ export default function GuardianDashboardPage() {
           </p>
           <p className="text-xs mt-0.5" style={{ color: cn.textSecondary }}>{today}</p>
         </div>
-        <div className="flex gap-2">
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="cn-card-flat p-5 space-y-3 hover:shadow-md transition-shadow">
           <Link
-            to="/guardian/care-requirement-wizard"
-            className="px-4 py-2 rounded-lg text-sm text-white cn-touch-target no-underline focus-visible:ring-2 focus-visible:ring-offset-2"
-            style={{ background: "var(--cn-gradient-guardian)" }}
+            to="/guardian/marketplace-hub?tab=packages"
+            className="block no-underline cn-touch-target focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cn-pink)] rounded-lg -m-1 p-1"
           >
-            {t("dashboard:guardian.submitCareRequirement")}
+            <div className="flex items-center gap-2 mb-2">
+              <Package className="w-5 h-5 shrink-0" style={{ color: cn.purple }} aria-hidden />
+              <h2 className="text-base font-semibold" style={{ color: cn.text }}>
+                {t("dashboard:guardian.marketplacePackagesCardTitle")}
+              </h2>
+            </div>
+            <p className="text-sm mb-3" style={{ color: cn.textSecondary }}>
+              {t("dashboard:guardian.marketplacePackagesCardSubtitle")}
+            </p>
+            <p className="text-3xl font-bold tabular-nums mb-3" style={{ color: cn.text }}>
+              {lMp ? "—" : String(mpDash?.packages ?? 0)}
+            </p>
+            <p className="text-sm flex items-center gap-1" style={{ color: cn.purple }}>
+              {t("dashboard:guardian.marketplacePackagesCrossLink")}
+              <ArrowRight className="w-4 h-4" aria-hidden />
+            </p>
           </Link>
+          <p className="text-xs pt-3 border-t border-[color-mix(in_srgb,var(--cn-text)_12%,transparent)]" style={{ color: cn.textSecondary }}>
+            <Link
+              to="/guardian/care-requirement-wizard?direct=true"
+              className="underline underline-offset-2"
+              style={{ color: cn.pink }}
+            >
+              {t("dashboard:guardian.marketplaceRequirementsHint")}
+            </Link>
+          </p>
+        </div>
+
+        <div className="cn-card-flat p-5 space-y-3 hover:shadow-md transition-shadow">
+          <Link
+            to="/guardian/care-requirements"
+            className="block no-underline cn-touch-target focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cn-pink)] rounded-lg -m-1 p-1"
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <ClipboardList className="w-5 h-5 shrink-0" style={{ color: cn.teal }} aria-hidden />
+              <h2 className="text-base font-semibold" style={{ color: cn.text }}>
+                {t("dashboard:guardian.marketplaceRequirementsCardTitle")}
+              </h2>
+            </div>
+            <p className="text-sm mb-3" style={{ color: cn.textSecondary }}>
+              {t("dashboard:guardian.marketplaceRequirementsCardSubtitle")}
+            </p>
+            <p className="text-3xl font-bold tabular-nums mb-3" style={{ color: cn.text }}>
+              {lMp ? "—" : String(mpDash?.requirements ?? 0)}
+            </p>
+            <p className="text-sm flex items-center gap-1" style={{ color: cn.teal }}>
+              {t("dashboard:guardian.marketplaceRequirementsCrossLink")}
+              <ArrowRight className="w-4 h-4" aria-hidden />
+            </p>
+          </Link>
+          <p className="text-xs pt-3 border-t border-[color-mix(in_srgb,var(--cn-text)_12%,transparent)]" style={{ color: cn.textSecondary }}>
+            <Link
+              to="/guardian/marketplace-hub?tab=packages"
+              className="underline underline-offset-2"
+              style={{ color: cn.pink }}
+            >
+              {t("dashboard:guardian.marketplacePackagesCrossLink")}
+            </Link>
+          </p>
         </div>
       </div>
 

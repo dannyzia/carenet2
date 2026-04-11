@@ -1,6 +1,7 @@
 {
-  "$comment": "Authoritative field list for AgencyPackageCreatePage (/agency/package-create). UCCF meta.type = \"offer\". For comparison, guardian/patient care requirement wizard uses the same UCCF option sets (UCCF_SERVICE_OPTIONS, devices, procedures, etc.) with meta.type = \"request\" — see CareRequirementWizardPage.tsx. Caregivers do not use this form; they browse/apply to roles separately.",
+  "$comment": "Authoritative field list for AgencyPackageCreatePage (/agency/package-create). UCCF meta.type = \"offer\". Guardian/patient care requirement wizard field spec: src/imports/care-requirement-wizard-fields.json (same UCCF option sets where applicable). Caregivers do not use either wizard for posting offers/requests.",
   "route": "/agency/package-create",
+  "careRequirementFieldSpec": "src/imports/care-requirement-wizard-fields.json",
   "relatedWizard": {
     "name": "Care requirement (guardian/patient)",
     "route": "/guardian/care-requirement-wizard (and patient variant)",

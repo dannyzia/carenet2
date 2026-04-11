@@ -225,6 +225,7 @@ export const router = createBrowserRouter([
               { path: "agency/care-packages", ...p(() => import("@/frontend/pages/agency/AgencyPackageCatalogPage")) },
               { path: "agency/bid-management", ...p(() => import("@/frontend/pages/agency/AgencyBidManagementPage")) },
               { path: "agency/package-leads", ...p(() => import("@/frontend/pages/agency/AgencyPackageLeadsPage")) },
+              { path: "agency/caregiving-jobs", ...p(() => import("@/frontend/pages/agency/AgencyCaregivingJobsPage")) },
               { path: "agency/incidents", ...p(() => import("@/frontend/pages/agency/AgencyIncidentsPage")) },
               { path: "agency/care-scorecard", ...p(() => import("@/frontend/pages/agency/AgencyCareScorecardPage")) },
 

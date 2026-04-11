@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link, useSearchParams } from "react-router";
 import {
   Clock, FileText, MessageSquare, Handshake, CheckCircle, Stethoscope,
@@ -16,6 +16,9 @@ import { useTranslation } from "react-i18next";
 import { useDocumentTitle } from "@/frontend/hooks";
 import { monetizationChannelName } from "@/backend/services/realtime";
 import { useAuth } from "@/frontend/auth/AuthContext";
+import { useAsyncData } from "@/frontend/hooks";
+import { marketplaceService, type UccfContractListRow } from "@/backend/services/marketplace.service";
+import { USE_SUPABASE } from "@/backend/services/supabase";
 
 const STATUS_CONFIG: Record<ContractStatus, { color: string; bg: string; icon: typeof Clock; label: string }> = {
   draft: { color: "#848484", bg: "#84848420", icon: FileText, label: "Draft" },
@@ -29,13 +32,26 @@ const STATUS_CONFIG: Record<ContractStatus, { color: string; bg: string; icon: t
 };
 
 export default function ContractListPage() {
-  const { t: tDocTitle } = useTranslation("common");
+  const { t: tDocTitle, t } = useTranslation("common");
   useDocumentTitle(tDocTitle("pageTitles.contractList", "Contract List"));
 
   const [searchParams] = useSearchParams();
   const role = searchParams.get("role") || "all";
   const [filter, setFilter] = useState<"all" | ContractStatus>("all");
+  const [sourceTab, setSourceTab] = useState<"uccf" | "legacy">("uccf");
+  const [uccfPartyTab, setUccfPartyTab] = useState<"all" | "guardian_agency" | "caregiver_agency">("all");
   const { user } = useAuth();
+
+  const { data: uccfRows, loading: uccfLoading, error: uccfError, refetch: refetchUccf } = useAsyncData(
+    () => marketplaceService.listMyUccfContractsBookedPlus(),
+    [],
+  );
+
+  const uccfFiltered = useMemo(() => {
+    const rows = uccfRows ?? [];
+    if (uccfPartyTab === "all") return rows;
+    return rows.filter((r) => r.contract_party_scope === uccfPartyTab);
+  }, [uccfRows, uccfPartyTab]);
 
   // Derive the channel name to match what useContracts subscribes to
   const fallbackUserId = role === "guardian" ? "guardian-1" : role === "agency" ? "agency-1" : "caregiver-1";
@@ -92,7 +108,9 @@ export default function ContractListPage() {
             <RealtimeStatusIndicator variant="dot" className="inline-block ml-2 align-middle" />
           </h1>
           <p className="text-sm" style={{ color: cn.textSecondary }}>
-            {contracts.length} total contracts · Offer, negotiate, and manage service agreements
+            {sourceTab === "legacy"
+              ? `${contracts.length} legacy agreements`
+              : `${uccfFiltered.length} care marketplace contracts (booked+)`}
           </p>
         </div>
         {role === "guardian" && (
@@ -104,51 +122,186 @@ export default function ContractListPage() {
         )}
       </div>
 
-      {/* Status Filter Chips */}
-      <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
-        <button
-          onClick={() => setFilter("all")}
-          className="px-3 py-1.5 rounded-full text-xs whitespace-nowrap transition-all cn-touch-target"
-          style={{
-            background: filter === "all" ? cn.text : cn.bgInput,
-            color: filter === "all" ? "white" : cn.textSecondary,
-          }}
-        >
-          <Filter className="w-3 h-3 inline-block mr-1" /> All ({contracts.length})
-        </button>
-        {(["negotiating", "offered", "active", "completed", "cancelled"] as ContractStatus[]).map((s) => {
-          const cfg = STATUS_CONFIG[s];
-          const count = statusCounts[s] || 0;
-          if (count === 0 && s !== "active") return null;
-          return (
+      {USE_SUPABASE ? (
+        <div className="flex gap-2 border-b border-[color-mix(in_srgb,var(--cn-text)_12%,transparent)] pb-2">
+          <button
+            type="button"
+            onClick={() => setSourceTab("uccf")}
+            className="px-4 py-2 rounded-t-lg text-sm font-medium cn-touch-target"
+            style={{
+              background: sourceTab === "uccf" ? cn.bgInput : "transparent",
+              color: sourceTab === "uccf" ? cn.text : cn.textSecondary,
+            }}
+          >
+            {t("contracts.uccfMarketContracts")}
+          </button>
+          <button
+            type="button"
+            onClick={() => setSourceTab("legacy")}
+            className="px-4 py-2 rounded-t-lg text-sm font-medium cn-touch-target"
+            style={{
+              background: sourceTab === "legacy" ? cn.bgInput : "transparent",
+              color: sourceTab === "legacy" ? cn.text : cn.textSecondary,
+            }}
+          >
+            {t("contracts.legacyAgreements")}
+          </button>
+        </div>
+      ) : null}
+
+      {USE_SUPABASE && sourceTab === "uccf" ? (
+        <div className="space-y-4">
+          <div className="flex flex-wrap gap-2">
+            {(["all", "guardian_agency", "caregiver_agency"] as const).map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setUccfPartyTab(tab)}
+                className="px-3 py-1.5 rounded-full text-xs cn-touch-target"
+                style={{
+                  background: uccfPartyTab === tab ? cn.text : cn.bgInput,
+                  color: uccfPartyTab === tab ? "white" : cn.textSecondary,
+                }}
+              >
+                {tab === "all"
+                  ? t("contracts.uccfTabAll")
+                  : tab === "guardian_agency"
+                    ? t("contracts.uccfTabGuardianAgency")
+                    : t("contracts.uccfTabCaregiverAgency")}
+              </button>
+            ))}
+          </div>
+          {uccfLoading && (uccfRows?.length ?? 0) === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin mb-3" style={{ color: cn.pink }} />
+            </div>
+          ) : null}
+          {uccfError ? (
+            <div className="finance-card p-6 text-center">
+              <p className="text-sm" style={{ color: cn.text }}>{String(uccfError)}</p>
+              <button
+                type="button"
+                onClick={() => void refetchUccf()}
+                className="mt-3 px-4 py-2 rounded-xl text-sm text-white cn-touch-target"
+                style={{ background: "var(--cn-gradient-guardian)" }}
+              >
+                Retry
+              </button>
+            </div>
+          ) : null}
+          {!uccfLoading && !uccfError && uccfFiltered.length === 0 ? (
+            <div className="finance-card p-8 text-center">
+              <FileText className="w-12 h-12 mx-auto mb-3 opacity-30" style={{ color: cn.textSecondary }} />
+              <p style={{ color: cn.textSecondary }}>{t("contracts.noUccfContracts")}</p>
+            </div>
+          ) : null}
+          <div className="space-y-3">
+            {uccfFiltered.map((row) => (
+              <UccfContractRow key={row.id} row={row} role={role} />
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {(!USE_SUPABASE || sourceTab === "legacy") ? (
+        <>
+          {/* Status Filter Chips */}
+          <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
             <button
-              key={s}
-              onClick={() => setFilter(s)}
+              onClick={() => setFilter("all")}
               className="px-3 py-1.5 rounded-full text-xs whitespace-nowrap transition-all cn-touch-target"
               style={{
-                background: filter === s ? cfg.color : cfg.bg,
-                color: filter === s ? "white" : cfg.color,
+                background: filter === "all" ? cn.text : cn.bgInput,
+                color: filter === "all" ? "white" : cn.textSecondary,
               }}
             >
-              {cfg.label} ({count})
+              <Filter className="w-3 h-3 inline-block mr-1" /> All ({contracts.length})
             </button>
-          );
-        })}
-      </div>
-
-      {/* Contract Cards */}
-      <div className="space-y-4">
-        {filtered.length === 0 && (
-          <div className="finance-card p-8 text-center">
-            <FileText className="w-12 h-12 mx-auto mb-3 opacity-30" style={{ color: cn.textSecondary }} />
-            <p style={{ color: cn.textSecondary }}>No contracts found</p>
+            {(["negotiating", "offered", "active", "completed", "cancelled"] as ContractStatus[]).map((s) => {
+              const cfg = STATUS_CONFIG[s];
+              const count = statusCounts[s] || 0;
+              if (count === 0 && s !== "active") return null;
+              return (
+                <button
+                  key={s}
+                  onClick={() => setFilter(s)}
+                  className="px-3 py-1.5 rounded-full text-xs whitespace-nowrap transition-all cn-touch-target"
+                  style={{
+                    background: filter === s ? cfg.color : cfg.bg,
+                    color: filter === s ? "white" : cfg.color,
+                  }}
+                >
+                  {cfg.label} ({count})
+                </button>
+              );
+            })}
           </div>
-        )}
-        {filtered.map((contract) => (
-          <ContractCard key={contract.id} contract={contract} currentUserId={userId} />
-        ))}
-      </div>
+
+          {/* Contract Cards */}
+          <div className="space-y-4">
+            {filtered.length === 0 && (
+              <div className="finance-card p-8 text-center">
+                <FileText className="w-12 h-12 mx-auto mb-3 opacity-30" style={{ color: cn.textSecondary }} />
+                <p style={{ color: cn.textSecondary }}>No contracts found</p>
+              </div>
+            )}
+            {filtered.map((contract) => (
+              <ContractCard key={contract.id} contract={contract} currentUserId={userId} />
+            ))}
+          </div>
+        </>
+      ) : null}
     </div>
+  );
+}
+
+function UccfContractRow({ row, role }: { row: UccfContractListRow; role: string }) {
+  const { t } = useTranslation("common");
+  const origin =
+    row.source_type === "package_client_engagement"
+      ? t("contracts.originPackage")
+      : row.source_type === "package_caregiver_engagement"
+        ? t("contracts.originCaregiverPackage")
+        : row.source_type === "care_contract_bid"
+          ? t("contracts.originRequirement")
+          : t("contracts.originOther");
+  const party =
+    row.contract_party_scope === "guardian_agency"
+      ? t("contracts.uccfTabGuardianAgency")
+      : row.contract_party_scope === "caregiver_agency"
+        ? t("contracts.uccfTabCaregiverAgency")
+        : "—";
+  const hub =
+    role === "agency"
+      ? "/agency/care-packages"
+      : role === "caregiver"
+        ? "/caregiver/marketplace-hub"
+        : "/guardian/marketplace-hub";
+
+  return (
+    <Link to={hub} className="block no-underline">
+      <div className="finance-card p-4 hover:shadow-md transition-shadow">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div>
+            <p className="text-sm font-medium" style={{ color: cn.text }}>{row.title}</p>
+            <p className="text-xs mt-0.5" style={{ color: cn.textSecondary }}>{row.id}</p>
+          </div>
+          <span className="text-xs px-2 py-0.5 rounded-full border" style={{ color: cn.textSecondary, borderColor: cn.borderLight }}>
+            {row.status}
+          </span>
+        </div>
+        <div className="flex flex-wrap gap-2 mt-3 text-xs">
+          <span className="px-2 py-0.5 rounded-md" style={{ background: cn.bgInput, color: cn.text }}>{origin}</span>
+          <span className="px-2 py-0.5 rounded-md" style={{ background: cn.bgInput, color: cn.text }}>{party}</span>
+          {row.financial_status ? (
+            <span className="px-2 py-0.5 rounded-md" style={{ background: cn.amberBg, color: cn.amber }}>
+              {t("contracts.uccfFinancial", { status: row.financial_status })}
+            </span>
+          ) : null}
+        </div>
+        <p className="text-xs mt-2" style={{ color: cn.textSecondary }}>Updated {row.updated_at}</p>
+      </div>
+    </Link>
   );
 }
 

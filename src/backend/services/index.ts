@@ -15,6 +15,12 @@ export { searchService } from "./search.service";
 export type { GlobalSearchResults } from "./search.service";
 export { marketplaceService } from "./marketplace.service";
 export { packageEngagementService } from "./packageEngagement.service";
+export { caregivingJobService } from "./caregivingJob.service";
+export type {
+  AgencyConvergenceContractRow,
+  CaregivingAssignmentRow,
+  CaregivingJobListRow,
+} from "./caregivingJob.service";
 export { communityService } from "./community.service";
 export { messageService } from "./message.service";
 export { adminService } from "./admin.service";

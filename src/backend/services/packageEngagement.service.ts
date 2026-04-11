@@ -34,6 +34,7 @@ function mapClientRow(r: Record<string, unknown>): PackageClientEngagement {
     client_user_id: String(r.client_user_id),
     agency_user_id: String(r.agency_user_id),
     status: r.status as PackageClientEngagement["status"],
+    contract_id: r.contract_id != null ? String(r.contract_id) : null,
     created_at: String(r.created_at),
     updated_at: String(r.updated_at),
   };
@@ -58,6 +59,7 @@ function mapCgRow(r: Record<string, unknown>): PackageCaregiverEngagement {
     caregiver_user_id: String(r.caregiver_user_id),
     agency_user_id: String(r.agency_user_id),
     status: r.status as PackageCaregiverEngagement["status"],
+    contract_id: r.contract_id != null ? String(r.contract_id) : null,
     created_at: String(r.created_at),
     updated_at: String(r.updated_at),
   };
@@ -343,10 +345,11 @@ export const packageEngagementService = {
   ): Promise<void> {
     if (USE_SUPABASE) {
       return sbWrite(async () => {
-        await sbData()
-          .from("package_client_engagements")
-          .update({ status, updated_at: new Date().toISOString() })
-          .eq("id", engagementId);
+        const { error } = await sbData().rpc("accept_client_engagement", {
+          p_engagement_id: engagementId,
+          p_new_status: status,
+        });
+        if (error) throw error;
       });
     }
     if (!useInAppMockDataset()) return;
@@ -480,10 +483,11 @@ export const packageEngagementService = {
   ): Promise<void> {
     if (USE_SUPABASE) {
       return sbWrite(async () => {
-        await sbData()
-          .from("package_caregiver_engagements")
-          .update({ status, updated_at: new Date().toISOString() })
-          .eq("id", engagementId);
+        const { error } = await sbData().rpc("accept_caregiver_engagement", {
+          p_engagement_id: engagementId,
+          p_new_status: status,
+        });
+        if (error) throw error;
       });
     }
     if (!useInAppMockDataset()) return;

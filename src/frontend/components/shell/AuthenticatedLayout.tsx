@@ -14,6 +14,7 @@ import {
   Megaphone,
   Gavel,
   Plus,
+  Link2,
 } from "lucide-react";
 import { useTheme } from "@/frontend/components/shared/ThemeProvider";
 import { type Role, roleConfig, cn } from "@/frontend/theme/tokens";
@@ -194,6 +195,7 @@ function getRoleNavSections(t: TFunction): Record<Role, NavSection[]> {
           { i18nKey: "carePackageCatalog", path: "/agency/care-packages", icon: Package },
           { i18nKey: "bidManagement", path: "/agency/bid-management", icon: Gavel },
           { i18nKey: "packageLeads", path: "/agency/package-leads", icon: Package },
+          { i18nKey: "caregivingJobs", path: "/agency/caregiving-jobs", icon: Link2 },
           { i18nKey: "jobManagement", path: "/agency/job-management", icon: Briefcase },
           { i18nKey: "placements", path: "/agency/placements", icon: Shield },
           { i18nKey: "shiftMonitor", path: "/agency/shift-monitoring", icon: Radio },

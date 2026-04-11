@@ -318,7 +318,18 @@
       "updatedRealtime": "Contrato atualizado em tempo real"
     },
     "totalPlatformRevenue": "Receita total da plataforma",
-    "totalValue": "Valor total"
+    "totalValue": "Valor total",
+    "uccfMarketContracts": "Care marketplace contracts",
+    "legacyAgreements": "Legacy CarePoints agreements",
+    "uccfTabAll": "All",
+    "uccfTabGuardianAgency": "Guardian–agency",
+    "uccfTabCaregiverAgency": "Caregiver–agency",
+    "originPackage": "From package",
+    "originCaregiverPackage": "Caregiver package",
+    "originRequirement": "From requirement",
+    "originOther": "Other",
+    "uccfFinancial": "Billing: {{status}}",
+    "noUccfContracts": "No marketplace contracts in this view yet."
   },
   "currency": {
     "bdt": "BDT",
@@ -402,6 +413,7 @@
     "agencyDashboard": "Painel",
     "agencyDirectory": "Diretório de agências",
     "agencyJobApplications": "Candidaturas a empregos da agência",
+    "agencyCaregivingJobs": "Caregiving jobs",
     "agencyCarePackageCatalog": "Care package catalog",
     "agencyCareRequirementBoard": "Posted care requirements",
     "agencyMarketplaceBrowse": "Navegação no marketplace da agência",
@@ -646,6 +658,7 @@
     "languages": "Idiomas",
     "marketplace": "Marketplace",
     "carePackageCatalog": "Care packages",
+    "caregivingJobs": "Caregiving jobs",
     "careRequirementBoard": "Posted requirements",
     "marketplaceBrowse": "Navegar no marketplace",
     "marketplaceHub": "Central do marketplace",
@@ -912,6 +925,30 @@
     "applyNotePlaceholder": "Optional note (experience, availability)",
     "applyToPackage": "Apply to package"
   },
+  "agencyCaregivingJobs": {
+    "title": "Caregiving jobs",
+    "subtitle": "Link accepted guardian–agency (GAC) and caregiver–agency (CAC) contracts into operational jobs.",
+    "demoOnly": "Caregiving jobs are available when the app is connected to Supabase.",
+    "noAgency": "Sign in as an agency user to manage caregiving jobs.",
+    "createSection": "Create job from GAC + CAC",
+    "createHint": "Pick a GAC that matches your CAC (package path: package_gac with package_caregiver). Use a distinct assignment label if the same caregiver contract appears twice on one job.",
+    "gacLabel": "Guardian–agency contract (GAC)",
+    "cacLabel": "Caregiver–agency contract (CAC)",
+    "selectPlaceholder": "Select…",
+    "assignmentLabel": "Assignment label",
+    "startDateOptional": "Start date (optional)",
+    "createCta": "Create caregiving job",
+    "addCaregiverSection": "Add caregiver to existing job",
+    "addCaregiverHint": "Same compatibility rules as create. Duplicate CAC is allowed with a different assignment label.",
+    "jobLabel": "Caregiving job",
+    "roleOptional": "Role (optional)",
+    "addCaregiverCta": "Add assignment",
+    "listHeading": "Your caregiving jobs",
+    "emptyJobs": "No jobs yet. Create one above once you have accepted package engagements.",
+    "jobId": "Job",
+    "gacShort": "GAC",
+    "noAssignments": "No caregiver assignments on this job."
+  },
   "agencyPackageLeads": {
     "title": "Package leads",
     "subtitle": "Client interest and caregiver applications on your published packages",
@@ -963,6 +1000,30 @@
     "cancel": "Cancel",
     "bidPriceRequired": "Enter a bid price.",
     "bidSubmitted": "Bid submitted."
+  },
+  "agencyPlacementsList": {
+    "colId": "ID",
+    "colPatient": "Patient",
+    "colGuardian": "Guardian",
+    "colCaregiver": "Caregiver",
+    "colType": "Type",
+    "colStatus": "Status",
+    "colCjJob": "Caregiving job",
+    "colCjAssignment": "Assignment",
+    "colActions": "Actions",
+    "view": "View",
+    "dash": "—"
+  },
+  "agencyPlacementDetail": {
+    "cjLinkTitle": "Caregiving job link",
+    "cjLinkSubtitle": "Associate this placement with a job assignment so shifts stay aligned with GAC/CAC operations.",
+    "cjJobLabel": "Caregiving job",
+    "cjAssignmentLabel": "Assignment",
+    "cjClear": "Clear link",
+    "cjSave": "Save link",
+    "cjSaved": "Link updated.",
+    "cjSelectJob": "Select a job first.",
+    "cjDemo": "Linking requires Supabase."
   },
   "dailySchedule": {
     "addPhoto": "Add photo",
