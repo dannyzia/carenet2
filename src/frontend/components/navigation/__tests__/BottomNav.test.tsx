@@ -5,6 +5,10 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { BottomNav } from "../BottomNav";
 
+vi.mock("@/frontend/auth/AuthContext", () => ({
+  useAuth: () => ({ user: { activeRole: "caregiver" as const } }),
+}));
+
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string) => {

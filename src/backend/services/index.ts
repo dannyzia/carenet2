@@ -14,6 +14,7 @@ export { shopService } from "./shop.service";
 export { searchService } from "./search.service";
 export type { GlobalSearchResults } from "./search.service";
 export { marketplaceService } from "./marketplace.service";
+export { packageEngagementService } from "./packageEngagement.service";
 export { communityService } from "./community.service";
 export { messageService } from "./message.service";
 export { adminService } from "./admin.service";

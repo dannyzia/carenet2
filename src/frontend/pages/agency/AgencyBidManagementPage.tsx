@@ -370,7 +370,7 @@ export default function AgencyBidManagementPage() {
                 {/* Actions */}
                 <div className="flex items-center justify-between pt-2" style={{ borderTop: `1px solid ${cn.borderLight}` }}>
                   <Link
-                    to={`/agency/marketplace-browse`}
+                    to="/agency/care-requirement-board"
                     className="text-xs flex items-center gap-1 no-underline"
                     style={{ color: cn.teal }}
                   >
@@ -459,7 +459,7 @@ export default function AgencyBidManagementPage() {
               <p className="text-sm" style={{ color: cn.textSecondary }}>
                 {activeTab === "all" ? t("agencyBids.noBidsYet") : t("agencyBids.noBidsFilter", { status: activeTab })}
               </p>
-              <Link to="/agency/marketplace-browse" className="inline-flex items-center gap-2 px-4 py-2 mt-3 rounded-xl text-white text-sm no-underline" style={{ background: "var(--cn-gradient-agency)" }}>
+              <Link to="/agency/care-requirement-board" className="inline-flex items-center gap-2 px-4 py-2 mt-3 rounded-xl text-white text-sm no-underline" style={{ background: "var(--cn-gradient-agency)" }}>
                 {t("agencyBids.browseRequests")}
               </Link>
             </div>

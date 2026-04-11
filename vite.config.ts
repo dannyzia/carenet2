@@ -11,8 +11,11 @@ function envTruthy(v: string | undefined): boolean {
   return s === 'true' || s === '1' || s === 'yes'
 }
 
+/** Project root = folder containing this config (not `process.cwd()`). Avoids wrong/missing `.env` when the shell starts Vite from another directory. */
+const projectRoot = path.resolve(__dirname)
+
 export default defineConfig(({ mode }) => {
-  const fileEnv = loadEnv(mode, process.cwd(), '')
+  const fileEnv = loadEnv(mode, projectRoot, '')
   const playwrightE2E =
     envTruthy(process.env.VITE_PLAYWRIGHT_E2E) || envTruthy(fileEnv.VITE_PLAYWRIGHT_E2E)
   const vitest = process.env.VITEST === 'true'
@@ -61,6 +64,8 @@ export default defineConfig(({ mode }) => {
   })
 
   return {
+  root: projectRoot,
+  envDir: projectRoot,
   define: {
     __CARENET_PLAYWRIGHT_E2E__: JSON.stringify(playwrightE2E),
     /** Ensures client `import.meta.env` sees the flag (not only `process.env` at config time). */

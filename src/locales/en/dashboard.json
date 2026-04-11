@@ -45,7 +45,15 @@
     "marketplacePackages": "Marketplace packages",
     "packagesHint": "{{total}} total · {{drafts}} drafts",
     "openCareRequirements": "Open care requests",
-    "requirementsInboxHint": "Posted by guardians and patients"
+    "requirementsInboxHint": "Posted by guardians and patients",
+    "packagesHubTitle": "Care packages & leads",
+    "packagesHubSubtitle": "Create published offers, manage your listings, and respond when families or caregivers engage.",
+    "createPackage": "Create package",
+    "publishedPackagesShort": "Published listings",
+    "familyInterestShort": "Family interest",
+    "caregiverApplicationsShort": "Caregiver applications",
+    "viewMyPackages": "Manage packages",
+    "viewPackageLeads": "Open leads"
   },
   "caregiver": {
     "greeting": "Good morning, {{name}}!",

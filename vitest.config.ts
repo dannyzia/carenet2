@@ -35,18 +35,20 @@ function parseEnvFile(filePath: string): Record<string, string> {
   return result;
 }
 
+const projectRoot = path.resolve(__dirname);
+
 export default defineConfig(({ mode }) => {
   // Parse .env files ourselves so quoted values with # are preserved correctly.
   // loadEnv treats # as a comment even inside unquoted values.
   const rawEnv = {
-    ...parseEnvFile(path.resolve(process.cwd(), ".env")),
-    ...parseEnvFile(path.resolve(process.cwd(), ".env.local")),
+    ...parseEnvFile(path.resolve(projectRoot, ".env")),
+    ...parseEnvFile(path.resolve(projectRoot, ".env.local")),
   };
   Object.assign(process.env, rawEnv);
 
   // Also run loadEnv for VITE_* import.meta.env compatibility, but don't
   // overwrite keys already set by our parser above.
-  const viteEnv = loadEnv(mode, process.cwd(), "");
+  const viteEnv = loadEnv(mode, projectRoot, "");
   for (const [k, v] of Object.entries(viteEnv)) {
     if (!(k in process.env)) process.env[k] = v;
   }

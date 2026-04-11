@@ -16,4 +16,8 @@ export type { UnreadCounts } from "./useUnreadCounts";
 export { UnreadCountsContext, useUnreadCountsCtx } from "./UnreadCountsContext";
 export { useDocumentTitle } from "./useDocumentTitle";
 export { useCareSeekerBasePath } from "./useCareSeekerBasePath";
+export {
+  useCareSeekerIsolationTarget,
+  CareSeekerIsolationRedirect,
+} from "./useCareSeekerIsolationRedirect";
 export { useSection15PatientId } from "./useSection15PatientId";

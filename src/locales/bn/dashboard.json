@@ -45,7 +45,15 @@
     "marketplacePackages": "মার্কেটপ্লেস প্যাকেজ",
     "packagesHint": "মোট {{total}} · খসড়া {{drafts}}",
     "openCareRequirements": "খোলা যত্ন অনুরোধ",
-    "requirementsInboxHint": "অভিভাবক ও রোগীর পোস্ট"
+    "requirementsInboxHint": "অভিভাবক ও রোগীর পোস্ট",
+    "packagesHubTitle": "যত্ন প্যাকেজ ও লিড",
+    "packagesHubSubtitle": "প্রকাশিত অফার তৈরি করুন, তালিকা পরিচালনা করুন, এবং পরিবার বা কেয়ারগিভার যোগাযোগ করলে সাড়া দিন।",
+    "createPackage": "প্যাকেজ তৈরি করুন",
+    "publishedPackagesShort": "প্রকাশিত তালিকা",
+    "familyInterestShort": "পরিবারের আগ্রহ",
+    "caregiverApplicationsShort": "কেয়ারগিভার আবেদন",
+    "viewMyPackages": "প্যাকেজ পরিচালনা",
+    "viewPackageLeads": "লিড দেখুন"
   },
   "caregiver": {
     "greeting": "সুপ্রভাত, {{name}}!",

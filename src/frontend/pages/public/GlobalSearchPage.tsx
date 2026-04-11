@@ -8,19 +8,28 @@ import { cn } from "@/frontend/theme/tokens";
 import { useDebouncedSearch, useDocumentTitle } from "@/frontend/hooks";
 import { searchService, type GlobalSearchResults } from "@/backend/services";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/frontend/auth/AuthContext";
+import { features } from "@/config/features";
 
 export default function GlobalSearchPage() {
   const { t: tDocTitle } = useTranslation("common");
   useDocumentTitle(tDocTitle("pageTitles.globalSearch", "Global Search"));
 
   const navigate = useTransitionNavigate();
+  const { user } = useAuth();
+  const seekerBase = user?.activeRole === "patient" ? "/patient" : "/guardian";
+  const hideCaregiverResults =
+    !features.careSeekerCaregiverContactEnabled &&
+    !!user &&
+    (user.activeRole === "guardian" || user.activeRole === "patient");
   const [activeTab, setActiveTab] = useState("all");
   const { query, setQuery, results, loading } = useDebouncedSearch<GlobalSearchResults>(
     (q) => searchService.globalSearch(q),
     300
   );
 
-  const caregivers = results?.caregivers ?? [];
+  const caregiversRaw = results?.caregivers ?? [];
+  const caregivers = hideCaregiverResults ? [] : caregiversRaw;
   const agencies = results?.agencies ?? [];
   const jobs = results?.jobs ?? [];
   const totalResults = caregivers.length + agencies.length + jobs.length;
@@ -88,11 +97,11 @@ export default function GlobalSearchPage() {
               <section className="space-y-6">
                 <div className="flex justify-between items-center px-4">
                   <h2 className="text-xl text-gray-800">Caregivers</h2>
-                  <RouterLink to="/guardian/search" className="text-[10px] text-[#FEB4C5] uppercase tracking-widest">See all results</RouterLink>
+                  <RouterLink to={`${seekerBase}/search`} className="text-[10px] text-[#FEB4C5] uppercase tracking-widest">See all results</RouterLink>
                 </div>
                 <div className="space-y-3">
                   {caregivers.slice(0, 5).map(c => (
-                    <RouterLink key={c.id} to={`/guardian/caregiver/${c.id}`} className="finance-card p-5 flex items-center justify-between hover:border-[#FEB4C5] transition-all">
+                    <RouterLink key={c.id} to={`${seekerBase}/caregiver/${c.id}`} className="finance-card p-5 flex items-center justify-between hover:border-[#FEB4C5] transition-all">
                       <div className="flex items-center gap-4">
                         <img src={c.image} className="w-14 h-14 rounded-2xl object-cover" alt={c.name} />
                         <div>

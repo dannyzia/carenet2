@@ -13,6 +13,7 @@ import {
   Coins, Handshake, Receipt,
   Megaphone,
   Gavel,
+  Plus,
 } from "lucide-react";
 import { useTheme } from "@/frontend/components/shared/ThemeProvider";
 import { type Role, roleConfig, cn } from "@/frontend/theme/tokens";
@@ -32,6 +33,7 @@ import { useTransitionNavigate } from "@/frontend/hooks/useTransitionNavigate";
 import { useUnreadCounts } from "@/frontend/hooks/useUnreadCounts";
 import { UnreadCountsContext } from "@/frontend/hooks/UnreadCountsContext";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/frontend/components/ui/collapsible";
+import { features } from "@/config/features";
 
 /* ─── Focus main content on route change (a11y) ─── */
 function useFocusOnNavigate() {
@@ -49,6 +51,17 @@ function useFocusOnNavigate() {
 interface NavSection {
   sectionKey?: string;          // i18n key under sidebar.section.*
   links: { i18nKey: string; path: string; icon: React.ElementType }[];
+}
+
+function filterCareSeekerCaregiverNavLinks(
+  role: Role,
+  links: NavSection["links"],
+): NavSection["links"] {
+  if (features.careSeekerCaregiverContactEnabled) return links;
+  if (role !== "guardian" && role !== "patient") return links;
+  return links.filter(
+    (l) => l.i18nKey !== "findCaregivers" && l.i18nKey !== "compareCaregivers",
+  );
 }
 
 function getRoleNavSections(t: TFunction): Record<Role, NavSection[]> {
@@ -74,14 +87,14 @@ function getRoleNavSections(t: TFunction): Record<Role, NavSection[]> {
       },
       {
         sectionKey: "tools",
-        links: [
+        links: filterCareSeekerCaregiverNavLinks("guardian", [
           { i18nKey: "findCaregivers", path: "/guardian/search", icon: Search },
           { i18nKey: "compareCaregivers", path: "/guardian/caregiver-comparison", icon: Users },
           { i18nKey: "newBooking", path: "/guardian/booking", icon: Calendar },
           { i18nKey: "postRequirement", path: "/guardian/care-requirement-wizard", icon: FileText },
           { i18nKey: "patientIntake", path: "/guardian/patient-intake", icon: Heart },
           { i18nKey: "familyHub", path: "/guardian/family-hub", icon: Home },
-        ],
+        ]),
       },
     ],
     patient: [
@@ -101,11 +114,11 @@ function getRoleNavSections(t: TFunction): Record<Role, NavSection[]> {
       },
       {
         sectionKey: "tools",
-        links: [
+        links: filterCareSeekerCaregiverNavLinks("patient", [
           { i18nKey: "findCaregivers", path: "/patient/search", icon: Search },
           { i18nKey: "postRequirement", path: "/patient/care-requirement-wizard", icon: FileText },
           { i18nKey: "newBooking", path: "/patient/booking", icon: Calendar },
-        ],
+        ]),
       },
       {
         sectionKey: "health",
@@ -130,6 +143,7 @@ function getRoleNavSections(t: TFunction): Record<Role, NavSection[]> {
           { i18nKey: "dashboard", path: "/caregiver/dashboard", icon: LayoutDashboard },
           { i18nKey: "myPatients", path: "/caregiver/assigned-patients", icon: Heart },
           { i18nKey: "myJobs", path: "/caregiver/jobs", icon: Briefcase },
+          { i18nKey: "marketplaceHub", path: "/caregiver/marketplace-hub", icon: Megaphone },
           { i18nKey: "careLog", path: "/caregiver/care-log", icon: ClipboardList },
           { i18nKey: "careNotes", path: "/caregiver/care-notes", icon: FileText },
           { i18nKey: "schedule", path: "/caregiver/schedule", icon: Calendar },
@@ -174,9 +188,12 @@ function getRoleNavSections(t: TFunction): Record<Role, NavSection[]> {
         sectionKey: "main",
         links: [
           { i18nKey: "dashboard", path: "/agency/dashboard", icon: LayoutDashboard },
+          { i18nKey: "packageCreate", path: "/agency/package-create", icon: Plus },
           { i18nKey: "requirements", path: "/agency/requirements-inbox", icon: Inbox },
-          { i18nKey: "marketplaceBrowse", path: "/agency/marketplace-browse", icon: Megaphone },
+          { i18nKey: "careRequirementBoard", path: "/agency/care-requirement-board", icon: Megaphone },
+          { i18nKey: "carePackageCatalog", path: "/agency/care-packages", icon: Package },
           { i18nKey: "bidManagement", path: "/agency/bid-management", icon: Gavel },
+          { i18nKey: "packageLeads", path: "/agency/package-leads", icon: Package },
           { i18nKey: "jobManagement", path: "/agency/job-management", icon: Briefcase },
           { i18nKey: "placements", path: "/agency/placements", icon: Shield },
           { i18nKey: "shiftMonitor", path: "/agency/shift-monitoring", icon: Radio },

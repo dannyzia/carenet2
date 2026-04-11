@@ -5,6 +5,7 @@ import type { ConversationItem, ChatMessage } from "@/backend/models";
 import type { Role } from "@/frontend/auth/types";
 import { loadMockBarrel } from "@/backend/api/mock/loadMockBarrel";
 import { USE_SUPABASE, sbRead, sbWrite, sb, currentUserId, useInAppMockDataset } from "./_sb";
+import { features } from "@/config/features";
 import { demoOfflineDelayAndPick } from "./demoOfflineMock";
 
 const delay = (ms = 200) => new Promise((r) => setTimeout(r, ms));
@@ -143,6 +144,18 @@ export const messageService = {
   async getOrCreateConversation(otherUserId: string): Promise<string> {
     if (USE_SUPABASE) {
       const myId = await currentUserId();
+      if (!features.careSeekerCaregiverContactEnabled) {
+        const { data: me } = await sb().from("profiles").select("role").eq("id", myId).maybeSingle();
+        const { data: other } = await sb().from("profiles").select("role").eq("id", otherUserId).maybeSingle();
+        const r1 = me?.role as string | undefined;
+        const r2 = other?.role as string | undefined;
+        const blocked =
+          (r1 === "caregiver" && (r2 === "guardian" || r2 === "patient")) ||
+          (r2 === "caregiver" && (r1 === "guardian" || r1 === "patient"));
+        if (blocked) {
+          throw new Error("CARENET_BLOCK_CARE_SEEKER_CAREGIVER_CONVERSATION");
+        }
+      }
       // Check if conversation already exists
       const { data: existing } = await sb().from("conversations")
         .select("id")

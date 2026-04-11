@@ -8,15 +8,16 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import {
   Megaphone, Package, Plus, ChevronRight, Star, Shield, MapPin,
-  Clock, Users, DollarSign, Filter, Search, Eye, MessageSquare,
-  CheckCircle2, AlertTriangle, XCircle, TrendingUp, Briefcase,
+  Clock, Users, DollarSign, MessageSquare,
+  CheckCircle2, Briefcase,
   RefreshCw, Timer,
 } from "lucide-react";
 import { cn } from "@/frontend/theme/tokens";
 import { useAsyncData, useDocumentTitle, useCareSeekerBasePath } from "@/frontend/hooks";
 import { marketplaceService } from "@/backend/services";
 import { PageSkeleton } from "@/frontend/components/shared/PageSkeleton";
-import type { CareContract, AgencyPackage, CareCategory, UCCFPricingRequest, UCCFPricingOffer } from "@/backend/models";
+import { AgencyPackageBrowseList } from "@/frontend/components/marketplace/AgencyPackageBrowseList";
+import type { CareContract, CareCategory, UCCFPricingRequest, UCCFPricingOffer } from "@/backend/models";
 import { useAriaToast } from "@/frontend/hooks/useAriaToast";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/frontend/auth/AuthContext";
@@ -108,9 +109,6 @@ export default function GuardianMarketplaceHubPage() {
     },
     [setSearchParams],
   );
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterCategory, setFilterCategory] = useState<CareCategory | "">("");
-
   const { data: myRequests, loading: loadingReqs, refetch: refetchMyRequests } = useAsyncData(() =>
     marketplaceService.getMyRequests(),
     []
@@ -131,15 +129,6 @@ export default function GuardianMarketplaceHubPage() {
   const { data: packages, loading: loadingPkgs } = useAsyncData(() =>
     marketplaceService.getAgencyPackages()
   );
-
-  const filteredPackages = (packages || []).filter((p) => {
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      if (!p.meta.title.toLowerCase().includes(q) && !p.agency_name.toLowerCase().includes(q)) return false;
-    }
-    if (filterCategory && !p.meta.category.includes(filterCategory)) return false;
-    return true;
-  });
 
   return (
     <div className="space-y-6">
@@ -331,118 +320,12 @@ export default function GuardianMarketplaceHubPage() {
 
       {/* ─── Tab: Browse Agency Packages ─── */}
       {activeTab === "packages" && (
-        <div className="space-y-4">
-          {/* Search & Filter */}
-          <div className="flex gap-2">
-            <div className="flex-1 relative">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" style={{ color: cn.textSecondary }} />
-              <input
-                type="text"
-                placeholder="Search packages or agencies..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm"
-                style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }}
-              />
-            </div>
-            <select
-              value={filterCategory}
-              onChange={(e) => setFilterCategory(e.target.value as CareCategory | "")}
-              className="px-3 py-2.5 rounded-xl border text-sm"
-              style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }}
-            >
-              <option value="">All Categories</option>
-              {Object.entries(categoryLabels).map(([k, v]) => (
-                <option key={k} value={k}>{v}</option>
-              ))}
-            </select>
-          </div>
-
-          {loadingPkgs ? <PageSkeleton /> : (
-            <div className="space-y-3">
-              {filteredPackages.map((pkg) => (
-                <Link
-                  key={pkg.id}
-                  to={`${base}/marketplace/package/${pkg.id}`}
-                  state={{ fromMarketplacePackages: `${base}/marketplace-hub?tab=packages` }}
-                  className="block stat-card p-4 hover:shadow-md transition-shadow no-underline"
-                >
-                  {pkg.featured && (
-                    <div className="flex items-center gap-1 mb-2">
-                      <Star className="w-3 h-3" style={{ color: cn.amber }} />
-                      <span className="text-xs" style={{ color: cn.amber }}>Featured Package</span>
-                    </div>
-                  )}
-                  <div className="flex items-start justify-between gap-3 mb-2">
-                    <h3 className="text-sm" style={{ color: cn.text }}>{pkg.meta.title}</h3>
-                    <span className="text-sm shrink-0" style={{ color: cn.green }}>{formatPrice(pkg.pricing)}</span>
-                  </div>
-
-                  {/* Agency info */}
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-6 h-6 rounded-lg flex items-center justify-center text-white text-[9px]" style={{ background: "var(--cn-gradient-agency)" }}>
-                      {pkg.agency_name.slice(0, 2)}
-                    </div>
-                    <span className="text-xs" style={{ color: cn.text }}>{pkg.agency_name}</span>
-                    {pkg.agency_verified && <Shield className="w-3 h-3" style={{ color: cn.teal }} />}
-                    {pkg.agency_rating && (
-                      <span className="flex items-center gap-0.5 text-xs" style={{ color: cn.amber }}>
-                        <Star className="w-3 h-3" /> {pkg.agency_rating}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex flex-wrap gap-1.5 mb-3">
-                    {pkg.meta.category.map((cat) => {
-                      const cc = categoryColors[cat];
-                      return (
-                        <span key={cat} className="px-2 py-0.5 rounded-full text-xs" style={{ background: cc.bg, color: cc.color }}>
-                          {categoryLabels[cat]}
-                        </span>
-                      );
-                    })}
-                  </div>
-
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs mb-3" style={{ color: cn.textSecondary }}>
-                    <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {(pkg.staffing.caregiver_count || 0) + (pkg.staffing.nurse_count || 0)} staff</span>
-                    <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {pkg.schedule?.hours_per_day || 8}h/day</span>
-                    <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {pkg.party.service_area?.slice(0, 2).join(", ")}{(pkg.party.service_area?.length || 0) > 2 ? ` +${(pkg.party.service_area?.length || 0) - 2}` : ""}</span>
-                    {pkg.sla?.replacement_time_hours && (
-                      <span className="flex items-center gap-1"><TrendingUp className="w-3 h-3" /> {pkg.sla.replacement_time_hours}h replacement</span>
-                    )}
-                  </div>
-
-                  {/* Services preview */}
-                  <div className="flex flex-wrap gap-1 mb-3">
-                    {[...(pkg.services?.personal_care || []), ...(pkg.services?.medical_support || [])].slice(0, 5).map((s) => (
-                      <span key={s} className="px-2 py-0.5 rounded-full text-xs" style={{ background: cn.bgInput, color: cn.textSecondary }}>{s}</span>
-                    ))}
-                  </div>
-
-                  <div className="flex items-center justify-between pt-3" style={{ borderTop: `1px solid ${cn.border}` }}>
-                    <div className="flex items-center gap-3 text-xs" style={{ color: cn.textSecondary }}>
-                      {pkg.compliance?.trial_available && (
-                        <span className="flex items-center gap-1" style={{ color: cn.teal }}>
-                          <CheckCircle2 className="w-3 h-3" /> Trial available
-                        </span>
-                      )}
-                      {pkg.subscribers && <span>{pkg.subscribers} subscribers</span>}
-                    </div>
-                    <span className="flex items-center gap-1 text-xs" style={{ color: cn.green }}>
-                      View Details <ChevronRight className="w-3 h-3" />
-                    </span>
-                  </div>
-                </Link>
-              ))}
-              {filteredPackages.length === 0 && (
-                <div className="text-center py-12">
-                  <Package className="w-12 h-12 mx-auto mb-3" style={{ color: cn.borderLight }} />
-                  <p className="text-sm" style={{ color: cn.textSecondary }}>No packages match your search</p>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+        <AgencyPackageBrowseList
+          packages={packages}
+          loading={loadingPkgs}
+          packageDetailPathPrefix={`${base}/marketplace/package`}
+          listBackUrl={`${base}/marketplace-hub?tab=packages`}
+        />
       )}
     </div>
   );

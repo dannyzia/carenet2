@@ -9,8 +9,17 @@ import { useAsyncData, useDocumentTitle, useCareSeekerBasePath } from "@/fronten
 import { guardianService } from "@/backend/services/guardian.service";
 import { PageSkeleton } from "@/frontend/components/PageSkeleton";
 import { useTranslation } from "react-i18next";
+import { CareSeekerIsolationRedirect, useCareSeekerIsolationTarget } from "@/frontend/hooks/useCareSeekerIsolationRedirect";
 
 export default function CaregiverPublicProfilePage() {
+  const isolationTarget = useCareSeekerIsolationTarget();
+  if (isolationTarget) {
+    return <CareSeekerIsolationRedirect />;
+  }
+  return <CaregiverPublicProfilePageContent />;
+}
+
+function CaregiverPublicProfilePageContent() {
   const { t: tDocTitle } = useTranslation("common");
   useDocumentTitle(tDocTitle("pageTitles.caregiverPublicProfile", "Caregiver Public Profile"));
 

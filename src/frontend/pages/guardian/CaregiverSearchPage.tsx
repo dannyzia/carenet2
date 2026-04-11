@@ -7,6 +7,7 @@ import { cn } from "@/frontend/theme/tokens";
 import { PageHero } from "@/frontend/components/PageHero";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose, DrawerFooter } from "@/frontend/components/ui/drawer";
 import { useAsyncData, useDebouncedSearch, useDocumentTitle, useCareSeekerBasePath } from "@/frontend/hooks";
+import { CareSeekerIsolationRedirect, useCareSeekerIsolationTarget } from "@/frontend/hooks/useCareSeekerIsolationRedirect";
 import { agencyService, caregiverService } from "@/backend/services";
 import { PageSkeleton } from "@/frontend/components/shared/PageSkeleton";
 import type { Agency, CaregiverProfile } from "@/backend/models";
@@ -15,6 +16,14 @@ import { useTranslation } from "react-i18next";
 type SearchTab = "agencies" | "caregivers";
 
 export default function CaregiverSearchPage() {
+  const isolationTarget = useCareSeekerIsolationTarget();
+  if (isolationTarget) {
+    return <CareSeekerIsolationRedirect />;
+  }
+  return <CaregiverSearchPageContent />;
+}
+
+function CaregiverSearchPageContent() {
   const { t: tDocTitle } = useTranslation("common");
   useDocumentTitle(tDocTitle("pageTitles.caregiverSearch", "Caregiver Search"));
 

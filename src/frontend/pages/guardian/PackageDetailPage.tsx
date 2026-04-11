@@ -14,6 +14,8 @@ import { PageSkeleton } from "@/frontend/components/shared/PageSkeleton";
 import type { AgencyPackage, CareCategory } from "@/backend/models";
 import { useTranslation } from "react-i18next";
 import { DEFAULT_SCHEDULE_HOURS_PER_DAY } from "@/domain/bookingWizardKeys";
+import { useAuth } from "@/frontend/auth/AuthContext";
+import { PackageEngagementActions } from "@/frontend/components/marketplace/PackageEngagementActions";
 
 const categoryColors: Record<CareCategory, { color: string; bg: string }> = {
   elderly: { color: "#7B5EA7", bg: "rgba(123,94,167,0.12)" },
@@ -50,7 +52,10 @@ export default function PackageDetailPage() {
   const { t: tg } = useTranslation("guardian");
   useDocumentTitle(tDocTitle("pageTitles.packageDetail", "Package Detail"));
 
-  const base = useCareSeekerBasePath();
+  const careSeekerBase = useCareSeekerBasePath();
+  const { user } = useAuth();
+  const activeRole = user?.activeRole;
+  const base = activeRole === "caregiver" ? "/caregiver" : careSeekerBase;
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
@@ -462,19 +467,25 @@ export default function PackageDetailPage() {
         </div>
       ) : null}
 
-      <div className="stat-card p-5 flex gap-3">
-        <button
-          type="button"
-          onClick={() => navigate(`${base}/booking?package=${pkg.id}`)}
-          className="flex-1 py-3 rounded-xl text-white text-sm cn-touch-target"
-          style={{ background: "var(--cn-gradient-guardian)" }}
-        >
-          {t("subscribeThis")}
-        </button>
+      {id && activeRole && (
+        <PackageEngagementActions packageId={id} activeRole={activeRole} />
+      )}
+
+      <div className="stat-card p-5 flex flex-col sm:flex-row gap-3">
+        {activeRole !== "caregiver" && (
+          <button
+            type="button"
+            onClick={() => navigate(`${base}/booking?package=${pkg.id}`)}
+            className="flex-1 py-3 rounded-xl text-white text-sm cn-touch-target"
+            style={{ background: "var(--cn-gradient-guardian)" }}
+          >
+            {t("subscribeThis")}
+          </button>
+        )}
         <button
           type="button"
           onClick={() => navigate(`${base}/messages?to=${pkg.agency_id}`)}
-          className="px-6 py-3 rounded-xl border text-sm cn-touch-target flex items-center gap-2"
+          className="flex-1 sm:flex-none px-6 py-3 rounded-xl border text-sm cn-touch-target flex items-center justify-center gap-2"
           style={{ borderColor: cn.border, color: cn.text }}
         >
           <Phone className="w-4 h-4" /> {t("contactAgency")}

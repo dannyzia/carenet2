@@ -1,9 +1,27 @@
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-import { Users, CreditCard, Star, ArrowRight, Coins, Handshake, FileText, Package, ClipboardList } from "lucide-react";
+import {
+  Users,
+  CreditCard,
+  Star,
+  ArrowRight,
+  Coins,
+  Handshake,
+  FileText,
+  Package,
+  Plus,
+  UserCircle,
+  Heart,
+} from "lucide-react";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useAsyncData, useDocumentTitle } from "@/frontend/hooks";
-import { agencyService, getMyWallet, getContractDashboardSummary, marketplaceService } from "@/backend/services";
+import {
+  agencyService,
+  getMyWallet,
+  getContractDashboardSummary,
+  marketplaceService,
+  packageEngagementService,
+} from "@/backend/services";
 import { PageSkeleton } from "@/frontend/components/shared/PageSkeleton";
 import { useEffect } from "react";
 import { useAriaToast } from "@/frontend/hooks/useAriaToast";
@@ -12,6 +30,12 @@ import { cn as cnTokens } from "@/frontend/theme/tokens";
 import { DashboardStatLink } from "@/frontend/components/shared/DashboardStatLink";
 import { formatBdtCompactLakh, formatCarePoints, formatDashboardDate } from "@/frontend/utils/dashboardFormat";
 import i18n from "@/frontend/i18n";
+
+const TERMINAL_PACKAGE_ENGAGEMENT = new Set(["accepted", "declined", "withdrawn", "expired"]);
+
+function isOpenPackageEngagementStatus(status: string): boolean {
+  return !TERMINAL_PACKAGE_ENGAGEMENT.has(status);
+}
 
 export default function AgencyDashboardPage() {
   const { t } = useTranslation(["dashboard", "common"]);
@@ -29,6 +53,18 @@ export default function AgencyDashboardPage() {
   const { data: wallet, loading: lW } = useAsyncData(() => getMyWallet("agency"));
   const { data: contractSum, loading: lCt } = useAsyncData(() => getContractDashboardSummary("agency"));
   const contractSafe = contractSum ?? { activeCount: 0, pendingOffersCount: 0 };
+
+  const { data: clientEngagements, loading: lEc } = useAsyncData(
+    () => packageEngagementService.listAgencyClientEngagements(),
+    [],
+  );
+  const { data: cgEngagements, loading: lEg } = useAsyncData(
+    () => packageEngagementService.listAgencyCaregiverEngagements(),
+    [],
+  );
+  const loadingLeads = lEc || lEg;
+  const familyInterestCount = (clientEngagements ?? []).filter((e) => isOpenPackageEngagementStatus(e.status)).length;
+  const caregiverApplicationsCount = (cgEngagements ?? []).filter((e) => isOpenPackageEngagementStatus(e.status)).length;
 
   const loading = lC || lR || lS || lW || lCt;
   const walletBal = wallet?.balance ?? 0;
@@ -67,6 +103,93 @@ export default function AgencyDashboardPage() {
         </p>
       </div>
 
+      <section
+        className="cn-card-flat p-5 md:p-6 space-y-5"
+        style={{ borderColor: "color-mix(in srgb, var(--cn-teal) 25%, var(--cn-border-light))" }}
+        aria-labelledby="agency-packages-hub-heading"
+      >
+        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+          <div className="space-y-1 min-w-0">
+            <h2 id="agency-packages-hub-heading" className="text-lg font-semibold" style={{ color: cnTokens.text }}>
+              {t("dashboard:agency.packagesHubTitle")}
+            </h2>
+            <p className="text-sm" style={{ color: cnTokens.textSecondary }}>
+              {t("dashboard:agency.packagesHubSubtitle")}
+            </p>
+          </div>
+          <Link
+            to="/agency/package-create"
+            className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-white text-sm font-semibold no-underline shrink-0 cn-touch-target focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cn-teal)] focus-visible:ring-offset-2"
+            style={{ background: "var(--cn-gradient-agency)" }}
+          >
+            <Plus className="w-5 h-5" aria-hidden />
+            {t("dashboard:agency.createPackage")}
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <Link
+            to="/agency/care-packages"
+            className="rounded-xl p-4 no-underline transition-colors hover:bg-[color-mix(in_srgb,var(--cn-text)_4%,transparent)] cn-touch-target focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cn-purple)]"
+            style={{ background: cnTokens.purpleBg }}
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <Package className="w-4 h-4 shrink-0" style={{ color: cnTokens.purple }} aria-hidden />
+              <span className="text-xs font-medium uppercase tracking-wide" style={{ color: cnTokens.textSecondary }}>
+                {t("dashboard:agency.publishedPackagesShort")}
+              </span>
+            </div>
+            <p className="text-2xl font-bold tabular-nums" style={{ color: cnTokens.text }}>
+              {summary.marketplacePackagesPublished}
+            </p>
+            <p className="text-xs mt-1 flex items-center gap-1" style={{ color: cnTokens.purple }}>
+              {t("dashboard:agency.viewMyPackages")}
+              <ArrowRight className="w-3 h-3" aria-hidden />
+            </p>
+          </Link>
+
+          <Link
+            to="/agency/package-leads?tab=clients"
+            className="rounded-xl p-4 no-underline transition-colors hover:bg-[color-mix(in_srgb,var(--cn-text)_4%,transparent)] cn-touch-target focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cn-pink)]"
+            style={{ background: cnTokens.pinkBg }}
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <Heart className="w-4 h-4 shrink-0" style={{ color: cnTokens.pink }} aria-hidden />
+              <span className="text-xs font-medium uppercase tracking-wide" style={{ color: cnTokens.textSecondary }}>
+                {t("dashboard:agency.familyInterestShort")}
+              </span>
+            </div>
+            <p className="text-2xl font-bold tabular-nums" style={{ color: cnTokens.text }}>
+              {loadingLeads ? "—" : familyInterestCount}
+            </p>
+            <p className="text-xs mt-1 flex items-center gap-1" style={{ color: cnTokens.pink }}>
+              {t("dashboard:agency.viewPackageLeads")}
+              <ArrowRight className="w-3 h-3" aria-hidden />
+            </p>
+          </Link>
+
+          <Link
+            to="/agency/package-leads?tab=caregivers"
+            className="rounded-xl p-4 no-underline transition-colors hover:bg-[color-mix(in_srgb,var(--cn-text)_4%,transparent)] cn-touch-target focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cn-teal)]"
+            style={{ background: cnTokens.tealBg }}
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <UserCircle className="w-4 h-4 shrink-0" style={{ color: cnTokens.teal }} aria-hidden />
+              <span className="text-xs font-medium uppercase tracking-wide" style={{ color: cnTokens.textSecondary }}>
+                {t("dashboard:agency.caregiverApplicationsShort")}
+              </span>
+            </div>
+            <p className="text-2xl font-bold tabular-nums" style={{ color: cnTokens.text }}>
+              {loadingLeads ? "—" : caregiverApplicationsCount}
+            </p>
+            <p className="text-xs mt-1 flex items-center gap-1" style={{ color: cnTokens.teal }}>
+              {t("dashboard:agency.viewPackageLeads")}
+              <ArrowRight className="w-3 h-3" aria-hidden />
+            </p>
+          </Link>
+        </div>
+      </section>
+
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <DashboardStatLink
           to="/agency/caregivers"
@@ -99,30 +222,6 @@ export default function AgencyDashboardPage() {
           icon={Star}
           iconColor="var(--cn-amber)"
           iconBg="var(--cn-amber-bg)"
-        />
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <DashboardStatLink
-          to="/agency/marketplace-browse"
-          label={t("dashboard:agency.marketplacePackages")}
-          value={String(summary.marketplacePackagesPublished)}
-          icon={Package}
-          iconColor="var(--cn-purple)"
-          iconBg="var(--cn-purple-bg)"
-          hint={t("dashboard:agency.packagesHint", {
-            total: summary.marketplacePackagesTotal,
-            drafts: summary.marketplacePackagesDraft,
-          })}
-        />
-        <DashboardStatLink
-          to="/agency/requirements-inbox"
-          label={t("dashboard:agency.openCareRequirements")}
-          value={String(summary.openCareRequirementsCount)}
-          icon={ClipboardList}
-          iconColor="var(--cn-teal)"
-          iconBg="var(--cn-teal-bg)"
-          hint={t("dashboard:agency.requirementsInboxHint")}
         />
       </div>
 

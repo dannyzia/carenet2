@@ -11,9 +11,11 @@ import type {
   ClientCarePlanData, StaffAttendanceData, StaffHiringData,
   AgencyIncident,
   DocumentVerificationItem,
+  CareContract,
+  UCCFPricingRequest,
 } from "@/backend/models";
 import { loadMockBarrel } from "@/backend/api/mock/loadMockBarrel";
-import { USE_SUPABASE, sbRead, sbWrite, sb, sbData, currentUserId, useInAppMockDataset } from "./_sb";
+import { USE_SUPABASE, sbRead, sbWrite, sb, sbData, currentUserId, useInAppMockDataset, dataCacheScope } from "./_sb";
 import {
   EMPTY_STOREFRONT,
   EMPTY_AGENCY_SETTINGS_CARD,
@@ -25,6 +27,48 @@ import { marketplaceService } from "./marketplace.service";
 import { demoOfflineDelayAndPick } from "./demoOfflineMock";
 
 const delay = (ms = 200) => new Promise((r) => setTimeout(r, ms));
+
+/** Map a UCCF care request contract to the richer inbox row the agency UI expects. */
+function uccfRequestToRequirementInboxItem(cc: CareContract): RequirementInboxItem {
+  const pricing = cc.pricing as UCCFPricingRequest;
+  const partyName = cc.party?.name?.trim() || "—";
+  const cs = cc.care_subject;
+  const patientLabel = cs?.condition_summary?.trim() || cc.meta.title || "Patient";
+  let status: RequirementInboxItem["status"] = "new";
+  if (cc.status === "matched") status = "under-review";
+  else if (cc.status === "locked" || cc.status === "booked" || cc.status === "active") status = "accepted";
+  else if (cc.status === "cancelled" || cc.status === "rated" || cc.status === "completed") status = "declined";
+  else if (cc.status === "published" || cc.status === "bidding") status = "new";
+
+  const loc = [cc.meta.location.area, cc.meta.location.city].filter(Boolean).join(", ") || "—";
+  const ms = Date.now() - new Date(cc.created_at).getTime();
+  const hoursAgo = Math.floor(ms / 3600000);
+  const submittedAgo =
+    hoursAgo < 1 ? "Just now" : hoursAgo < 24 ? `${hoursAgo} hours ago` : `${Math.floor(hoursAgo / 24)} days ago`;
+
+  return {
+    id: cc.id,
+    guardianName: partyName,
+    guardianVerified: false,
+    guardianPlacements: 0,
+    patientName: patientLabel.slice(0, 80),
+    patientAge: cs?.age ?? 0,
+    patientCondition: cs?.condition_summary || cc.meta.title || "—",
+    careType: cc.meta.category?.length ? cc.meta.category.join(", ") : "—",
+    duration: cc.meta.duration_type || "—",
+    shiftPreference: cc.schedule?.shift_type || "—",
+    budgetMin: pricing.budget_min ?? 0,
+    budgetMax: pricing.budget_max ?? 0,
+    location: loc,
+    specialRequirements: cc.medical?.diagnosis || cc.exclusions?.join("; ") || "—",
+    submittedDate: new Date(cc.created_at).toLocaleDateString(),
+    submittedAgo,
+    responseDeadline: cc.expires_at ? `Expires ${new Date(cc.expires_at).toLocaleDateString()}` : "",
+    status,
+    priority: cs?.risk_level === "high" ? "urgent" : "normal",
+    isNew: cc.status === "published" || cc.status === "bidding",
+  };
+}
 
 const emptyClientCarePlan: ClientCarePlanData = {
   client: { name: "", age: 0, condition: "" },
@@ -422,21 +466,20 @@ export const agencyService = {
 
   async getRequirementsInbox(): Promise<RequirementInboxItem[]> {
     if (USE_SUPABASE) {
-      return sbRead("ag:requirements", async () => {
-        try {
-          const { data, error } = await sbData().from("care_contracts")
-            .select("*")
-            .eq("type", "request")
-            .eq("status", "published")
-            .order("created_at", { ascending: false });
-          if (error) return [];
-          return (data || []).map((d: any) => ({
-            id: d.id, title: d.title, description: d.description,
-            source: d.source, date: d.created_at, status: d.status,
-          }));
-        } catch {
-          return [];
+      // Use the same source + RLS path as the agency care requirement board (`getCareRequests`).
+      // A direct `care_contracts` query can fail or return empty for agencies depending on policies.
+      return sbRead(`ag:requirements:${dataCacheScope()}`, async () => {
+        const requests = await marketplaceService.getCareRequests();
+        const items: RequirementInboxItem[] = [];
+        for (const cc of requests) {
+          try {
+            if (cc.meta.type !== "request") continue;
+            items.push(uccfRequestToRequirementInboxItem(cc));
+          } catch (e) {
+            console.warn("[agencyService.getRequirementsInbox] skip contract", cc.id, e);
+          }
         }
+        return items;
       });
     }
     return demoOfflineDelayAndPick(200, [] as RequirementInboxItem[], (m) => m.MOCK_REQUIREMENTS_INBOX);

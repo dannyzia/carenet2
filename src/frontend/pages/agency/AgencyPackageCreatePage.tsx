@@ -6,7 +6,7 @@ import { useNavigate } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
 import {
   FileText, Users, Calendar, DollarSign, Shield, ClipboardCheck, CheckCircle2,
-  ChevronLeft, ChevronRight, Plus, X, Star,
+  ChevronLeft, ChevronRight, X, Star,
 } from "lucide-react";
 import { cn } from "@/frontend/theme/tokens";
 import { marketplaceService } from "@/backend/services";
@@ -35,6 +35,15 @@ import {
   UCCF_MEDICAL_PROCEDURES,
 } from "@/backend/domain/uccf";
 
+/** i18n keys under `guardian:` for UCCF service checklist buckets (same keys as requirement wizard). */
+const UCCF_SERVICE_BUCKET_I18N: Record<keyof typeof UCCF_SERVICE_OPTIONS, string> = {
+  personal_care: "wizard.agencyServiceBucketPersonalCare",
+  medical_support: "wizard.agencyServiceBucketMedicalSupport",
+  household_support: "wizard.agencyServiceBucketHouseholdSupport",
+  advanced_care: "wizard.agencyServiceBucketAdvancedCare",
+  coordination: "wizard.agencyServiceBucketCoordination",
+};
+
 const steps = [
   { id: 1, name: "Package Info", icon: FileText },
   { id: 2, name: "Staffing", icon: Users },
@@ -52,6 +61,16 @@ const categories: { id: CareCategory; label: string; emoji: string }[] = [
   { id: "baby", label: "Baby Care", emoji: "\u{1F476}" },
   { id: "disability", label: "Disability", emoji: "\u267F" },
 ];
+
+/** Module scope: inner render functions get new identities each render and remount children (focus loss in controlled inputs). */
+function PackageWizardInputField({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="block text-sm mb-1.5" style={{ color: cn.text }}>{label}</label>
+      {children}
+    </div>
+  );
+}
 
 export default function AgencyPackageCreatePage() {
   const { t: tDocTitle } = useTranslation("common");
@@ -137,7 +156,13 @@ export default function AgencyPackageCreatePage() {
     setForm((f) => ({ ...f, [key]: toggleArray(f[key], item) }));
   };
 
-  const next = () => setStep((s) => Math.min(s + 1, 6));
+  const next = () => {
+    if (step === 1 && form.serviceAreas.length === 0) {
+      toast.error(tg("wizard.agencyServiceAreasRequired"));
+      return;
+    }
+    setStep((s) => Math.min(s + 1, 6));
+  };
   const prev = () => setStep((s) => Math.max(s - 1, 1));
 
   const handlePublish = async () => {
@@ -147,6 +172,10 @@ export default function AgencyPackageCreatePage() {
     }
     if (form.categories.length === 0) {
       toast.error(tg("wizard.agencyCategoriesRequired"));
+      return;
+    }
+    if (form.serviceAreas.length === 0) {
+      toast.error(tg("wizard.agencyServiceAreasRequired"));
       return;
     }
     const phone = user?.phone?.trim();
@@ -277,7 +306,7 @@ export default function AgencyPackageCreatePage() {
 
     await marketplaceService.publishPackage(pkg.id);
     toast.success("Package published to marketplace!");
-    navigate("/agency/marketplace-browse");
+    navigate("/agency/care-packages");
     } catch (e) {
       if (e instanceof UCCFValidationError) {
         toast.error(e.issues.join(" "));
@@ -287,13 +316,6 @@ export default function AgencyPackageCreatePage() {
       }
     }
   };
-
-  const InputField = ({ label, children }: { label: string; children: React.ReactNode }) => (
-    <div>
-      <label className="block text-sm mb-1.5" style={{ color: cn.text }}>{label}</label>
-      {children}
-    </div>
-  );
 
   const inputStyle = { borderColor: cn.border, color: cn.text, background: cn.bgInput };
 
@@ -327,10 +349,17 @@ export default function AgencyPackageCreatePage() {
             {step === 1 && (
               <div className="space-y-4">
                 <h2 className="text-xl" style={{ color: cn.text }}>Package Information</h2>
-                <InputField label="Package Title">
-                  <input type="text" value={form.title} onChange={(e) => update({ title: e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={inputStyle} placeholder="e.g. Premium Elderly Home Care Package" />
-                </InputField>
-                <InputField label="Care Categories">
+                <PackageWizardInputField label="Package Title">
+                  <input
+                    type="text"
+                    value={form.title}
+                    onChange={(e) => update({ title: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl border text-sm"
+                    style={inputStyle}
+                    placeholder="e.g. Premium Elderly Home Care Package"
+                  />
+                </PackageWizardInputField>
+                <PackageWizardInputField label="Care Categories">
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {categories.map((c) => (
                       <button key={c.id} onClick={() => update({ categories: toggleArray(form.categories, c.id) as CareCategory[] })} className="p-3 rounded-xl border text-sm text-left transition-all cn-touch-target" style={{ borderColor: form.categories.includes(c.id) ? cn.pink : cn.border, background: form.categories.includes(c.id) ? cn.pinkBg : "transparent" }}>
@@ -339,60 +368,61 @@ export default function AgencyPackageCreatePage() {
                       </button>
                     ))}
                   </div>
-                </InputField>
+                </PackageWizardInputField>
                 <div className="grid grid-cols-2 gap-4">
-                  <InputField label="City">
+                  <PackageWizardInputField label="City">
                     <input type="text" value={form.city} onChange={(e) => update({ city: e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={inputStyle} />
-                  </InputField>
-                  <InputField label="Duration Type">
+                  </PackageWizardInputField>
+                  <PackageWizardInputField label="Duration Type">
                     <select value={form.durationType} onChange={(e) => update({ durationType: e.target.value as typeof form.durationType })} className="w-full px-4 py-3 rounded-xl border text-sm" style={inputStyle}>
                       <option value="short">Short Term</option>
                       <option value="monthly">Monthly</option>
                       <option value="long_term">Long Term</option>
                     </select>
-                  </InputField>
+                  </PackageWizardInputField>
                 </div>
-                <InputField label="Service Areas">
+                <PackageWizardInputField label={tg("wizard.agencyServiceAreasLabel")}>
+                  <p className="text-xs mb-2 leading-relaxed" style={{ color: cn.textSecondary }}>{tg("wizard.agencyServiceAreasHelp")}</p>
                   <div className="flex flex-wrap gap-2 mb-2">
                     {form.serviceAreas.map((a) => (
                       <span key={a} className="px-3 py-1 rounded-lg text-xs flex items-center gap-1" style={{ background: cn.tealBg, color: cn.teal }}>
                         {a}{" "}
-                        <button type="button" onClick={() => update({ serviceAreas: form.serviceAreas.filter((x) => x !== a) })}>
+                        <button type="button" aria-label={tg("wizard.removeServiceArea", { area: a })} onClick={() => update({ serviceAreas: form.serviceAreas.filter((x) => x !== a) })}>
                           <X className="w-3 h-3" />
                         </button>
                       </span>
                     ))}
                   </div>
-                  <div className="flex gap-2">
-                    <input type="text" value={form.newArea} onChange={(e) => update({ newArea: e.target.value })} className="flex-1 px-4 py-2.5 rounded-xl border text-sm" style={inputStyle} placeholder="Add area..." />
-                    <button type="button" onClick={() => { if (form.newArea.trim()) { update({ serviceAreas: [...form.serviceAreas, form.newArea.trim()], newArea: "" }); } }} className="px-4 py-2.5 rounded-xl text-white text-sm" style={{ background: "var(--cn-gradient-agency)" }}>Add</button>
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
+                    <input type="text" value={form.newArea} onChange={(e) => update({ newArea: e.target.value })} className="flex-1 min-w-0 px-4 py-2.5 rounded-xl border text-sm" style={inputStyle} placeholder={tg("wizard.agencyServiceAreaPlaceholder")} />
+                    <button type="button" onClick={() => { if (form.newArea.trim()) { update({ serviceAreas: [...form.serviceAreas, form.newArea.trim()], newArea: "" }); } }} className="shrink-0 px-4 py-2.5 rounded-xl text-white text-sm cn-touch-target" style={{ background: "var(--cn-gradient-agency)" }}>{tg("wizard.addServiceArea")}</button>
                   </div>
-                </InputField>
+                </PackageWizardInputField>
                 <div className="pt-2 space-y-3" style={{ borderTop: `1px solid ${cn.borderLight}` }}>
                   <p className="text-sm font-medium" style={{ color: cn.text }}>Typical client profile (optional)</p>
-                  <div className="grid grid-cols-3 gap-3">
-                    <InputField label={tg("wizard.age")}>
+                  <div className="grid grid-cols-1 gap-5 sm:grid-cols-3 sm:gap-4">
+                    <PackageWizardInputField label={tg("wizard.age")}>
                       <input type="number" min={0} value={form.targetAge} onChange={(e) => update({ targetAge: e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={inputStyle} />
-                    </InputField>
-                    <InputField label={tg("wizard.gender")}>
+                    </PackageWizardInputField>
+                    <PackageWizardInputField label={tg("wizard.gender")}>
                       <select value={form.targetGender} onChange={(e) => update({ targetGender: e.target.value as typeof form.targetGender })} className="w-full px-4 py-3 rounded-xl border text-sm" style={inputStyle}>
                         <option value="">{tg("wizard.preferNotSay")}</option>
                         <option value="male">{tg("wizard.genderMale")}</option>
                         <option value="female">{tg("wizard.genderFemale")}</option>
                         <option value="other">{tg("wizard.genderOther")}</option>
                       </select>
-                    </InputField>
-                    <InputField label={tg("wizard.medicalConditions")}>
-                      <input type="text" value={form.targetCondition} onChange={(e) => update({ targetCondition: e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={inputStyle} placeholder={tg("wizard.medicalConditionsPlaceholder")} />
-                    </InputField>
+                    </PackageWizardInputField>
+                    <PackageWizardInputField label={tg("wizard.medicalConditions")}>
+                      <input type="text" value={form.targetCondition} onChange={(e) => update({ targetCondition: e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm min-h-[44px]" style={inputStyle} placeholder={tg("wizard.medicalConditionsPlaceholder")} />
+                    </PackageWizardInputField>
                   </div>
-                  <InputField label={tg("wizard.locationType")}>
+                  <PackageWizardInputField label={tg("wizard.locationType")}>
                     <select value={form.locationType} onChange={(e) => update({ locationType: e.target.value as typeof form.locationType })} className="w-full px-4 py-3 rounded-xl border text-sm" style={inputStyle}>
                       <option value="">{tg("wizard.preferNotSay")}</option>
                       <option value="home">{tg("wizard.locationHome")}</option>
                       <option value="hospital">{tg("wizard.locationHospital")}</option>
                     </select>
-                  </InputField>
+                  </PackageWizardInputField>
                   <div className="flex flex-wrap gap-3">
                     <label className="flex items-center gap-2 text-sm cursor-pointer" style={{ color: cn.text }}>
                       <input type="checkbox" checked={form.accommodationProvided} onChange={(e) => update({ accommodationProvided: e.target.checked })} className="rounded" />
@@ -403,9 +433,9 @@ export default function AgencyPackageCreatePage() {
                       {tg("wizard.foodProvided")}
                     </label>
                   </div>
-                  <InputField label={tg("wizard.travelDistanceKm")}>
+                  <PackageWizardInputField label={tg("wizard.travelDistanceKm")}>
                     <input type="number" min={0} value={form.travelDistanceKm} onChange={(e) => update({ travelDistanceKm: e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={inputStyle} />
-                  </InputField>
+                  </PackageWizardInputField>
                 </div>
               </div>
             )}
@@ -413,16 +443,16 @@ export default function AgencyPackageCreatePage() {
             {/* Step 2: Staffing */}
             {step === 2 && (
               <div className="space-y-4">
-                <h2 className="text-xl" style={{ color: cn.text }}>Staffing Details</h2>
+                <h2 className="text-xl" style={{ color: cn.text }}>{tg("wizard.agencyCareTeamHeadline")}</h2>
                 <div className="grid grid-cols-2 gap-4">
-                  <InputField label="Caregivers">
+                  <PackageWizardInputField label="Caregivers">
                     <input type="number" min={0} value={form.caregiverCount} onChange={(e) => update({ caregiverCount: +e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={inputStyle} />
-                  </InputField>
-                  <InputField label="Nurses">
+                  </PackageWizardInputField>
+                  <PackageWizardInputField label="Nurses">
                     <input type="number" min={0} value={form.nurseCount} onChange={(e) => update({ nurseCount: +e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={inputStyle} />
-                  </InputField>
+                  </PackageWizardInputField>
                 </div>
-                <InputField label="Staff Level">
+                <PackageWizardInputField label={tg("wizard.agencyProfessionalLevel")}>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {(["L1", "L2", "L3", "L4"] as StaffLevel[]).map((l) => (
                       <button key={l} onClick={() => update({ staffLevel: l })} className="p-3 rounded-xl border text-sm text-center cn-touch-target" style={{ borderColor: form.staffLevel === l ? cn.teal : cn.border, background: form.staffLevel === l ? cn.tealBg : "transparent", color: cn.text }}>
@@ -433,18 +463,18 @@ export default function AgencyPackageCreatePage() {
                       </button>
                     ))}
                   </div>
-                </InputField>
+                </PackageWizardInputField>
                 <div className="grid grid-cols-2 gap-4">
-                  <InputField label="Gender Preference">
+                  <PackageWizardInputField label="Gender Preference">
                     <select value={form.genderPref} onChange={(e) => update({ genderPref: e.target.value as any })} className="w-full px-4 py-3 rounded-xl border text-sm" style={inputStyle}>
                       <option value="none">No Preference</option>
                       <option value="male">Male</option>
                       <option value="female">Female</option>
                     </select>
-                  </InputField>
-                  <InputField label="Min Experience (years)">
+                  </PackageWizardInputField>
+                  <PackageWizardInputField label="Min Experience (years)">
                     <input type="number" min={0} value={form.experienceYears} onChange={(e) => update({ experienceYears: +e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={inputStyle} />
-                  </InputField>
+                  </PackageWizardInputField>
                 </div>
               </div>
             )}
@@ -452,7 +482,8 @@ export default function AgencyPackageCreatePage() {
             {/* Step 3: Services */}
             {step === 3 && (
               <div className="space-y-5">
-                <h2 className="text-xl" style={{ color: cn.text }}>Services Included</h2>
+                <h2 className="text-xl" style={{ color: cn.text }}>{tg("wizard.agencyPackageServicesStepTitle")}</h2>
+                <p className="text-sm leading-relaxed -mt-2" style={{ color: cn.textSecondary }}>{tg("wizard.agencyPackageServicesIntro")}</p>
                 <div className="space-y-3 p-4 rounded-xl" style={{ background: cn.bgInput, border: `1px solid ${cn.borderLight}` }}>
                   <p className="text-sm font-medium" style={{ color: cn.text }}>{tg("wizard.dailyLiving")}</p>
                   <div className="flex flex-wrap gap-2">
@@ -480,17 +511,17 @@ export default function AgencyPackageCreatePage() {
                 </div>
                 <div className="space-y-3 p-4 rounded-xl" style={{ background: cn.bgInput, border: `1px solid ${cn.borderLight}` }}>
                   <p className="text-sm font-medium" style={{ color: cn.text }}>{tg("wizard.medicalOptional")}</p>
-                  <InputField label={tg("wizard.diagnosis")}>
+                  <PackageWizardInputField label={tg("wizard.diagnosis")}>
                     <input type="text" value={form.diagnosis} onChange={(e) => update({ diagnosis: e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={inputStyle} />
-                  </InputField>
-                  <InputField label={tg("wizard.medicationComplexity")}>
+                  </PackageWizardInputField>
+                  <PackageWizardInputField label={tg("wizard.medicationComplexity")}>
                     <select value={form.medicationComplexity} onChange={(e) => update({ medicationComplexity: e.target.value as typeof form.medicationComplexity })} className="w-full px-4 py-3 rounded-xl border text-sm" style={inputStyle}>
                       <option value="">{tg("wizard.preferNotSay")}</option>
                       <option value="low">{tg("wizard.medLow")}</option>
                       <option value="medium">{tg("wizard.medMedium")}</option>
                       <option value="high">{tg("wizard.medHigh")}</option>
                     </select>
-                  </InputField>
+                  </PackageWizardInputField>
                   <p className="text-xs" style={{ color: cn.textSecondary }}>{tg("wizard.devices")}</p>
                   <div className="flex flex-wrap gap-2">
                     {UCCF_MEDICAL_DEVICES.map((d) => {
@@ -520,20 +551,22 @@ export default function AgencyPackageCreatePage() {
                       );
                     })}
                   </div>
-                  <InputField label={tg("wizard.equipmentProvider")}>
+                  <PackageWizardInputField label={tg("wizard.equipmentProvider")}>
                     <select value={form.equipmentProvider} onChange={(e) => update({ equipmentProvider: e.target.value as typeof form.equipmentProvider })} className="w-full px-4 py-3 rounded-xl border text-sm" style={inputStyle}>
                       <option value="">{tg("wizard.preferNotSay")}</option>
                       <option value="patient">{tg("wizard.providerPatient")}</option>
                       <option value="agency">{tg("wizard.providerAgency")}</option>
                       <option value="mixed">{tg("wizard.providerMixed")}</option>
                     </select>
-                  </InputField>
+                  </PackageWizardInputField>
                 </div>
+                <p className="text-sm font-medium pt-1" style={{ color: cn.text }}>{tg("wizard.agencyPackageServiceChecklistsHeading")}</p>
+                <p className="text-xs leading-relaxed" style={{ color: cn.textSecondary }}>{tg("wizard.agencyPackageServiceBucketsIntro")}</p>
                 {(Object.keys(UCCF_SERVICE_OPTIONS) as Array<keyof typeof UCCF_SERVICE_OPTIONS>).map((key) => {
                   const options = UCCF_SERVICE_OPTIONS[key];
                   const list = form[key];
                   return (
-                    <InputField key={key} label={key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}>
+                    <PackageWizardInputField key={key} label={tg(UCCF_SERVICE_BUCKET_I18N[key])}>
                       <div className="flex flex-wrap gap-2">
                         {options.map((opt) => {
                           const selected = list.includes(opt);
@@ -545,10 +578,10 @@ export default function AgencyPackageCreatePage() {
                           );
                         })}
                       </div>
-                    </InputField>
+                    </PackageWizardInputField>
                   );
                 })}
-                <InputField label="Exclusions">
+                <PackageWizardInputField label="Exclusions">
                   <div className="flex flex-wrap gap-2">
                     {UCCF_EXCLUSION_OPTIONS.map((opt) => {
                       const selected = form.exclusions.includes(opt);
@@ -559,8 +592,8 @@ export default function AgencyPackageCreatePage() {
                       );
                     })}
                   </div>
-                </InputField>
-                <InputField label="Add-Ons">
+                </PackageWizardInputField>
+                <PackageWizardInputField label="Add-Ons">
                   <div className="flex flex-wrap gap-2">
                     {UCCF_ADD_ON_OPTIONS.map((opt) => {
                       const selected = form.addOns.includes(opt);
@@ -571,7 +604,7 @@ export default function AgencyPackageCreatePage() {
                       );
                     })}
                   </div>
-                </InputField>
+                </PackageWizardInputField>
               </div>
             )}
 
@@ -579,7 +612,7 @@ export default function AgencyPackageCreatePage() {
             {step === 4 && (
               <div className="space-y-4">
                 <h2 className="text-xl" style={{ color: cn.text }}>Schedule</h2>
-                <InputField label="Hours Per Day">
+                <PackageWizardInputField label="Hours Per Day">
                   <div className="grid grid-cols-3 gap-3">
                     {([8, 12, 24] as HoursPerDay[]).map((h) => (
                       <button key={h} onClick={() => update({ hoursPerDay: h })} className="p-4 rounded-xl border text-center cn-touch-target" style={{ borderColor: form.hoursPerDay === h ? cn.teal : cn.border, background: form.hoursPerDay === h ? cn.tealBg : "transparent" }}>
@@ -588,8 +621,8 @@ export default function AgencyPackageCreatePage() {
                       </button>
                     ))}
                   </div>
-                </InputField>
-                <InputField label="Shift Type">
+                </PackageWizardInputField>
+                <PackageWizardInputField label="Shift Type">
                   <div className="grid grid-cols-3 gap-3">
                     {(["day", "night", "rotational"] as ShiftType[]).map((t) => (
                       <button key={t} onClick={() => update({ shiftType: t })} className="p-3 rounded-xl border text-sm text-center cn-touch-target" style={{ borderColor: form.shiftType === t ? cn.teal : cn.border, background: form.shiftType === t ? cn.tealBg : "transparent", color: cn.text }}>
@@ -597,14 +630,14 @@ export default function AgencyPackageCreatePage() {
                       </button>
                     ))}
                   </div>
-                </InputField>
-                <InputField label="Staff Pattern">
+                </PackageWizardInputField>
+                <PackageWizardInputField label="Staff Pattern">
                   <select value={form.staffPattern} onChange={(e) => update({ staffPattern: e.target.value as any })} className="w-full px-4 py-3 rounded-xl border text-sm" style={inputStyle}>
                     <option value="single">Single Staff</option>
                     <option value="double">Double Staff</option>
                     <option value="rotational_team">Rotational Team</option>
                   </select>
-                </InputField>
+                </PackageWizardInputField>
               </div>
             )}
 
@@ -613,45 +646,45 @@ export default function AgencyPackageCreatePage() {
               <div className="space-y-4">
                 <h2 className="text-xl" style={{ color: cn.text }}>Pricing & SLA</h2>
                 <div className="grid grid-cols-2 gap-4">
-                  <InputField label="Base Price (BDT)">
+                  <PackageWizardInputField label="Base Price (BDT)">
                     <input type="number" min={0} value={form.basePrice} onChange={(e) => update({ basePrice: +e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={inputStyle} />
-                  </InputField>
-                  <InputField label="Pricing Model">
+                  </PackageWizardInputField>
+                  <PackageWizardInputField label="Pricing Model">
                     <select value={form.pricingModel} onChange={(e) => update({ pricingModel: e.target.value as PricingModel })} className="w-full px-4 py-3 rounded-xl border text-sm" style={inputStyle}>
                       <option value="monthly">Monthly</option>
                       <option value="daily">Daily</option>
                       <option value="hourly">Hourly</option>
                     </select>
-                  </InputField>
+                  </PackageWizardInputField>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <InputField label="Included Hours">
+                  <PackageWizardInputField label="Included Hours">
                     <input type="number" min={0} value={form.includedHours} onChange={(e) => update({ includedHours: +e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={inputStyle} />
-                  </InputField>
-                  <InputField label="Overtime Rate (BDT/hr)">
+                  </PackageWizardInputField>
+                  <PackageWizardInputField label="Overtime Rate (BDT/hr)">
                     <input type="number" min={0} value={form.overtimeRate} onChange={(e) => update({ overtimeRate: +e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={inputStyle} />
-                  </InputField>
+                  </PackageWizardInputField>
                 </div>
 
                 <h3 className="text-sm pt-4" style={{ color: cn.text, borderTop: `1px solid ${cn.border}` }}>Service Level Agreement</h3>
                 <div className="grid grid-cols-2 gap-4">
-                  <InputField label="Replacement Time (hours)">
+                  <PackageWizardInputField label="Replacement Time (hours)">
                     <input type="number" min={1} value={form.replacementHours} onChange={(e) => update({ replacementHours: +e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={inputStyle} />
-                  </InputField>
-                  <InputField label="Emergency Response (min)">
+                  </PackageWizardInputField>
+                  <PackageWizardInputField label="Emergency Response (min)">
                     <input type="number" min={5} value={form.emergencyMinutes} onChange={(e) => update({ emergencyMinutes: +e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={inputStyle} />
-                  </InputField>
+                  </PackageWizardInputField>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <InputField label="Attendance Guarantee (%)">
+                  <PackageWizardInputField label="Attendance Guarantee (%)">
                     <input type="number" min={80} max={100} value={form.attendancePercent} onChange={(e) => update({ attendancePercent: +e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={inputStyle} />
-                  </InputField>
-                  <InputField label="Reporting Frequency">
+                  </PackageWizardInputField>
+                  <PackageWizardInputField label="Reporting Frequency">
                     <select value={form.reportingFreq} onChange={(e) => update({ reportingFreq: e.target.value as any })} className="w-full px-4 py-3 rounded-xl border text-sm" style={inputStyle}>
                       <option value="daily">Daily</option>
                       <option value="weekly">Weekly</option>
                     </select>
-                  </InputField>
+                  </PackageWizardInputField>
                 </div>
 
                 <h3 className="text-sm pt-4" style={{ color: cn.text, borderTop: `1px solid ${cn.border}` }}>Compliance & Trust</h3>
@@ -674,23 +707,56 @@ export default function AgencyPackageCreatePage() {
             {/* Step 6: Review */}
             {step === 6 && (
               <div className="space-y-4">
-                <h2 className="text-xl" style={{ color: cn.text }}>Review & Publish</h2>
+                <h2 className="text-xl" style={{ color: cn.text }}>{tg("wizard.agencyReviewPublishTitle")}</h2>
+                {form.serviceAreas.length === 0 && (
+                  <div className="p-4 rounded-xl border text-sm space-y-3" style={{ borderColor: cn.amber, background: cn.amberBg, color: cn.text }}>
+                    <p className="leading-relaxed">{tg("wizard.agencyReviewServiceAreasBanner")}</p>
+                    <button type="button" onClick={() => setStep(1)} className="px-4 py-2.5 rounded-xl text-sm cn-touch-target text-white" style={{ background: "var(--cn-gradient-agency)" }}>
+                      {tg("wizard.agencyReviewFixServiceAreas")}
+                    </button>
+                  </div>
+                )}
                 <div className="space-y-3">
                   {[
-                    { label: "Title", value: form.title || "—" },
-                    { label: "Categories", value: form.categories.map((c) => c.replace(/_/g, " ")).join(", ") || "—" },
-                    { label: "Service Areas", value: form.serviceAreas.join(", ") || "—" },
-                    { label: "Staff", value: `${form.caregiverCount} caregiver(s), ${form.nurseCount} nurse(s) — ${form.staffLevel}` },
-                    { label: "Schedule", value: `${form.hoursPerDay}h/day, ${form.shiftType}, ${form.staffPattern}` },
-                    { label: "Base Price", value: `৳${form.basePrice.toLocaleString()}/${form.pricingModel}` },
-                    { label: "SLA", value: `${form.replacementHours}h replacement, ${form.emergencyMinutes}min response, ${form.attendancePercent}% attendance` },
-                    { label: "Services", value: [...form.personal_care, ...form.medical_support, ...form.advanced_care, ...form.coordination].join(", ") || "—" },
+                    { label: tg("wizard.agencyReviewPackageTitle"), value: form.title || "—" },
+                    { label: tg("wizard.agencyReviewCategories"), value: form.categories.map((c) => c.replace(/_/g, " ")).join(", ") || "—" },
+                    {
+                      label: tg("wizard.agencyReviewServiceAreas"),
+                      value: form.serviceAreas.length ? form.serviceAreas.join(", ") : tg("wizard.agencyReviewServiceAreasEmpty"),
+                    },
+                    {
+                      label: tg("wizard.agencyReviewCareTeam"),
+                      value: tg("wizard.agencyReviewCareTeamSummary", {
+                        caregivers: form.caregiverCount,
+                        nurses: form.nurseCount,
+                        level: form.staffLevel,
+                      }),
+                    },
+                    { label: tg("wizard.agencyReviewSchedule"), value: `${form.hoursPerDay}h/day, ${form.shiftType}, ${form.staffPattern}` },
+                    { label: tg("wizard.agencyReviewBasePrice"), value: `৳${form.basePrice.toLocaleString()}/${form.pricingModel}` },
+                    {
+                      label: tg("wizard.agencyReviewSla"),
+                      value: `${form.replacementHours}h replacement, ${form.emergencyMinutes}min response, ${form.attendancePercent}% attendance`,
+                    },
+                    ...(form.targetCondition.trim()
+                      ? [{ label: tg("wizard.agencyReviewClientCondition"), value: form.targetCondition.trim() }]
+                      : []),
                   ].map((r) => (
-                    <div key={r.label} className="flex justify-between p-3 rounded-xl" style={{ background: cn.bgInput }}>
-                      <span className="text-sm" style={{ color: cn.textSecondary }}>{r.label}</span>
-                      <span className="text-sm text-right max-w-[60%]" style={{ color: cn.text }}>{r.value}</span>
+                    <div key={r.label} className="flex flex-col gap-1.5 p-3 rounded-xl sm:flex-row sm:justify-between sm:items-start" style={{ background: cn.bgInput }}>
+                      <span className="text-sm shrink-0" style={{ color: cn.textSecondary }}>{r.label}</span>
+                      <span className="text-sm break-words sm:text-right sm:max-w-[min(100%,28rem)]" style={{ color: cn.text }}>{r.value}</span>
                     </div>
                   ))}
+                  <p className="text-xs font-semibold uppercase tracking-wide px-1 pt-2" style={{ color: cn.textSecondary }}>{tg("wizard.agencyReviewServicesHeading")}</p>
+                  {(Object.keys(UCCF_SERVICE_OPTIONS) as Array<keyof typeof UCCF_SERVICE_OPTIONS>).map((key) => {
+                    const v = form[key].join(", ") || "—";
+                    return (
+                      <div key={key} className="flex flex-col gap-1.5 p-3 rounded-xl sm:flex-row sm:justify-between sm:items-start" style={{ background: cn.bgInput }}>
+                        <span className="text-sm shrink-0" style={{ color: cn.textSecondary }}>{tg(UCCF_SERVICE_BUCKET_I18N[key])}</span>
+                        <span className="text-sm break-words sm:text-right sm:max-w-[min(100%,28rem)]" style={{ color: cn.text }}>{v.replace(/_/g, " ")}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}

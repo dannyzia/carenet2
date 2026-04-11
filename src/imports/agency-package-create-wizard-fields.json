@@ -1,0 +1,116 @@
+{
+  "$comment": "Authoritative field list for AgencyPackageCreatePage (/agency/package-create). UCCF meta.type = \"offer\". For comparison, guardian/patient care requirement wizard uses the same UCCF option sets (UCCF_SERVICE_OPTIONS, devices, procedures, etc.) with meta.type = \"request\" — see CareRequirementWizardPage.tsx. Caregivers do not use this form; they browse/apply to roles separately.",
+  "route": "/agency/package-create",
+  "relatedWizard": {
+    "name": "Care requirement (guardian/patient)",
+    "route": "/guardian/care-requirement-wizard (and patient variant)",
+    "sharedWithThisForm": [
+      "UCCF_SERVICE_OPTIONS buckets (personal_care, medical_support, household_support, advanced_care, coordination)",
+      "UCCF_EXCLUSION_OPTIONS",
+      "UCCF_ADD_ON_OPTIONS",
+      "UCCF_EQUIPMENT_SLUGS",
+      "UCCF_MEDICAL_DEVICES",
+      "UCCF_MEDICAL_PROCEDURES",
+      "Similar care_needs / medical / logistics / equipment payload shaping"
+    ],
+    "notShared": [
+      "Agency-only: pricing, SLA, compliance flags, publish to marketplace",
+      "Requirement wizard: patient/contact fields, requirement title, different party block"
+    ]
+  },
+  "steps": [
+    {
+      "id": 1,
+      "title": "Package Information",
+      "fields": [
+        { "formKey": "title", "type": "string", "control": "text", "required": true, "validation": "trim length >= 5 on publish" },
+        { "formKey": "categories", "type": "CareCategory[]", "control": "multi-toggle", "required": true },
+        { "formKey": "city", "type": "string", "control": "text", "required": false },
+        { "formKey": "durationType", "type": "\"short\" | \"monthly\" | \"long_term\"", "control": "select", "required": false },
+        { "formKey": "serviceAreas", "type": "string[]", "control": "tags + text + add button", "required": true, "validation": "non-empty before next step and publish" },
+        { "formKey": "newArea", "type": "string", "control": "text (buffer for add)", "required": false },
+        { "formKey": "targetAge", "type": "string", "control": "number input", "required": false, "note": "stored as string; parsed to number in payload" },
+        { "formKey": "targetGender", "type": "\"\" | \"male\" | \"female\" | \"other\"", "control": "select", "required": false },
+        { "formKey": "targetCondition", "type": "string", "control": "text", "required": false, "mapsTo": "care_subject.condition_summary" },
+        { "formKey": "locationType", "type": "\"\" | \"home\" | \"hospital\"", "control": "select", "required": false },
+        { "formKey": "accommodationProvided", "type": "boolean", "control": "checkbox", "required": false },
+        { "formKey": "foodProvided", "type": "boolean", "control": "checkbox", "required": false },
+        { "formKey": "travelDistanceKm", "type": "string", "control": "number", "required": false }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Care team size & level",
+      "fields": [
+        { "formKey": "caregiverCount", "type": "number", "control": "number", "required": false },
+        { "formKey": "nurseCount", "type": "number", "control": "number", "required": false },
+        { "formKey": "staffLevel", "type": "StaffLevel", "control": "L1–L4 buttons", "required": false },
+        { "formKey": "genderPref", "type": "\"male\" | \"female\" | \"none\"", "control": "select", "required": false },
+        { "formKey": "experienceYears", "type": "number", "control": "number", "required": false },
+        { "formKey": "certifications", "type": "string[]", "control": "unused in current UI", "required": false }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Care needs, tasks & add-ons",
+      "fields": [
+        { "formKey": "adlBathing", "type": "boolean", "control": "toggle", "mapsTo": "care_needs.ADL" },
+        { "formKey": "feedingOral", "type": "boolean", "control": "toggle" },
+        { "formKey": "feedingTube", "type": "boolean", "control": "toggle" },
+        { "formKey": "toiletingAssisted", "type": "boolean", "control": "toggle" },
+        { "formKey": "toiletingFull", "type": "boolean", "control": "toggle" },
+        { "formKey": "adlMobility", "type": "boolean", "control": "toggle" },
+        { "formKey": "monitorVitals", "type": "boolean", "control": "toggle" },
+        { "formKey": "monitorSupervision", "type": "boolean", "control": "toggle" },
+        { "formKey": "companionship", "type": "boolean", "control": "toggle" },
+        { "formKey": "diagnosis", "type": "string", "control": "text", "mapsTo": "medical.diagnosis" },
+        { "formKey": "medicationComplexity", "type": "\"\" | \"low\" | \"medium\" | \"high\"", "control": "select", "mapsTo": "medical.medication_complexity" },
+        { "formKey": "devices", "type": "string[]", "control": "multi-toggle", "mapsTo": "medical.devices" },
+        { "formKey": "procedures", "type": "string[]", "control": "multi-toggle", "mapsTo": "medical.procedures_required" },
+        { "formKey": "equipmentSlugs", "type": "string[]", "control": "multi-toggle", "mapsTo": "equipment.required" },
+        { "formKey": "equipmentProvider", "type": "\"\" | \"patient\" | \"agency\" | \"mixed\"", "control": "select", "mapsTo": "equipment.provider" },
+        { "formKey": "personal_care", "type": "string[]", "control": "multi-toggle", "optionsSource": "UCCF_SERVICE_OPTIONS.personal_care" },
+        { "formKey": "medical_support", "type": "string[]", "control": "multi-toggle", "optionsSource": "UCCF_SERVICE_OPTIONS.medical_support" },
+        { "formKey": "household_support", "type": "string[]", "control": "multi-toggle", "optionsSource": "UCCF_SERVICE_OPTIONS.household_support" },
+        { "formKey": "advanced_care", "type": "string[]", "control": "multi-toggle", "optionsSource": "UCCF_SERVICE_OPTIONS.advanced_care" },
+        { "formKey": "coordination", "type": "string[]", "control": "multi-toggle", "optionsSource": "UCCF_SERVICE_OPTIONS.coordination" },
+        { "formKey": "exclusions", "type": "string[]", "control": "multi-toggle", "optionsSource": "UCCF_EXCLUSION_OPTIONS" },
+        { "formKey": "addOns", "type": "string[]", "control": "multi-toggle", "optionsSource": "UCCF_ADD_ON_OPTIONS" }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Schedule",
+      "fields": [
+        { "formKey": "hoursPerDay", "type": "HoursPerDay", "control": "8 | 12 | 24 buttons", "required": false },
+        { "formKey": "shiftType", "type": "ShiftType", "control": "toggle group", "required": false },
+        { "formKey": "staffPattern", "type": "\"single\" | \"double\" | \"rotational_team\"", "control": "select", "required": false }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Pricing & SLA",
+      "fields": [
+        { "formKey": "basePrice", "type": "number", "control": "number", "required": false },
+        { "formKey": "pricingModel", "type": "PricingModel", "control": "select", "required": false },
+        { "formKey": "includedHours", "type": "number", "control": "number", "required": false },
+        { "formKey": "overtimeRate", "type": "number", "control": "number", "required": false },
+        { "formKey": "replacementHours", "type": "number", "control": "number", "required": false },
+        { "formKey": "emergencyMinutes", "type": "number", "control": "number", "required": false },
+        { "formKey": "attendancePercent", "type": "number", "control": "number", "required": false },
+        { "formKey": "reportingFreq", "type": "\"daily\" | \"weekly\"", "control": "select", "required": false },
+        { "formKey": "backgroundVerified", "type": "boolean", "control": "toggle button", "required": false },
+        { "formKey": "medicalFit", "type": "boolean", "control": "toggle button", "required": false },
+        { "formKey": "contractRequired", "type": "boolean", "control": "toggle button", "required": false },
+        { "formKey": "trialAvailable", "type": "boolean", "control": "toggle button", "required": false },
+        { "formKey": "extraCharges", "type": "string[]", "control": "unused in current UI", "required": false }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Review & publish",
+      "fields": [],
+      "note": "Read-only summary; publish calls marketplaceService.createAgencyPackage + publishPackage"
+    }
+  ]
+}

@@ -91,6 +91,8 @@ export const router = createBrowserRouter([
               // ─── Caregiver ───
               { path: "caregiver/dashboard", ...p(() => import("@/frontend/pages/caregiver/CaregiverDashboardPage")) },
               { path: "caregiver/jobs", ...p(() => import("@/frontend/pages/caregiver/CaregiverJobsPage")) },
+              { path: "caregiver/marketplace-hub", ...p(() => import("@/frontend/pages/caregiver/CaregiverMarketplaceHubPage")) },
+              { path: "caregiver/marketplace/package/:id", ...p(() => import("@/frontend/pages/guardian/PackageDetailPage")) },
               { path: "caregiver/jobs/:id", ...p(() => import("@/frontend/pages/caregiver/CaregiverJobDetailPage")) },
               { path: "caregiver/schedule", ...p(() => import("@/frontend/pages/caregiver/CaregiverSchedulePage")) },
               { path: "caregiver/messages", ...p(() => import("@/frontend/pages/caregiver/CaregiverMessagesPage")) },
@@ -215,8 +217,14 @@ export const router = createBrowserRouter([
               { path: "agency/reassignment-history", ...p(() => import("@/frontend/pages/agency/ReassignmentHistoryPage")) },
               { path: "agency/care-plan-template", ...p(() => import("@/frontend/pages/agency/CarePlanTemplatePage")) },
               { path: "agency/package-create", ...p(() => import("@/frontend/pages/agency/AgencyPackageCreatePage")) },
-              { path: "agency/marketplace-browse", ...p(() => import("@/frontend/pages/agency/AgencyMarketplaceBrowsePage")) },
+              {
+                path: "agency/marketplace-browse",
+                ...p(() => import("@/frontend/pages/agency/AgencyMarketplaceBrowseLegacyRedirect")),
+              },
+              { path: "agency/care-requirement-board", ...p(() => import("@/frontend/pages/agency/AgencyMarketplaceBrowsePage")) },
+              { path: "agency/care-packages", ...p(() => import("@/frontend/pages/agency/AgencyPackageCatalogPage")) },
               { path: "agency/bid-management", ...p(() => import("@/frontend/pages/agency/AgencyBidManagementPage")) },
+              { path: "agency/package-leads", ...p(() => import("@/frontend/pages/agency/AgencyPackageLeadsPage")) },
               { path: "agency/incidents", ...p(() => import("@/frontend/pages/agency/AgencyIncidentsPage")) },
               { path: "agency/care-scorecard", ...p(() => import("@/frontend/pages/agency/AgencyCareScorecardPage")) },
 

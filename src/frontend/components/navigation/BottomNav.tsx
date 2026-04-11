@@ -6,6 +6,8 @@ import {
 import { cn, type Role, roleConfig } from "@/frontend/theme/tokens";
 import { useTranslation } from "react-i18next";
 import { useTransitionNavigate } from "@/frontend/hooks/useTransitionNavigate";
+import { features } from "@/config/features";
+import { useAuth } from "@/frontend/auth/AuthContext";
 
 export interface BottomNavProps {
   unreadMessages?: number;
@@ -33,12 +35,21 @@ export function BottomNav({ unreadMessages = 0, unreadNotifications = 0, ...rest
   const location = useLocation();
   const navigate = useTransitionNavigate();
   const { t } = useTranslation("common");
+  const { user } = useAuth();
   const role = detectRole(location.pathname);
   const rolePrimary = role ? `var(--${roleConfig[role].cssVar})` : "var(--cn-pink)";
 
   /* Resolve dynamic destinations based on detected role */
   const homePath = role ? `/${role}/dashboard` : "/";
-  const searchPath = role ? `/${role}/search` : "/global-search";
+  const effectiveRole = role ?? user?.activeRole ?? null;
+  const searchPath =
+    effectiveRole === "guardian" || effectiveRole === "patient"
+      ? !features.careSeekerCaregiverContactEnabled
+        ? `/${effectiveRole}/marketplace-hub?tab=packages`
+        : `/${effectiveRole}/search`
+      : role
+        ? `/${role}/search`
+        : "/global-search";
   const messagesPath = role ? `/${role}/messages` : "/messages";
 
   /* Tab definitions — order: Home | Back | Search | Messages | Menu */
