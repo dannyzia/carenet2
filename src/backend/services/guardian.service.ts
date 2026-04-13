@@ -15,6 +15,8 @@ import type {
   InvoiceDetail,
   CareContract,
 } from "@/backend/models";
+import type { OperationalDashboardData } from "@/backend/models/operationalDashboard.model";
+import { mapGuardianOperationalDashboard } from "./guardianOperationalMapper";
 import {
   USE_SUPABASE,
   sbRead,
@@ -757,5 +759,13 @@ export const guardianService = {
       });
     }
     return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_INCIDENT_HISTORY);
+  },
+
+  async getOperationalDashboard(): Promise<OperationalDashboardData> {
+    const [alerts, activity] = await Promise.all([
+      guardianService.getDashboardAlerts(),
+      guardianService.getRecentActivity(),
+    ]);
+    return mapGuardianOperationalDashboard({ alerts, activity });
   },
 };

@@ -1,0 +1,115 @@
+{
+  "$comment": "Field inventory for CareRequirementWizardPage — UCCF meta.type = \"request\". Same React module serves /guardian/care-requirement-wizard and /patient/care-requirement-wizard (useCareSeekerBasePath). Agency offer wizard: src/imports/agency-package-create-wizard-fields.json.",
+  "component": "src/frontend/pages/guardian/CareRequirementWizardPage.tsx",
+  "routes": [
+    "/guardian/care-requirement-wizard",
+    "/patient/care-requirement-wizard"
+  ],
+  "queryParams": [
+    { "name": "agency", "type": "string | null", "purpose": "Pre-select agency id; skips agency picker when set." },
+    { "name": "direct", "type": "\"true\" | omitted", "purpose": "When true, opens wizard at patient step and sets post-to-marketplace intent." }
+  ],
+  "wizardStateOutsideFormData": [
+    { "key": "selectedAgency", "type": "string", "control": "agency picker / prefill", "required": false, "note": "Agency id when posting to a specific agency." },
+    { "key": "selectedCareTypes", "type": "CareCategory[]", "control": "multi-toggle (step 3)", "required": true, "validation": "non-empty before submit / step advance from 3" },
+    { "key": "postToMarketplace", "type": "boolean", "control": "choice screen + ?direct=", "required": false, "note": "If true, publishCareRequest after create." },
+    { "key": "currentStep", "type": "1..6", "control": "wizard navigation", "required": true },
+    { "key": "showWizard", "type": "boolean", "control": "pre-wizard vs wizard", "required": true }
+  ],
+  "steps": [
+    {
+      "id": 1,
+      "title": "Select Agency",
+      "fields": [
+        { "formKey": "selectedAgency", "state": "wizardStateOutsideFormData", "type": "string", "control": "agency list selection", "required": false }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Patient",
+      "fields": [
+        { "formKey": "patientName", "type": "string", "control": "text", "required": true, "validation": "step 2: non-empty" },
+        { "formKey": "patientAge", "type": "string", "control": "number input", "required": true, "validation": "parsed finite age >= 0" },
+        { "formKey": "conditions", "type": "string", "control": "text", "required": false, "mapsTo": "care_subject.condition_summary (with notes)" },
+        { "formKey": "gender", "type": "\"\" | \"male\" | \"female\" | \"other\"", "control": "select", "required": false, "mapsTo": "care_subject.gender" },
+        { "formKey": "mobility", "type": "\"independent\" | \"assisted\" | \"bedridden\"", "control": "select or buttons", "required": true, "mapsTo": "care_subject.mobility" },
+        { "formKey": "cognitive", "type": "\"\" | \"normal\" | \"impaired\" | \"unconscious\"", "control": "select", "required": false, "mapsTo": "care_subject.cognitive" },
+        { "formKey": "riskLevel", "type": "\"\" | \"low\" | \"medium\" | \"high\"", "control": "select", "required": false, "mapsTo": "care_subject.risk_level" },
+        { "formKey": "contactName", "type": "string", "control": "text", "required": true, "validation": "step 2", "mapsTo": "party.name" },
+        { "formKey": "contactPhone", "type": "string", "control": "text", "required": true, "validation": "step 2", "mapsTo": "party.contact_phone", "note": "Prefilled from auth user when empty." }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Care Needs",
+      "fields": [
+        { "formKey": "selectedCareTypes", "state": "wizardStateOutsideFormData", "type": "CareCategory[]", "control": "category toggles", "required": true, "mapsTo": "meta.category" },
+        { "formKey": "adlBathing", "type": "boolean", "control": "toggle", "mapsTo": "care_needs.ADL" },
+        { "formKey": "feedingOral", "type": "boolean", "control": "toggle" },
+        { "formKey": "feedingTube", "type": "boolean", "control": "toggle" },
+        { "formKey": "toiletingAssisted", "type": "boolean", "control": "toggle" },
+        { "formKey": "toiletingFull", "type": "boolean", "control": "toggle" },
+        { "formKey": "adlMobility", "type": "boolean", "control": "toggle" },
+        { "formKey": "monitorVitals", "type": "boolean", "control": "toggle" },
+        { "formKey": "monitorSupervision", "type": "boolean", "control": "toggle" },
+        { "formKey": "companionship", "type": "boolean", "control": "toggle" },
+        { "formKey": "diagnosis", "type": "string", "control": "text", "mapsTo": "medical.diagnosis" },
+        { "formKey": "medicationComplexity", "type": "\"\" | \"low\" | \"medium\" | \"high\"", "control": "select", "mapsTo": "medical.medication_complexity" },
+        { "formKey": "devices", "type": "string[]", "control": "multi-toggle", "mapsTo": "medical.devices" },
+        { "formKey": "procedures", "type": "string[]", "control": "multi-toggle", "mapsTo": "medical.procedures_required" },
+        { "formKey": "locationType", "type": "\"\" | \"home\" | \"hospital\"", "control": "select", "mapsTo": "logistics.location_type" },
+        { "formKey": "accommodationProvided", "type": "boolean", "control": "checkbox", "mapsTo": "logistics.accommodation_provided" },
+        { "formKey": "foodProvided", "type": "boolean", "control": "checkbox", "mapsTo": "logistics.food_provided" },
+        { "formKey": "travelDistanceKm", "type": "string", "control": "number", "mapsTo": "logistics.travel_distance_km" },
+        { "formKey": "equipment", "type": "string[]", "control": "multi-toggle", "optionsSource": "UCCF_EQUIPMENT_SLUGS", "mapsTo": "equipment.required", "note": "Agency wizard names this formKey equipmentSlugs." },
+        { "formKey": "equipmentProvider", "type": "\"\" | \"patient\" | \"agency\" | \"mixed\"", "control": "select", "mapsTo": "equipment.provider" },
+        { "formKey": "personal_care", "type": "string[]", "control": "multi-toggle", "optionsSource": "UCCF_SERVICE_OPTIONS.personal_care" },
+        { "formKey": "medical_support", "type": "string[]", "control": "multi-toggle", "optionsSource": "UCCF_SERVICE_OPTIONS.medical_support" },
+        { "formKey": "household_support", "type": "string[]", "control": "multi-toggle", "optionsSource": "UCCF_SERVICE_OPTIONS.household_support" },
+        { "formKey": "advanced_care", "type": "string[]", "control": "multi-toggle", "optionsSource": "UCCF_SERVICE_OPTIONS.advanced_care" },
+        { "formKey": "coordination", "type": "string[]", "control": "multi-toggle", "optionsSource": "UCCF_SERVICE_OPTIONS.coordination" },
+        { "formKey": "exclusions", "type": "string[]", "control": "multi-toggle", "optionsSource": "UCCF_EXCLUSION_OPTIONS" },
+        { "formKey": "addOns", "type": "string[]", "control": "multi-toggle", "optionsSource": "UCCF_ADD_ON_OPTIONS" }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Schedule",
+      "fields": [
+        { "formKey": "shiftType", "type": "ShiftType", "control": "toggle group", "mapsTo": "schedule.shift_type" },
+        { "formKey": "staffPattern", "type": "StaffPattern", "control": "select", "mapsTo": "schedule.staff_pattern" },
+        { "formKey": "staffLevel", "type": "StaffLevel", "control": "L1–L4 buttons", "mapsTo": "staffing.required_level" },
+        { "formKey": "caregiverCount", "type": "number", "control": "number", "mapsTo": "staffing.caregiver_count" },
+        { "formKey": "nurseCount", "type": "number", "control": "number", "mapsTo": "staffing.nurse_count" },
+        { "formKey": "hoursPerDay", "type": "8 | 12 | 24", "control": "buttons", "mapsTo": "schedule.hours_per_day" },
+        { "formKey": "startDate", "type": "string", "control": "date", "required": false, "mapsTo": "meta.start_date" },
+        { "formKey": "durationType", "type": "\"short\" | \"monthly\" | \"long_term\"", "control": "select", "mapsTo": "meta.duration_type" },
+        { "formKey": "city", "type": "string", "control": "text", "mapsTo": "meta.location.city" },
+        { "formKey": "area", "type": "string", "control": "text", "mapsTo": "meta.location.area" },
+        { "formKey": "address", "type": "string", "control": "text", "mapsTo": "meta.location.address_optional" }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Budget",
+      "fields": [
+        { "formKey": "budgetMin", "type": "string", "control": "number", "mapsTo": "pricing.budget_min", "note": "Parsed int; empty ok." },
+        { "formKey": "budgetMax", "type": "string", "control": "number", "mapsTo": "pricing.budget_max" },
+        { "formKey": "preferredModel", "type": "\"monthly\" | \"daily\" | \"hourly\"", "control": "select", "mapsTo": "pricing.preferred_model" },
+        { "formKey": "notes", "type": "string", "control": "textarea", "required": false, "mapsTo": "appended to care_subject.condition_summary with conditions" },
+        { "formKey": "expiryDays", "type": "string", "control": "number / select", "required": false, "mapsTo": "request.expires_at (derived)", "note": "Default \"15\"; converted to ISO expiry on submit." }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Review",
+      "fields": [],
+      "note": "Read-only summary; submit calls marketplaceService.createCareRequest (+ publishCareRequest when postToMarketplace)."
+    }
+  ],
+  "payloadOnlyOnSubmit": [
+    { "key": "meta.title", "source": "derived from categories + patientName or fallback prefix" },
+    { "key": "status", "value": "draft" },
+    { "key": "expires_at", "source": "now + expiryDays" }
+  ]
+}

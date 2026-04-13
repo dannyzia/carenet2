@@ -31,7 +31,10 @@
     "cap:run:android": "npm run build:cap && npx cap run android",
     "android:release": "node scripts/android-release.mjs",
     "android:release:apk": "node scripts/android-release.mjs apk",
-    "android:release:debug-sign": "node scripts/android-release.mjs -- -PcarenetAllowDebugSigning=true"
+    "android:release:debug-sign": "node scripts/android-release.mjs -- -PcarenetAllowDebugSigning=true",
+    "supabase:align:mark-applied": "node scripts/supabase-align-migrations.mjs",
+    "supabase:align:push-include-all": "npx supabase db push --linked --include-all",
+    "supabase:align:migration-list": "npx supabase migration list --linked"
   },
   "dependencies": {
     "@capacitor/android": "^8.3.0",

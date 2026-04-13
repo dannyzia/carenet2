@@ -120,7 +120,7 @@ async function syncBillingMuteToSupabase(muted: boolean): Promise<void> {
     .from("user_preferences")
     .select("notification_channels")
     .eq("user_id", user.id)
-    .single();
+    .maybeSingle();
 
   const currentChannels = (existing.data as { notification_channels?: Record<string, unknown> } | null)
     ?.notification_channels || {};
@@ -140,16 +140,12 @@ async function syncBillingMuteToSupabase(muted: boolean): Promise<void> {
     updated_at: new Date().toISOString(),
   };
 
-  // Try update first, insert if no row exists
-  const { error: updateErr } = await sb
+  const { error: upsertErr } = await sb
     .from("user_preferences")
-    .update({ notification_channels: updatedChannels, updated_at: row.updated_at })
-    .eq("user_id", user.id)
-    .single();
+    .upsert(row, { onConflict: "user_id" });
 
-  if (updateErr) {
-    // Row doesn't exist yet — insert
-    await sb.from("user_preferences").insert(row);
+  if (upsertErr) {
+    console.warn("[BillingNotifications] user_preferences upsert failed:", upsertErr.message);
   }
 }
 
@@ -168,7 +164,7 @@ async function loadBillingMuteFromSupabase(): Promise<void> {
       .from("user_preferences")
       .select("notification_channels")
       .eq("user_id", user.id)
-      .single();
+      .maybeSingle();
 
     if (data) {
       const channels = (data as { notification_channels?: Record<string, Record<string, unknown>> })

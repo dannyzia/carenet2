@@ -1,0 +1,109 @@
+{
+  "guardian": {
+    "bidAwaitingReview": {
+      "title": "Bid awaiting review",
+      "subtitle": "Patient: {{patientName}} — {{count}} bids received"
+    },
+    "missingCheckin": {
+      "title": "Caregiver not checked in",
+      "subtitle": "Shift started {{time}} — {{caregiverName}}"
+    },
+    "contractExpiring": {
+      "title": "Contract expiring soon",
+      "subtitle": "Patient: {{patientName}} — ends in {{days}} days"
+    }
+  },
+  "caregiver": {
+    "shiftToday": {
+      "title": "Today's shift",
+      "subtitle": "Patient: {{patientName}} — {{address}}"
+    },
+    "documentExpiring": {
+      "title": "Document expiring soon",
+      "subtitle": "{{documentType}} expires in {{days}} days"
+    },
+    "jobOffer": {
+      "title": "Job offer from {{agencyName}}",
+      "subtitle": "{{description}}"
+    }
+  },
+  "agency": {
+    "unassignedCJ": {
+      "title": "Unassigned caregiving job",
+      "subtitle": "Patient: {{patientName}} — {{duration}}"
+    },
+    "inactiveCaregiver": {
+      "title": "Caregiver inactive during shift",
+      "subtitle": "Caregiver: {{caregiverName}} — shift started {{time}}"
+    },
+    "newRequirementBid": {
+      "title": "New requirement to bid on",
+      "subtitle": "Posted by {{guardianName}} — {{requirements}}"
+    }
+  },
+  "admin": {
+    "pendingVerification": {
+      "title": "Caregiver verification pending",
+      "subtitle": "{{caregiverName}} — uploaded {{daysAgo}}"
+    },
+    "pendingAgencyApproval": {
+      "title": "Agency approval pending",
+      "subtitle": "{{agencyName}} — submitted {{daysAgo}}"
+    },
+    "openDispute": {
+      "title": "Open dispute",
+      "subtitle": "Case #{{caseId}} — {{description}}"
+    }
+  },
+  "patient": {
+    "bidToReview": {
+      "title": "Bids to review",
+      "subtitle": "Your requirement received {{count}} bids"
+    },
+    "medicationDue": {
+      "title": "Take {{medicationName}}",
+      "subtitle": "Due {{time}}"
+    },
+    "appointmentToday": {
+      "title": "Appointment today",
+      "subtitle": "{{providerName}} at {{time}}"
+    }
+  },
+  "moderator": {
+    "pendingReview": {
+      "title": "Review pending moderation",
+      "subtitle": "Reported by {{reporter}} — {{reason}}"
+    },
+    "openReport": {
+      "title": "Open report",
+      "subtitle": "{{reportedUser}} — {{reason}}"
+    },
+    "contentFlag": {
+      "title": "Content flag",
+      "subtitle": "{{contentType}} — {{reason}}"
+    }
+  },
+  "shop": {
+    "pendingOrder": {
+      "title": "Order pending fulfillment",
+      "subtitle": "Order #{{orderId}} — {{customerName}}"
+    },
+    "lowStock": {
+      "title": "Low stock alert",
+      "subtitle": "{{productName}} — only {{quantity}} left"
+    }
+  },
+  "state": {
+    "pendingReview": "Pending review",
+    "missingCheckin": "Missing check-in",
+    "expiring": "Expiring soon",
+    "checkinRequired": "Check-in required",
+    "offerPending": "Offer pending",
+    "unassigned": "Unassigned",
+    "inactive": "Inactive",
+    "actionNeeded": "Action needed",
+    "overdue": "Overdue",
+    "pendingFulfillment": "Pending fulfillment",
+    "lowStock": "Low stock"
+  }
+}

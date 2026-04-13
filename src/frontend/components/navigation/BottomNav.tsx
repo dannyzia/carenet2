@@ -47,9 +47,7 @@ export function BottomNav({ unreadMessages = 0, unreadNotifications = 0, ...rest
       ? !features.careSeekerCaregiverContactEnabled
         ? `/${effectiveRole}/marketplace-hub?tab=packages`
         : `/${effectiveRole}/search`
-      : role
-        ? `/${role}/search`
-        : "/global-search";
+      : "/global-search";
   const messagesPath = role ? `/${role}/messages` : "/messages";
 
   /* Tab definitions — order: Home | Back | Search | Messages | Menu */

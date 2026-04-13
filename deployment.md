@@ -38,10 +38,10 @@ Run the SQL migration files **in order** via the Supabase SQL Editor:
 4. `seed/02_views_and_rpcs.sql` — 14 views, 4 RPCs
 5. `seed/03_moderation_tables.sql` — 6 moderation tables + triggers
 6. `seed/04_rls_policies.sql` — 60+ RLS policies
-7. `supabase/migrations/20260317_notifications_and_preferences.sql`
-8. `supabase/migrations/20260317b_queued_notifications.sql`
-9. `supabase/migrations/20260317c_pgcron_process_queue.sql`
-10. `supabase/migrations/20260317d_cleanup_queued_notifications.sql`
+7. `supabase/migrations/20260317000000_notifications_and_preferences.sql`
+8. `supabase/migrations/20260317000001_queued_notifications.sql`
+9. `supabase/migrations/20260317000002_pgcron_process_queue.sql`
+10. `supabase/migrations/20260317000003_cleanup_queued_notifications.sql`
 11. `supabase/migrations/20260323045420_fix_function_search_path_update_updated_at.sql`
 12. `supabase/migrations/20260323045421_fix_function_search_path_update_updated_at_column.sql`
 13. `supabase/migrations/20260323045422_fix_function_search_path_generate_contract_number.sql`

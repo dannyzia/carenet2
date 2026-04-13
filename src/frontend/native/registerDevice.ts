@@ -6,7 +6,7 @@
  * Edge Function to upsert the token into the `device_tokens` table.
  */
 
-import { isNative, getPlatform } from "./platform";
+import { isCapacitorNativeShell, getPlatform } from "./platform";
 import { requestPermission, getDeviceToken } from "./notifications";
 import { USE_SUPABASE, getSupabaseClient } from "@/backend/services/supabase";
 
@@ -35,9 +35,14 @@ export function clearStoredDeviceToken(): void {
  * @returns The registered token string, or null if registration wasn't possible
  */
 export async function registerDeviceForPush(): Promise<string | null> {
-  // Only register on native platforms with Supabase connected
-  if (!isNative() || !USE_SUPABASE) {
-    console.log("[registerDevice] Skipped — not native or Supabase not connected");
+  if (!USE_SUPABASE) {
+    console.log("[registerDevice] Skipped — Supabase not connected");
+    return null;
+  }
+  if (!isCapacitorNativeShell()) {
+    console.log(
+      "[registerDevice] Skipped — push registration runs only on the iOS/Android app (Capacitor native shell), not in the browser"
+    );
     return null;
   }
 

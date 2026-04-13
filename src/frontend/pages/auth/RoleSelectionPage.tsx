@@ -1,4 +1,6 @@
+import React from "react";
 import { cn } from "@/frontend/theme/tokens";
+import { roleCardGradient } from "@/frontend/theme/roleActionGradients";
 import { useLocation } from "react-router";
 import { useTransitionNavigate } from "@/frontend/hooks/useTransitionNavigate";
 import { Users, Building2, Heart, Shield, User, ShoppingBag, Scale, ArrowRight } from "lucide-react";
@@ -9,14 +11,14 @@ import type { Role } from "@/frontend/auth/types";
 
 const SELF_REGISTER_ROLES: Role[] = ["guardian", "caregiver", "patient", "agency", "shop"];
 
-const allRoles: { id: Role; icon: React.ElementType; titleKey: string; descKey: string; gradient: string }[] = [
-  { id: "guardian", icon: Users, titleKey: "guardian", descKey: "guardianDesc", gradient: "radial-gradient(143.86% 887.35% at -10.97% -22.81%, #FFB3C1 0%, #FF8FA3 100%)" },
-  { id: "patient", icon: User, titleKey: "patient", descKey: "patientDesc", gradient: "radial-gradient(143.86% 887.35% at -10.97% -22.81%, #B8A7FF 0%, #8B7AE8 100%)" },
-  { id: "caregiver", icon: Heart, titleKey: "caregiver", descKey: "caregiverDesc", gradient: "radial-gradient(143.86% 887.35% at -10.97% -22.81%, #A8E063 0%, #7CE577 100%)" },
-  { id: "agency", icon: Building2, titleKey: "agencyOwner", descKey: "agencyOwnerDesc", gradient: "radial-gradient(143.86% 887.35% at -10.97% -22.81%, #8EC5FC 0%, #5B9FFF 100%)" },
-  { id: "shop", icon: ShoppingBag, titleKey: "shopOwner", descKey: "shopOwnerDesc", gradient: "radial-gradient(143.86% 887.35% at -10.97% -22.81%, #00BCD4 0%, #0097A7 100%)" },
-  { id: "moderator", icon: Scale, titleKey: "moderator", descKey: "moderatorDesc", gradient: "radial-gradient(143.86% 887.35% at -10.97% -22.81%, #FFD180 0%, #FFB74D 100%)" },
-  { id: "admin", icon: Shield, titleKey: "admin", descKey: "adminDesc", gradient: "radial-gradient(143.86% 887.35% at -10.97% -22.81%, #B8A7FF 0%, #8B7AE8 100%)" },
+const allRoles: { id: Role; icon: React.ElementType; titleKey: string; descKey: string }[] = [
+  { id: "guardian", icon: Users, titleKey: "guardian", descKey: "guardianDesc" },
+  { id: "patient", icon: User, titleKey: "patient", descKey: "patientDesc" },
+  { id: "caregiver", icon: Heart, titleKey: "caregiver", descKey: "caregiverDesc" },
+  { id: "agency", icon: Building2, titleKey: "agencyOwner", descKey: "agencyOwnerDesc" },
+  { id: "shop", icon: ShoppingBag, titleKey: "shopOwner", descKey: "shopOwnerDesc" },
+  { id: "moderator", icon: Scale, titleKey: "moderator", descKey: "moderatorDesc" },
+  { id: "admin", icon: Shield, titleKey: "admin", descKey: "adminDesc" },
 ];
 
 export default function RoleSelectionPage() {
@@ -62,7 +64,12 @@ export default function RoleSelectionPage() {
           return (
             <div key={role.id} className="finance-card p-5 hover:shadow-lg transition-all cursor-pointer hover:-translate-y-0.5" onClick={() => handleRoleSelect(role.id)} style={{ borderLeft: isCurrentRole ? `4px solid ${cn.green}` : undefined }}>
               <div className="flex items-center gap-4">
-                <div className="rounded-xl p-3 shrink-0" style={{ background: role.gradient, boxShadow: "0px 4px 14px rgba(0,0,0,0.15)" }}><Icon className="w-6 h-6 text-white" /></div>
+                <div
+                  className="rounded-xl p-3 shrink-0"
+                  style={{ background: roleCardGradient[role.id], boxShadow: "0px 4px 14px rgba(0,0,0,0.15)" }}
+                >
+                  <Icon className="w-6 h-6 text-white" />
+                </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <h3 className="text-base" style={{ color: cn.text }}>{t(`auth:roleSelection.${role.titleKey}`)}</h3>

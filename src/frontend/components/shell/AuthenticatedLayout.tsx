@@ -78,12 +78,17 @@ function getRoleNavSections(t: TFunction): Record<Role, NavSection[]> {
           { i18nKey: "myPatients", path: "/guardian/patients", icon: Heart },
           { i18nKey: "schedule", path: "/guardian/schedule", icon: Calendar },
           { i18nKey: "messages", path: "/guardian/messages", icon: MessageSquare },
+          { i18nKey: "profile", path: "/guardian/profile", icon: User },
+        ],
+      },
+      {
+        sectionKey: "finance",
+        links: [
           { i18nKey: "payments", path: "/guardian/payments", icon: CreditCard },
           { i18nKey: "billing", path: "/billing", icon: Receipt },
           { i18nKey: "wallet", path: "/wallet?role=guardian", icon: Coins },
           { i18nKey: "contracts", path: "/contracts?role=guardian", icon: Handshake },
           { i18nKey: "reviews", path: "/guardian/reviews", icon: Star },
-          { i18nKey: "profile", path: "/guardian/profile", icon: User },
         ],
       },
       {
@@ -260,11 +265,16 @@ function getRoleNavSections(t: TFunction): Record<Role, NavSection[]> {
           { i18nKey: "verifications", path: "/admin/verifications", icon: CheckCircle },
           { i18nKey: "agencyApprovals", path: "/admin/agency-approvals", icon: Building2 },
           { i18nKey: "placements", path: "/admin/placement-monitoring", icon: Shield },
+          { i18nKey: "reports", path: "/admin/reports", icon: BarChart2 },
+        ],
+      },
+      {
+        sectionKey: "finance",
+        links: [
           { i18nKey: "walletManagement", path: "/admin/wallet-management", icon: Coins },
           { i18nKey: "contractsOverview", path: "/admin/contracts", icon: Handshake },
           { i18nKey: "payments", path: "/admin/payments", icon: CreditCard },
           { i18nKey: "billing", path: "/billing", icon: Receipt },
-          { i18nKey: "reports", path: "/admin/reports", icon: BarChart2 },
         ],
       },
       {

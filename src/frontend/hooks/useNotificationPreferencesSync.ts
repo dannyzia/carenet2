@@ -14,6 +14,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import type { NotificationChannel } from "@/backend/models";
 import { USE_SUPABASE, getSupabaseClient } from "@/backend/services/supabase";
+import { agentDebugLog } from "@/debug/agentDebugLog";
 
 // ─── Types ───
 
@@ -107,11 +108,22 @@ export function useNotificationPreferencesSync() {
           return;
         }
 
-        const { data } = await sb
+        const { data, error: prefErr } = await sb
           .from("user_preferences")
           .select("notification_channels")
           .eq("user_id", user.id)
-          .single();
+          .maybeSingle();
+
+        if (prefErr) {
+          // #region agent log
+          agentDebugLog({
+            hypothesisId: "H3",
+            location: "useNotificationPreferencesSync.ts:loadFromSupabase",
+            message: "user_preferences load error",
+            data: { code: prefErr.code, message: prefErr.message },
+          });
+          // #endregion
+        }
 
         if (data && mountedRef.current) {
           const remote = (data as { notification_channels?: ChannelPreferencesMap })
@@ -161,18 +173,19 @@ export function useNotificationPreferencesSync() {
             updated_at: new Date().toISOString(),
           };
 
-          // Try update, insert if row doesn't exist
-          const { error: updateErr } = await sb
+          const { error: upsertErr } = await sb
             .from("user_preferences")
-            .update({
-              notification_channels: updatedPrefs,
-              updated_at: row.updated_at,
-            })
-            .eq("user_id", user.id)
-            .single();
+            .upsert(row, { onConflict: "user_id" });
 
-          if (updateErr) {
-            await sb.from("user_preferences").insert(row);
+          if (upsertErr) {
+            // #region agent log
+            agentDebugLog({
+              hypothesisId: "H3",
+              location: "useNotificationPreferencesSync.ts:syncToSupabase",
+              message: "user_preferences upsert error",
+              data: { code: upsertErr.code, message: upsertErr.message },
+            });
+            // #endregion
           }
         } catch (e) {
           console.warn("[NotifPrefsSync] Failed to sync to Supabase:", e);

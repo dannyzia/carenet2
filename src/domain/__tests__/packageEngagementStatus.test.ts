@@ -1,5 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { packageEngagementStatusTransitionOk } from "./packageEngagementStatus";
+import { isOpenPackageEngagementStatus, packageEngagementStatusTransitionOk } from "../packageEngagementStatus";
+
+describe("isOpenPackageEngagementStatus", () => {
+  it("treats terminal statuses as closed", () => {
+    expect(isOpenPackageEngagementStatus("accepted")).toBe(false);
+    expect(isOpenPackageEngagementStatus("negotiating")).toBe(true);
+  });
+});
 
 describe("packageEngagementStatusTransitionOk", () => {
   it("allows no-op transitions", () => {

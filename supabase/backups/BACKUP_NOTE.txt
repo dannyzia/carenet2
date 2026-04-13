@@ -1,0 +1,4 @@
+CLI schema dump (npx supabase db dump --linked) requires Docker Desktop on this machine.
+Before running migration repair or db push on production, take a backup via:
+- Supabase Dashboard: Project Settings > Database > Backups / Point-in-time recovery
+- Or install Docker and run: npx supabase db dump --linked -f supabase/backups/schema_manual.sql

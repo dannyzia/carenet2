@@ -57,6 +57,8 @@ export const router = createBrowserRouter([
           { path: "auth/forgot-password", ...p(() => import("@/frontend/pages/auth/ForgotPasswordPage")) },
           { path: "auth/reset-password", ...p(() => import("@/frontend/pages/auth/ResetPasswordPage")) },
           { path: "auth/verification-result", ...p(() => import("@/frontend/pages/auth/VerificationResultPage")) },
+          { path: "auth/mfa-verify", ...p(() => import("@/frontend/pages/auth/MFAVerifyPage")) },
+          { path: "auth/mfa-setup", ...p(() => import("@/frontend/pages/auth/MFASetupPage")) },
 
           // Support
           { path: "support/help", ...p(() => import("@/frontend/pages/support/HelpCenterPage")) },
@@ -127,7 +129,6 @@ export const router = createBrowserRouter([
       { path: "guardian/dashboard", ...p(() => import("@/frontend/pages/guardian/GuardianDashboardPage")) },
       { path: "guardian/emergency", ...p(() => import("@/frontend/pages/patient/EmergencyHubPage")) },
               { path: "guardian/patients", ...p(() => import("@/frontend/pages/guardian/GuardianPatientsPage")) },
-              { path: "guardian/patient/:id", ...p(() => import("@/frontend/pages/guardian/GuardianPatientDetailPage")) },
               { path: "guardian/patient/:id", ...p(() => import("@/frontend/pages/guardian/GuardianPatientDetailPage")) },
               { path: "guardian/schedule", ...p(() => import("@/frontend/pages/guardian/GuardianSchedulePage")) },
               { path: "guardian/messages", ...p(() => import("@/frontend/pages/guardian/GuardianMessagesPage")) },

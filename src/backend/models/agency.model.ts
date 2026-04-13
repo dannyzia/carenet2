@@ -81,7 +81,15 @@ export interface ActiveShift {
   status: string; lastLog: string; placement: string;
 }
 
-export interface ShiftAlert { type: string; text: string; time: string; }
+export interface ShiftAlert {
+  type: string;
+  /** Legacy / debug; prefer structured fields + i18n keys in the executive UI. */
+  text: string;
+  time: string;
+  /** When set, executive alerts use i18n instead of raw `text`. */
+  caregiverName?: string;
+  patientName?: string;
+}
 
 // ─── Revenue ───
 export interface AgencyRevenuePoint { month: string; amount: number; }

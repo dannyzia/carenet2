@@ -20,7 +20,7 @@ test.describe("Admin flows", () => {
   });
 
   test.describe("Dashboard", () => {
-    test("renders KPI cards, charts, and activity feed", async ({ page }) => {
+    test("renders operational action bar and work queue", async ({ page }) => {
       const errors = captureConsoleErrors(page);
       await page.goto("/admin/dashboard");
       await page.waitForLoadState("load");
@@ -28,20 +28,20 @@ test.describe("Admin flows", () => {
       await expect(mainLandmark(page).getByRole("heading", { name: /Admin Dashboard/i })).toBeVisible({
         timeout: 15_000,
       });
-      await expect(page.getByText("Total Users")).toBeVisible();
-      await expect(page.getByText("Active Caregivers")).toBeVisible();
-      await expect(page.getByText("User Growth")).toBeVisible();
-      await expect(page.getByText("Monthly Revenue")).toBeVisible();
-      await expect(page.getByText("Recent Activity")).toBeVisible();
+      await expect(page.getByRole("link", { name: /Review approvals/i })).toBeVisible();
+      await expect(page.getByRole("link", { name: /Resolve flags/i })).toBeVisible();
+      await expect(page.getByRole("link", { name: /Process payouts/i })).toBeVisible();
+      await expect(page.getByRole("heading", { name: /Work queue/i })).toBeVisible();
+      await expect(page.getByText("Verification").first()).toBeVisible();
 
       expect(errors()).toHaveLength(0);
     });
 
-    test("Points in Circulation card links to wallet management", async ({ page }) => {
+    test("Process payouts action links to payments", async ({ page }) => {
       await page.goto("/admin/dashboard");
       await page.waitForLoadState("load");
-      await page.getByText("Points in Circulation").click();
-      await expect(page).toHaveURL(/admin\/wallet-management/);
+      await page.getByRole("link", { name: /Process payouts/i }).click();
+      await expect(page).toHaveURL(/admin\/payments/);
     });
   });
 
@@ -120,43 +120,40 @@ test.describe("Moderator flows", () => {
   });
 
   test.describe("Dashboard", () => {
-    test("renders 4 stat cards and moderation queue", async ({ page }) => {
+    test("renders action bar and work queue", async ({ page }) => {
       const errors = captureConsoleErrors(page);
       await page.goto("/moderator/dashboard");
       await page.waitForLoadState("load");
 
       await expect(page.getByText("Moderator Dashboard")).toBeVisible();
-      await expect(page.getByText("Pending Reviews")).toBeVisible();
-      await expect(page.getByText("Open Reports")).toBeVisible();
-      await expect(page.getByText("Content Flags")).toBeVisible();
-      await expect(page.getByText("Resolved Today")).toBeVisible();
-      await expect(page.getByRole("heading", { name: "Moderation Queue" })).toBeVisible();
+      await expect(page.getByRole("main").getByRole("link", { name: /Review queue/i }).first()).toBeVisible();
+      await expect(page.getByRole("main").getByRole("link", { name: /^Reports$/i }).first()).toBeVisible();
+      await expect(page.getByRole("main").getByRole("link", { name: /Flagged content/i }).first()).toBeVisible();
+      await expect(page.getByRole("heading", { name: /Work queue/i })).toBeVisible();
 
       expect(errors()).toHaveLength(0);
     });
 
-    test("Pending Reviews card links to /moderator/reviews", async ({ page }) => {
+    test("Review queue action links to /moderator/reviews", async ({ page }) => {
       await page.goto("/moderator/dashboard");
       await page.waitForLoadState("load");
-      await page.getByText("Pending Reviews").click();
+      await page.getByRole("main").getByRole("link", { name: /Review queue/i }).first().click();
       await expect(page).toHaveURL(/moderator\/reviews/);
     });
 
-    test("User Sanctions link navigates correctly", async ({ page }) => {
-      await page.goto("/moderator/dashboard");
+    test("/moderator/sanctions loads from direct navigation", async ({ page }) => {
+      await page.goto("/moderator/sanctions");
       await page.waitForLoadState("load");
-      await page.getByText("User Sanctions").click();
-      await expect(page).toHaveURL(/moderator\/sanctions/);
+      await expect(page.getByRole("main")).toBeVisible({ timeout: 15_000 });
     });
 
-    test("Approve button in queue changes item state", async ({ page }) => {
+    test("Open case in queue navigates without crash", async ({ page }) => {
       await page.goto("/moderator/dashboard");
       await page.waitForLoadState("load");
-      const approveBtn = page.getByRole("button", { name: /approve/i }).first();
-      await expect(approveBtn).toBeVisible({ timeout: 15_000 });
-      await approveBtn.click();
-      await page.waitForTimeout(500);
-      // No crash
+      const openCase = page.getByRole("link", { name: /open case/i }).first();
+      await expect(openCase).toBeVisible({ timeout: 15_000 });
+      await openCase.click();
+      await expect(page).toHaveURL(/moderator\/(reviews|reports|content)/);
       await expect(page.getByRole("main")).toBeVisible({ timeout: 15_000 });
     });
   });
@@ -198,28 +195,27 @@ test.describe("Shop Merchant flows", () => {
   });
 
   test.describe("Dashboard", () => {
-    test("renders stat cards and recent orders table", async ({ page }) => {
+    test("renders operational action bar and orders queue", async ({ page }) => {
       const errors = captureConsoleErrors(page);
       await page.goto("/shop/dashboard");
       await page.waitForLoadState("load");
 
       await expect(page.getByText("Shop Dashboard")).toBeVisible();
-      await expect(page.getByText("Total Sales")).toBeVisible();
-      await expect(page.getByText("Active Products")).toBeVisible();
-      await expect(page.getByText("New Orders")).toBeVisible();
-      await expect(page.getByText("Total Customers")).toBeVisible();
-      await expect(page.getByText("Recent Orders")).toBeVisible();
+      const main = mainLandmark(page);
+      await expect(main.getByRole("link", { name: /^Products$/i }).first()).toBeVisible();
+      await expect(main.getByRole("link", { name: /^Orders$/i }).first()).toBeVisible();
+      await expect(main.getByRole("link", { name: /^Inventory$/i }).first()).toBeVisible();
+      await expect(page.getByRole("heading", { name: /Orders & signals/i })).toBeVisible();
 
       expect(errors()).toHaveLength(0);
     });
 
-    test("order table has expected columns", async ({ page }) => {
+    test("work queue shows column labels", async ({ page }) => {
       await page.goto("/shop/dashboard");
       await page.waitForLoadState("load");
-      await expect(page.getByRole("columnheader", { name: "Order ID" })).toBeVisible();
-      await expect(page.getByRole("columnheader", { name: "Customer" })).toBeVisible();
-      await expect(page.getByRole("columnheader", { name: "Amount" })).toBeVisible();
-      await expect(page.getByRole("columnheader", { name: "Status" })).toBeVisible();
+      await expect(page.getByText("Type", { exact: true }).first()).toBeVisible();
+      await expect(page.getByText("Priority", { exact: true }).first()).toBeVisible();
+      await expect(page.getByText("Entity", { exact: true }).first()).toBeVisible();
     });
   });
 

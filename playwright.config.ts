@@ -10,7 +10,13 @@ import { defineConfig, devices } from "@playwright/test";
  *
  * Prerequisites:
  *   npx playwright install chromium
+ *
+ * Optional: `PW_TEST_PORT=5174` (or `set PW_TEST_PORT=5174` on Windows) when port 5173
+ * is already taken by a normal `npm run dev` — Playwright will start E2E Vite on that port.
  */
+const testPort = process.env.PW_TEST_PORT ?? "5173";
+const baseURL = `http://localhost:${testPort}`;
+
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: true,
@@ -20,8 +26,8 @@ export default defineConfig({
   reporter: "html",
 
   use: {
-    // Base URL for the Vite dev server
-    baseURL: "http://localhost:5173",
+    // Base URL for the Vite dev server (see PW_TEST_PORT above)
+    baseURL,
     trace: "on-first-retry",
     screenshot: "only-on-failure",
   },
@@ -43,9 +49,9 @@ export default defineConfig({
   webServer: {
     command:
       process.platform === "win32"
-        ? "cmd /c \"set VITE_PLAYWRIGHT_E2E=true&& npx vite --host\""
-        : "env VITE_PLAYWRIGHT_E2E=true npx vite --host",
-    url: "http://localhost:5173",
+        ? `cmd /c "set VITE_PLAYWRIGHT_E2E=true&& npx vite --host --port ${testPort}"`
+        : `env VITE_PLAYWRIGHT_E2E=true npx vite --host --port ${testPort}`,
+    url: baseURL,
     // Reusing a normal `npm run dev` server skips `VITE_PLAYWRIGHT_E2E` → dashboards hang on real Supabase.
     // Set `PW_REUSE_VITE=1` if you intentionally want to attach to an already-running dev server.
     reuseExistingServer: process.env.PW_REUSE_VITE === "1",

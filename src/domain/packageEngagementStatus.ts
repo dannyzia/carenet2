@@ -1,4 +1,14 @@
 /**
+ * Terminal package engagement statuses (client or caregiver lane).
+ * Aligns with historical `agencyService` “open engagement” checks.
+ */
+export const PACKAGE_ENGAGEMENT_TERMINAL_STATUSES = ["accepted", "declined", "withdrawn", "expired"] as const;
+
+export function isOpenPackageEngagementStatus(status: string): boolean {
+  return !(PACKAGE_ENGAGEMENT_TERMINAL_STATUSES as readonly string[]).includes(status);
+}
+
+/**
  * Mirrors `public.package_engagement_status_transition_ok` in
  * `20260410120000_package_engagements.sql` for client-side checks and tests.
  */

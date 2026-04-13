@@ -20,6 +20,8 @@ import {
   dataCacheScope,
   withDemoExpiry,
 } from "./_sb";
+import { agentDebugLog } from "@/debug/agentDebugLog";
+import { isMissingRestRelation } from "@/backend/utils/supabasePostgrestErrors";
 
 const delay = (ms = 200) => new Promise((r) => setTimeout(r, ms));
 
@@ -508,7 +510,18 @@ export const packageEngagementService = {
         let q = sbData().from("package_client_engagements").select("*").eq("agency_user_id", uid);
         if (packageId) q = q.eq("package_contract_id", packageId);
         const { data, error } = await q.order("updated_at", { ascending: false });
-        if (error) throw error;
+        if (error) {
+          // #region agent log
+          agentDebugLog({
+            hypothesisId: "H1",
+            location: "packageEngagement.service.ts:listAgencyClientEngagements",
+            message: "package_client_engagements query error",
+            data: { code: error.code, message: error.message },
+          });
+          // #endregion
+          if (isMissingRestRelation(error)) return [];
+          throw error;
+        }
         return (data || []).map((r) => mapClientRow(r as Record<string, unknown>));
       });
     }
@@ -529,7 +542,18 @@ export const packageEngagementService = {
         let q = sbData().from("package_caregiver_engagements").select("*").eq("agency_user_id", uid);
         if (packageId) q = q.eq("package_contract_id", packageId);
         const { data, error } = await q.order("updated_at", { ascending: false });
-        if (error) throw error;
+        if (error) {
+          // #region agent log
+          agentDebugLog({
+            hypothesisId: "H1",
+            location: "packageEngagement.service.ts:listAgencyCaregiverEngagements",
+            message: "package_caregiver_engagements query error",
+            data: { code: error.code, message: error.message },
+          });
+          // #endregion
+          if (isMissingRestRelation(error)) return [];
+          throw error;
+        }
         return (data || []).map((r) => mapCgRow(r as Record<string, unknown>));
       });
     }

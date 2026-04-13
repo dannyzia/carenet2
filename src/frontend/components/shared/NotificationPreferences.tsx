@@ -96,7 +96,7 @@ export function NotificationPreferences({ inline = false }: NotificationPreferen
           .from("user_preferences")
           .select("quiet_hours_enabled, quiet_hours_start, quiet_hours_end")
           .eq("user_id", user.id)
-          .single();
+          .maybeSingle();
 
         if (data) {
           const row = data as { quiet_hours_enabled?: boolean; quiet_hours_start?: string; quiet_hours_end?: string };
@@ -128,6 +128,12 @@ export function NotificationPreferences({ inline = false }: NotificationPreferen
         const { data: { user } } = await sb.auth.getUser();
         if (!user) return;
 
+        const { data: existingPref } = await sb
+          .from("user_preferences")
+          .select("notification_channels")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
         const updateData = {
           quiet_hours_enabled: enabled,
           quiet_hours_start: start,
@@ -135,18 +141,20 @@ export function NotificationPreferences({ inline = false }: NotificationPreferen
           updated_at: new Date().toISOString(),
         };
 
-        const { error: updateErr } = await sb
-          .from("user_preferences")
-          .update(updateData)
-          .eq("user_id", user.id)
-          .single();
+        const channels =
+          (existingPref as { notification_channels?: Record<string, unknown> } | null)?.notification_channels ?? {};
 
-        if (updateErr) {
-          await sb.from("user_preferences").insert({
+        const { error: upsertErr } = await sb.from("user_preferences").upsert(
+          {
             user_id: user.id,
             ...updateData,
-            notification_channels: {},
-          });
+            notification_channels: channels,
+          },
+          { onConflict: "user_id" },
+        );
+
+        if (upsertErr) {
+          console.warn("[NotifPrefs] quiet hours upsert failed:", upsertErr.message);
         }
       } catch (e) {
         console.warn("[NotifPrefs] Failed to sync quiet hours:", e);

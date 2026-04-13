@@ -7,6 +7,8 @@
 
 import { USE_SUPABASE, getSupabaseClient } from "./supabase";
 import { sbData, isDemoSession } from "./_sb";
+import { agentDebugLog } from "@/debug/agentDebugLog";
+import { isMissingRestRelation } from "@/backend/utils/supabasePostgrestErrors";
 import { MOCK_WALLETS, MOCK_POINT_TRANSACTIONS } from "@/backend/utils/contracts";
 import type { WalletSummary, PointTransaction } from "@/backend/utils/points";
 import { withRetry } from "@/backend/utils/retry";
@@ -36,9 +38,20 @@ export async function getMyWallet(role: string): Promise<WalletSummary | null> {
     const { data, error } = await sbData().from("wallets")
       .select("*")
       .eq("user_id", user.id)
-      .single();
+      .maybeSingle();
 
-    if (error) throw error;
+    if (error) {
+      // #region agent log
+      agentDebugLog({
+        hypothesisId: "H2",
+        location: "walletService.ts:getMyWallet",
+        message: "wallets query error",
+        data: { code: error.code, message: error.message, details: error.details },
+      });
+      // #endregion
+      if (isMissingRestRelation(error)) return null;
+      throw error;
+    }
     if (!data) return null;
 
     const d = data as Record<string, unknown>;

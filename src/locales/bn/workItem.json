@@ -1,0 +1,109 @@
+{
+  "guardian": {
+    "bidAwaitingReview": {
+      "title": "বিড পর্যালোচনার অপেক্ষায়",
+      "subtitle": "রোগী: {{patientName}} — {{count}}টি বিড এসেছে"
+    },
+    "missingCheckin": {
+      "title": "কেয়ারগিভার চেক-ইন করেননি",
+      "subtitle": "শিফট শুরু {{time}} — {{caregiverName}}"
+    },
+    "contractExpiring": {
+      "title": "চুক্তি শীঘ্রই শেষ হবে",
+      "subtitle": "রোগী: {{patientName}} — {{days}} দিনে শেষ"
+    }
+  },
+  "caregiver": {
+    "shiftToday": {
+      "title": "আজকের শিফট",
+      "subtitle": "রোগী: {{patientName}} — {{address}}"
+    },
+    "documentExpiring": {
+      "title": "নথি শীঘ্রই মেয়াদ শেষ",
+      "subtitle": "{{documentType}} — {{days}} দিনে মেয়াদ শেষ"
+    },
+    "jobOffer": {
+      "title": "{{agencyName}} থেকে চাকরির অফার",
+      "subtitle": "{{description}}"
+    }
+  },
+  "agency": {
+    "unassignedCJ": {
+      "title": "অনির্ধারিত কেয়ারগিভিং জব",
+      "subtitle": "রোগী: {{patientName}} — {{duration}}"
+    },
+    "inactiveCaregiver": {
+      "title": "শিফট চলাকালীন কেয়ারগিভার নিষ্ক্রিয়",
+      "subtitle": "কেয়ারগিভার: {{caregiverName}} — শিফট শুরু {{time}}"
+    },
+    "newRequirementBid": {
+      "title": "বিড করার জন্য নতুন চাহিদা",
+      "subtitle": "{{guardianName}} পোস্ট করেছেন — {{requirements}}"
+    }
+  },
+  "admin": {
+    "pendingVerification": {
+      "title": "কেয়ারগিভার যাচাইকরণ অপেক্ষমান",
+      "subtitle": "{{caregiverName}} — {{daysAgo}} আপলোড"
+    },
+    "pendingAgencyApproval": {
+      "title": "এজেন্সি অনুমোদন অপেক্ষমান",
+      "subtitle": "{{agencyName}} — {{daysAgo}} জমা"
+    },
+    "openDispute": {
+      "title": "খোলা বিরোধ",
+      "subtitle": "কেস #{{caseId}} — {{description}}"
+    }
+  },
+  "patient": {
+    "bidToReview": {
+      "title": "পর্যালোচনার জন্য বিড",
+      "subtitle": "আপনার চাহিদায় {{count}}টি বিড এসেছে"
+    },
+    "medicationDue": {
+      "title": "{{medicationName}} নিন",
+      "subtitle": "{{time}} সময়ে"
+    },
+    "appointmentToday": {
+      "title": "আজ অ্যাপয়েন্টমেন্ট",
+      "subtitle": "{{providerName}}, {{time}}"
+    }
+  },
+  "moderator": {
+    "pendingReview": {
+      "title": "মডারেশন পর্যালোচনা অপেক্ষমান",
+      "subtitle": "{{reporter}} রিপোর্ট করেছেন — {{reason}}"
+    },
+    "openReport": {
+      "title": "খোলা রিপোর্ট",
+      "subtitle": "{{reportedUser}} — {{reason}}"
+    },
+    "contentFlag": {
+      "title": "কনটেন্ট ফ্ল্যাগ",
+      "subtitle": "{{contentType}} — {{reason}}"
+    }
+  },
+  "shop": {
+    "pendingOrder": {
+      "title": "অর্ডার পূরণের অপেক্ষায়",
+      "subtitle": "অর্ডার #{{orderId}} — {{customerName}}"
+    },
+    "lowStock": {
+      "title": "কম স্টক সতর্কতা",
+      "subtitle": "{{productName}} — মাত্র {{quantity}} বাকি"
+    }
+  },
+  "state": {
+    "pendingReview": "পর্যালোচনা অপেক্ষমান",
+    "missingCheckin": "চেক-ইন নেই",
+    "expiring": "শীঘ্রই মেয়াদ শেষ",
+    "checkinRequired": "চেক-ইন প্রয়োজন",
+    "offerPending": "অফার অপেক্ষমান",
+    "unassigned": "অনির্ধারিত",
+    "inactive": "নিষ্ক্রিয়",
+    "actionNeeded": "কর্ম প্রয়োজন",
+    "overdue": "মেয়াদোত্তীর্ণ",
+    "pendingFulfillment": "পূরণ অপেক্ষমান",
+    "lowStock": "কম স্টক"
+  }
+}

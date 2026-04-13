@@ -14,6 +14,9 @@ import type {
   CareContract,
   UCCFPricingRequest,
 } from "@/backend/models";
+import type { AgencyExecutiveDashboardData } from "@/backend/models/agencyExecutiveDashboard.model";
+import type { OperationalDashboardData } from "@/backend/models/operationalDashboard.model";
+import { mapAgencyExecutiveToOperationalDashboard } from "./agencyExecutiveToOperational";
 import { loadMockBarrel } from "@/backend/api/mock/loadMockBarrel";
 import { USE_SUPABASE, sbRead, sbWrite, sb, sbData, currentUserId, useInAppMockDataset, dataCacheScope } from "./_sb";
 import {
@@ -24,6 +27,12 @@ import {
   EMPTY_STAFF_HIRING,
 } from "./liveEmptyDefaults";
 import { marketplaceService } from "./marketplace.service";
+import { packageEngagementService } from "./packageEngagement.service";
+import { caregivingJobService } from "./caregivingJob.service";
+import { getContractDashboardSummary } from "./contractService";
+import { buildAgencyExecutiveDashboard } from "./agencyExecutiveMapper";
+import { agencyAppPaths } from "@/backend/navigation/agencyAppPaths";
+import { CJ_JOB_STATUS_ACTIVE, isRecruitmentJobOpen } from "@/backend/domain/agency/agencyExecutive.constants";
 import { demoOfflineDelayAndPick } from "./demoOfflineMock";
 
 const delay = (ms = 200) => new Promise((r) => setTimeout(r, ms));
@@ -414,6 +423,8 @@ export const agencyService = {
             type: "late_checkin",
             text: `${d.caregiver_name} has not checked in for ${d.patient_name}`,
             time: d.start_time,
+            caregiverName: d.caregiver_name,
+            patientName: d.patient_name,
           }));
         return { shifts, alerts };
       });
@@ -478,6 +489,56 @@ export const agencyService = {
     }
     await delay();
     return build();
+  },
+
+  /** Interrupt-driven agency home: alerts, live jobs, unified queue, notifications, 3 KPIs. */
+  async getExecutiveDashboard(): Promise<AgencyExecutiveDashboardData> {
+    const [
+      summary,
+      monitoring,
+      clientEngagements,
+      cgEngagements,
+      openBoardRequirementCount,
+      cjJobs,
+      agencyJobs,
+      requirements,
+      placements,
+      contractSummary,
+    ] = await Promise.all([
+      agencyService.getDashboardSummary(),
+      agencyService.getShiftMonitoringData(),
+      packageEngagementService.listAgencyClientEngagements(),
+      packageEngagementService.listAgencyCaregiverEngagements(),
+      marketplaceService.countOpenBoardRequirements(),
+      caregivingJobService.listJobsWithAssignments(),
+      agencyService.getJobs(),
+      agencyService.getRequirementsInbox(),
+      agencyService.getPlacements(),
+      getContractDashboardSummary("agency"),
+    ]);
+    const activeCjCount = cjJobs.filter((j) => j.status.toLowerCase() === CJ_JOB_STATUS_ACTIVE).length;
+    const activeRecruitmentJobs = agencyJobs.filter((j) => isRecruitmentJobOpen(j.status)).length;
+    const activeJobsCount = USE_SUPABASE ? activeCjCount : activeRecruitmentJobs;
+    const activeJobsHref = USE_SUPABASE ? agencyAppPaths.caregivingJobsBase() : agencyAppPaths.jobManagement();
+    return buildAgencyExecutiveDashboard({
+      summary,
+      monitoring,
+      cjJobs,
+      clientEngagements,
+      caregiverEngagements: cgEngagements,
+      requirements,
+      placements,
+      openBoardRequirementCount,
+      contractPendingOffers: contractSummary.pendingOffersCount,
+      activeJobsCount,
+      activeJobsHref,
+      useSupabaseCj: USE_SUPABASE,
+    });
+  },
+
+  async getOperationalDashboard(): Promise<OperationalDashboardData> {
+    const exec = await agencyService.getExecutiveDashboard();
+    return mapAgencyExecutiveToOperationalDashboard(exec);
   },
 
   async getJobApplications(_jobId?: string): Promise<JobApplication[]> {

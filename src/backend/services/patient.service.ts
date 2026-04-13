@@ -10,6 +10,8 @@ import type {
   EmergencyData,
   PrivacyData,
 } from "@/backend/models";
+import type { OperationalDashboardData } from "@/backend/models/operationalDashboard.model";
+import { mapPatientOperationalDashboard } from "./patientOperationalMapper";
 import { USE_SUPABASE, sbRead, sbWrite, sb, sbData, currentUserId, useInAppMockDataset } from "./_sb";
 import { demoOfflineDelayAndPick } from "./demoOfflineMock";
 
@@ -278,16 +280,23 @@ export const patientService = {
       return sbRead("care-history", async () => {
         const userId = await currentUserId();
         const { data, error } = await sbData().from("shifts")
-          .select("*, caregiver_profiles!shifts_caregiver_id_fkey(name)")
+          .select("id, date, start_time, end_time, status, notes, caregiver_id")
           .eq("patient_id", userId)
           .eq("status", "completed")
           .order("date", { ascending: false })
           .limit(20);
         if (error) throw error;
-        return (data || []).map((d: any) => ({
+        const rows = data || [];
+        const cgIds = [...new Set(rows.map((r: { caregiver_id?: string }) => r.caregiver_id).filter(Boolean))] as string[];
+        const nameByCg = new Map<string, string>();
+        if (cgIds.length > 0) {
+          const { data: profs } = await sbData().from("caregiver_profiles").select("id, name").in("id", cgIds);
+          for (const p of profs || []) nameByCg.set(String((p as { id: string }).id), String((p as { name: string }).name));
+        }
+        return rows.map((d: any) => ({
           id: d.id,
           date: d.date,
-          caregiver: d.caregiver_profiles?.name || "Unknown",
+          caregiver: nameByCg.get(String(d.caregiver_id)) || "Unknown",
           type: "shift",
           duration: `${d.start_time} - ${d.end_time}`,
           rating: 0,
@@ -404,6 +413,15 @@ export const patientService = {
       return { authorized: [], accessLogs: [] };
     }
     return demoOfflineDelayAndPick(200, { authorized: [], accessLogs: [] } as PrivacyData, (m) => m.MOCK_PRIVACY_DATA);
+  },
+
+  async getOperationalDashboard(): Promise<OperationalDashboardData> {
+    const [vitals, medications, appointments] = await Promise.all([
+      patientService.getDashboardVitals(),
+      patientService.getDashboardMedications(),
+      patientService.getAppointments(),
+    ]);
+    return mapPatientOperationalDashboard({ vitals, medications, appointments });
   },
 };
 

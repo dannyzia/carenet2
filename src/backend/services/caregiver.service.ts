@@ -16,6 +16,7 @@ import type {
   CaregiverPortfolio, CaregiverReference, ShiftDetailData,
   SkillsAssessment, TrainingModule,
 } from "@/backend/models";
+import type { OperationalDashboardData } from "@/backend/models/operationalDashboard.model";
 import { loadMockBarrel } from "@/backend/api/mock/loadMockBarrel";
 import {
   USE_SUPABASE,
@@ -27,6 +28,9 @@ import {
   useInAppMockDataset,
 } from "./_sb";
 import { EMPTY_CAREGIVER_DASHBOARD_SUMMARY } from "./liveEmptyDefaults";
+import { getMyWallet } from "./walletService";
+import { getContractDashboardSummary } from "./contractService";
+import { mapCaregiverOperationalDashboard } from "./caregiverOperationalMapper";
 
 /** Simulates async API latency for realistic dev experience */
 const delay = (ms = 200) => new Promise((r) => setTimeout(r, ms));
@@ -42,6 +46,101 @@ async function offlineMockFallback<T>(empty: T, pick: (m: MockApi) => T): Promis
   await delay();
   if (!useInAppMockDataset()) return empty;
   return pick(await mockData());
+}
+
+/** Same shape as legacy `get_caregiver_earnings` RPC (charts + tax). */
+type CaregiverEarningsRpcPayload = {
+  earningsChart?: { month: string; earned: string | number; withdrawn?: string | number }[];
+  taxReport?: unknown[];
+};
+
+const WALLET_EARNING_TYPES = new Set([
+  "earning",
+  "contract_payment",
+  "bonus",
+  "admin_credit",
+  "refund",
+]);
+
+function utcMonthKey(iso: string): string {
+  const d = new Date(iso);
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+}
+
+function utcMonthLabel(monthKey: string): string {
+  const [ys, ms] = monthKey.split("-");
+  const y = Number(ys);
+  const m = Number(ms);
+  return new Date(Date.UTC(y, m - 1, 1)).toLocaleString("en-US", {
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+/** Loads earnings charts from `wallets` + `wallet_transactions` (no RPC — avoids 404 when RPC is not migrated). */
+async function loadCaregiverEarningsPayload(userId: string): Promise<CaregiverEarningsRpcPayload> {
+  const { data: wallet, error: wErr } = await sbData()
+    .from("wallets")
+    .select("id")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (wErr) throw wErr;
+  if (!wallet?.id) return { earningsChart: [], taxReport: [] };
+
+  const { data: txs, error: tErr } = await sbData()
+    .from("wallet_transactions")
+    .select("amount, type, status, created_at")
+    .eq("wallet_id", wallet.id)
+    .eq("status", "completed")
+    .order("created_at", { ascending: true })
+    .limit(5000);
+  if (tErr) throw tErr;
+
+  const byMonth = new Map<string, { earned: number; withdrawn: number; income: number }>();
+  for (const row of txs || []) {
+    const created = String((row as { created_at?: string }).created_at || "");
+    if (!created) continue;
+    const key = utcMonthKey(created);
+    let b = byMonth.get(key);
+    if (!b) {
+      b = { earned: 0, withdrawn: 0, income: 0 };
+      byMonth.set(key, b);
+    }
+    const amt = Number((row as { amount?: unknown }).amount) || 0;
+    const typ = String((row as { type?: string }).type || "");
+    if (amt > 0 && WALLET_EARNING_TYPES.has(typ)) b.earned += amt;
+    if (typ === "withdrawal") b.withdrawn += Math.max(0, -amt);
+    if (amt > 0) b.income += amt;
+  }
+
+  const sortedKeys = [...byMonth.keys()].sort();
+  const earningsChart = sortedKeys.map((k) => {
+    const b = byMonth.get(k)!;
+    return { month: utcMonthLabel(k), earned: b.earned, withdrawn: b.withdrawn };
+  });
+  const taxReport = sortedKeys.map((k) => ({
+    month: utcMonthLabel(k),
+    income: byMonth.get(k)!.income,
+  }));
+
+  // #region agent log
+  fetch("http://127.0.0.1:7557/ingest/04d63fde-28d9-48a9-bc93-871ef0a09c70", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "672241" },
+    body: JSON.stringify({
+      sessionId: "672241",
+      runId: "post-wallet-earnings",
+      hypothesisId: "H-earnings-no-rpc",
+      location: "caregiver.service.ts:loadCaregiverEarningsPayload",
+      message: "earnings loaded from wallet_transactions (RPC not called)",
+      data: { monthBuckets: sortedKeys.length, txRows: (txs || []).length },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
+
+  return { earningsChart, taxReport };
 }
 
 function mapDbShiftToShiftPlan(d: any): ShiftPlan {
@@ -284,8 +383,7 @@ export const caregiverService = {
     if (USE_SUPABASE) {
       return sbRead("cg:tax", async () => {
         const userId = await currentUserId();
-        const { data, error } = await sbData().rpc("get_caregiver_earnings", { p_caregiver_id: userId });
-        if (error) throw error;
+        const data = await loadCaregiverEarningsPayload(userId);
         return (data?.taxReport || []).map((d: any) => ({
           month: d.month, income: Number(d.income),
         }));
@@ -569,8 +667,7 @@ export const caregiverService = {
     if (USE_SUPABASE) {
       return sbRead("cg:earnings-chart", async () => {
         const userId = await currentUserId();
-        const { data, error } = await sbData().rpc("get_caregiver_earnings", { p_caregiver_id: userId });
-        if (error) throw error;
+        const data = await loadCaregiverEarningsPayload(userId);
         return (data?.earningsChart || []).map((d: any) => ({
           month: d.month, amount: Number(d.earned),
         }));
@@ -631,8 +728,7 @@ export const caregiverService = {
     if (USE_SUPABASE) {
       return sbRead("cg:monthly-earnings", async () => {
         const userId = await currentUserId();
-        const { data, error } = await sbData().rpc("get_caregiver_earnings", { p_caregiver_id: userId });
-        if (error) throw error;
+        const data = await loadCaregiverEarningsPayload(userId);
         return (data?.earningsChart || []).map((d: any) => ({
           month: d.month, earned: Number(d.earned), withdrawn: Number(d.withdrawn),
         }));
@@ -683,7 +779,7 @@ export const caregiverService = {
       return sbRead("cg:schedule", async () => {
         const userId = await currentUserId();
         const { data, error } = await sbData().from("shifts")
-          .select("id, date, start_time, end_time, status, patient_name")
+          .select("id, date, start_time, end_time, status, patients(name)")
           .eq("caregiver_id", userId)
           .gte("date", new Date().toISOString().split("T")[0])
           .order("date", { ascending: true })
@@ -693,10 +789,11 @@ export const caregiverService = {
         for (const d of data || []) {
           const key = d.date;
           if (!result[key]) result[key] = [];
+          const patientLabel = (d as { patients?: { name?: string } }).patients?.name ?? "";
           result[key].push({
             id: d.id,
             time: `${d.start_time} - ${d.end_time}`,
-            patient: d.patient_name || "",
+            patient: patientLabel,
             status: d.status || "scheduled",
           });
         }
@@ -751,7 +848,7 @@ export const caregiverService = {
         const userId = await currentUserId();
         const today = new Date().toISOString().split("T")[0];
         const { data, error } = await sbData().from("shifts")
-          .select("id, date, start_time, end_time, status, patient_name")
+          .select("id, date, start_time, end_time, status, patients(name)")
           .eq("caregiver_id", userId)
           .gte("date", today)
           .order("date", { ascending: true })
@@ -759,14 +856,34 @@ export const caregiverService = {
         if (error) throw error;
         return (data || []).map((d: any) => ({
           shiftId: String(d.id),
+          date: typeof d.date === "string" ? d.date : undefined,
           time: d.start_time && d.end_time ? `${d.start_time} – ${d.end_time}` : String(d.start_time || ""),
-          patient: d.patient_name || "",
+          patient: d.patients?.name ?? "",
           type: "Shift",
           duration: "",
         }));
       });
     }
     return offlineMockFallback([], (m) => m.MOCK_UPCOMING_SCHEDULE);
+  },
+
+  async getOperationalDashboard(): Promise<OperationalDashboardData> {
+    const todayIso = new Date().toISOString().split("T")[0];
+    const [summary, upcoming, wallet, contract] = await Promise.all([
+      caregiverService.getDashboardSummary(),
+      caregiverService.getUpcomingSchedule(),
+      getMyWallet("caregiver"),
+      getContractDashboardSummary("caregiver"),
+    ]);
+    return mapCaregiverOperationalDashboard({
+      summary,
+      upcoming,
+      todayIso,
+      walletBalance: wallet?.balance ?? 0,
+      walletPendingDue: wallet?.pendingDue ?? 0,
+      contractActive: contract.activeCount,
+      contractPendingOffers: contract.pendingOffersCount,
+    });
   },
 
   // ─── Upload methods (Phase 2) ───

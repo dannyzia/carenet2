@@ -10,6 +10,7 @@ import { USE_SUPABASE, supabase } from "@/backend/services/supabase";
 import { getAuthEmailRedirectTo } from "@/frontend/auth/authEmailRedirect";
 import { DEMO_ACCOUNTS, DEMO_PASSWORD } from "@/frontend/auth/mockAuth";
 import type { Role } from "@/frontend/auth/types";
+import { AUTH_PUBLIC_SIGNUP_PATH } from "@/frontend/constants/authPublicPaths";
 
 type Step = "credentials" | "role-select";
 
@@ -73,6 +74,10 @@ export default function LoginPage() {
     const result = await login(email, password);
     setIsLoading(false);
     if (result.success) {
+      if (result.needsMfa) {
+        navigate("/auth/mfa-verify", { replace: true });
+        return;
+      }
       if (result.user) {
         if (result.user.roles.length === 0) {
           navigate("/auth/role-selection", { state: { newUser: true } });
@@ -273,7 +278,7 @@ export default function LoginPage() {
               <p className="text-sm" style={{ color: cn.textSecondary }}>
                 {t("auth:login.noAccount")}{" "}
                 <Link
-                  to="/auth/role-selection"
+                  to={AUTH_PUBLIC_SIGNUP_PATH}
                   className="font-medium underline underline-offset-2 decoration-1 hover:opacity-90"
                   style={{ color: cn.pink }}
                 >

@@ -25,3 +25,5 @@ export * from "./backup.model";
 export * from "./uccf.model";
 export * from "./section15.model";
 export * from "./packageEngagement.model";
+export * from "./operationalDashboard.model";
+export * from "./agencyExecutiveDashboard.model";

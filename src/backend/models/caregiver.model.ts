@@ -52,6 +52,8 @@ export interface RecentJob {
 
 export interface UpcomingScheduleItem {
   shiftId?: string;
+  /** ISO date (YYYY-MM-DD) when known — used to filter “today” on live dashboards. */
+  date?: string;
   time: string; patient: string; type: string; duration: string;
 }
 

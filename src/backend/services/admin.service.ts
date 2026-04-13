@@ -2,15 +2,17 @@
  * Admin Service — platform administration data
  */
 import type {
-  AdminDashboardData, AdminPaymentsData,
+  AdminDashboardData,
+  AdminPaymentsData,
   AdminVerification, AdminReport, AdminUser, AdminAgencyApproval,
   AdminPlacement, AgencyPerformanceRow, AdminAlert,
   AuditChartDataPoint, SystemPerformancePoint,
-  AuditLogsData, CMSPageData, DisputeData, PolicyData, PromoData,
+  AuditLogsData, CMSPageData, DisputeData, PolicyData,   PromoData,
   SupportTicketData, UserInspectorData, VerificationCaseData, AdminSettingsData,
   SecurityAlertItem,
-  SupportTicketData,
 } from "@/backend/models";
+import type { OperationalDashboardData } from "@/backend/models/operationalDashboard.model";
+import { mapAdminDashboardRaw } from "./adminOperationalMapper";
 import { loadMockBarrel } from "@/backend/api/mock/loadMockBarrel";
 import { USE_SUPABASE, sbRead, sb, sbData, dataCacheScope, useInAppMockDataset } from "./_sb";
 import {
@@ -50,65 +52,74 @@ function adminPendingPath(type: string): string {
   return "/admin/reports";
 }
 
-export const adminService = {
-  async getDashboardData(): Promise<AdminDashboardData> {
-    const mockDash = async () => (await loadMockBarrel()).MOCK_ADMIN_DASHBOARD;
-    if (USE_SUPABASE) {
-      try {
-        return await sbRead("admin:dashboard", async () => {
-          const { data, error } = await sb().rpc("get_admin_dashboard");
-          if (error) throw error;
-          const d = data as Record<string, unknown> | null;
-          const base = useInAppMockDataset() ? await mockDash() : EMPTY_ADMIN_DASHBOARD;
-          if (!d) return base;
-          const summaryRaw = d.summary as Record<string, unknown> | undefined;
-          return {
-            summary: summaryRaw
-              ? {
-                  totalUsers: Number(summaryRaw.totalUsers ?? base.summary.totalUsers),
-                  totalUsersChangeLabel: String(summaryRaw.totalUsersChangeLabel ?? base.summary.totalUsersChangeLabel),
-                  activeCaregivers: Number(summaryRaw.activeCaregivers ?? base.summary.activeCaregivers),
-                  activeCaregiversChangeLabel: String(
-                    summaryRaw.activeCaregiversChangeLabel ?? base.summary.activeCaregiversChangeLabel
-                  ),
-                  revenueMonthLabel: String(summaryRaw.revenueMonthLabel ?? base.summary.revenueMonthLabel),
-                  revenueThisMonthBdt: Number(summaryRaw.revenueThisMonthBdt ?? base.summary.revenueThisMonthBdt),
-                  revenueChangeLabel: String(summaryRaw.revenueChangeLabel ?? base.summary.revenueChangeLabel),
-                  platformGrowthPercent: Number(summaryRaw.platformGrowthPercent ?? base.summary.platformGrowthPercent),
-                  platformGrowthChangeLabel: String(
-                    summaryRaw.platformGrowthChangeLabel ?? base.summary.platformGrowthChangeLabel
-                  ),
-                  pointsInCirculation: Number(summaryRaw.pointsInCirculation ?? base.summary.pointsInCirculation),
-                  pendingDuesCp: Number(summaryRaw.pendingDuesCp ?? base.summary.pendingDuesCp),
-                  contractsTotal: Number(summaryRaw.contractsTotal ?? base.summary.contractsTotal),
-                  platformRevenueCp: Number(summaryRaw.platformRevenueCp ?? base.summary.platformRevenueCp),
-                }
-              : base.summary,
-            userGrowth: (d.userGrowth as typeof base.userGrowth) || base.userGrowth,
-            revenueData: (d.revenueData as typeof base.revenueData) || base.revenueData,
-            pieData: (d.pieData as typeof base.pieData) || base.pieData,
-            pendingItems: Array.isArray(d.pendingItems)
-              ? (d.pendingItems as { type: string; count: number }[]).map((p) => {
-                  const match = base.pendingItems.find((x) => x.type === p.type);
-                  return {
-                    type: p.type,
-                    count: p.count,
-                    color: match?.color ?? "#E8A838",
-                    path: match?.path ?? adminPendingPath(p.type),
-                  };
-                })
-              : base.pendingItems,
-            recentActivity: (d.recentActivity as typeof base.recentActivity) || base.recentActivity,
-          };
-        });
-      } catch (error) {
-        console.warn("[Admin Service] Supabase call failed, falling back to mock data:", error);
-        await delay();
-        return useInAppMockDataset() ? await mockDash() : EMPTY_ADMIN_DASHBOARD;
-      }
+async function fetchAdminDashboardLegacy(): Promise<AdminDashboardData> {
+  const mockDash = async () => (await loadMockBarrel()).MOCK_ADMIN_DASHBOARD;
+  if (USE_SUPABASE) {
+    try {
+      return await sbRead("admin:dashboard", async () => {
+        const { data, error } = await sb().rpc("get_admin_dashboard");
+        if (error) throw error;
+        const d = data as Record<string, unknown> | null;
+        const base = useInAppMockDataset() ? await mockDash() : EMPTY_ADMIN_DASHBOARD;
+        if (!d) return base;
+        const summaryRaw = d.summary as Record<string, unknown> | undefined;
+        return {
+          summary: summaryRaw
+            ? {
+                totalUsers: Number(summaryRaw.totalUsers ?? base.summary.totalUsers),
+                totalUsersChangeLabel: String(summaryRaw.totalUsersChangeLabel ?? base.summary.totalUsersChangeLabel),
+                activeCaregivers: Number(summaryRaw.activeCaregivers ?? base.summary.activeCaregivers),
+                activeCaregiversChangeLabel: String(
+                  summaryRaw.activeCaregiversChangeLabel ?? base.summary.activeCaregiversChangeLabel
+                ),
+                revenueMonthLabel: String(summaryRaw.revenueMonthLabel ?? base.summary.revenueMonthLabel),
+                revenueThisMonthBdt: Number(summaryRaw.revenueThisMonthBdt ?? base.summary.revenueThisMonthBdt),
+                revenueChangeLabel: String(summaryRaw.revenueChangeLabel ?? base.summary.revenueChangeLabel),
+                platformGrowthPercent: Number(summaryRaw.platformGrowthPercent ?? base.summary.platformGrowthPercent),
+                platformGrowthChangeLabel: String(
+                  summaryRaw.platformGrowthChangeLabel ?? base.summary.platformGrowthChangeLabel
+                ),
+                pointsInCirculation: Number(summaryRaw.pointsInCirculation ?? base.summary.pointsInCirculation),
+                pendingDuesCp: Number(summaryRaw.pendingDuesCp ?? base.summary.pendingDuesCp),
+                contractsTotal: Number(summaryRaw.contractsTotal ?? base.summary.contractsTotal),
+                platformRevenueCp: Number(summaryRaw.platformRevenueCp ?? base.summary.platformRevenueCp),
+              }
+            : base.summary,
+          userGrowth: (d.userGrowth as typeof base.userGrowth) || base.userGrowth,
+          revenueData: (d.revenueData as typeof base.revenueData) || base.revenueData,
+          pieData: (d.pieData as typeof base.pieData) || base.pieData,
+          pendingItems: Array.isArray(d.pendingItems)
+            ? (d.pendingItems as { type: string; count: number }[]).map((p) => {
+                const match = base.pendingItems.find((x) => x.type === p.type);
+                return {
+                  type: p.type,
+                  count: p.count,
+                  color: match?.color ?? "#E8A838",
+                  path: match?.path ?? adminPendingPath(p.type),
+                };
+              })
+            : base.pendingItems,
+          recentActivity: (d.recentActivity as typeof base.recentActivity) || base.recentActivity,
+        };
+      });
+    } catch (error) {
+      console.warn("[Admin Service] Supabase call failed, falling back to mock data:", error);
+      await delay();
+      return useInAppMockDataset() ? await mockDash() : EMPTY_ADMIN_DASHBOARD;
     }
-    await delay();
-    return useInAppMockDataset() ? await mockDash() : EMPTY_ADMIN_DASHBOARD;
+  }
+  await delay();
+  return useInAppMockDataset() ? await mockDash() : EMPTY_ADMIN_DASHBOARD;
+}
+
+export const adminService = {
+  async getDashboardData(): Promise<OperationalDashboardData> {
+    const legacy = await fetchAdminDashboardLegacy();
+    return mapAdminDashboardRaw({
+      summary: legacy.summary,
+      pendingItems: legacy.pendingItems,
+      recentActivity: legacy.recentActivity,
+    });
   },
 
   async getPaymentsData(): Promise<AdminPaymentsData> {

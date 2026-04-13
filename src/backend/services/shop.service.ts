@@ -8,6 +8,8 @@ import type {
   ShopDashboardOrder, ShopDashboardStats, MerchantFulfillmentData, InventoryItem,
   ProductDetailData, CartItem, OrderTrackingData, ProductReviewDetail,
 } from "@/backend/models";
+import type { OperationalDashboardData } from "@/backend/models/operationalDashboard.model";
+import { mapShopOperationalDashboard } from "./shopOperationalMapper";
 import { loadMockBarrel } from "@/backend/api/mock/loadMockBarrel";
 import { USE_SUPABASE, sbRead, sb, currentUserId, useInAppMockDataset } from "./_sb";
 import { EMPTY_SHOP_DASHBOARD_STATS } from "./liveEmptyDefaults";
@@ -408,5 +410,13 @@ export const shopService = {
       });
     }
     return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_PRODUCT_REVIEWS);
+  },
+
+  async getOperationalDashboard(): Promise<OperationalDashboardData> {
+    const [orders, stats] = await Promise.all([
+      shopService.getShopDashboardOrders(),
+      shopService.getDashboardStats(),
+    ]);
+    return mapShopOperationalDashboard({ orders, stats });
   },
 };

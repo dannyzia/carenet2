@@ -14,6 +14,8 @@ import type {
   ModeratorSanction,
   ModeratorEscalation,
 } from "@/backend/models";
+import type { OperationalDashboardData } from "@/backend/models/operationalDashboard.model";
+import { mapModeratorOperationalDashboard } from "./moderatorOperationalMapper";
 import { loadMockBarrel } from "@/backend/api/mock/loadMockBarrel";
 import { USE_SUPABASE, sbRead, sbWrite, sb, currentUserId, useInAppMockDataset } from "./_sb";
 import { EMPTY_MODERATOR_DASHBOARD_STATS } from "./liveEmptyDefaults";
@@ -102,6 +104,14 @@ export const moderatorService = {
       }
     }
     return demoOfflineDelayAndPick(200, [], (m) => m.MOCK_MODERATION_QUEUE);
+  },
+
+  async getOperationalDashboard(): Promise<OperationalDashboardData> {
+    const [queue, stats] = await Promise.all([
+      moderatorService.getDashboardQueue(),
+      moderatorService.getDashboardStats(),
+    ]);
+    return mapModeratorOperationalDashboard(queue, stats);
   },
 
   async getDashboardStats(): Promise<ModeratorDashboardStats> {

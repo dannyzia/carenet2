@@ -8,9 +8,45 @@ interface PageSkeletonProps {
   cards?: number;
   /** Show the page header skeleton (default: true) */
   header?: boolean;
+  /** Compact operational dashboard: title row + action chips + queue list */
+  variant?: "default" | "dashboard";
 }
 
-export function PageSkeleton({ cards = 3, header = true }: PageSkeletonProps) {
+export function PageSkeleton({ cards = 3, header = true, variant = "default" }: PageSkeletonProps) {
+  if (variant === "dashboard") {
+    return (
+      <div className="space-y-6 animate-pulse">
+        <div className="flex items-center justify-between gap-4">
+          <div className="space-y-2 flex-1">
+            <div className="h-8 w-56 max-w-full rounded-lg" style={{ background: "rgba(219,134,154,0.15)" }} />
+            <div className="h-4 w-40 max-w-full rounded-md" style={{ background: "rgba(132,132,132,0.1)" }} />
+          </div>
+          <div className="h-8 w-24 rounded-full shrink-0" style={{ background: "rgba(232,168,56,0.2)" }} />
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-10 w-28 rounded-xl" style={{ background: "rgba(95,184,101,0.12)" }} />
+          ))}
+        </div>
+        <div
+          className="rounded-xl border overflow-hidden"
+          style={{ borderColor: "rgba(132,132,132,0.12)", background: "rgba(255,255,255,0.5)" }}
+        >
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div
+              key={i}
+              className="h-14 px-4 border-b last:border-b-0 flex items-center gap-3"
+              style={{ borderColor: "rgba(132,132,132,0.08)" }}
+            >
+              <div className="h-3 flex-1 rounded" style={{ background: "rgba(132,132,132,0.08)" }} />
+              <div className="h-3 w-16 rounded shrink-0" style={{ background: "rgba(132,132,132,0.06)" }} />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 animate-pulse">
       {header && (

@@ -83,8 +83,20 @@ export const MOCK_ACTIVE_SHIFTS: ActiveShift[] = [
   { caregiver: "Rashid Khan", patient: "Mr. Rafiqul Islam", time: "8AM-8PM", checkedIn: "8:15 AM", status: "grace", lastLog: "1h 20m ago", placement: "PL-2026-0021" },
 ];
 export const MOCK_SHIFT_ALERTS: ShiftAlert[] = [
-  { type: "missed", text: "Nasrin Begum has not checked in for 8PM shift (Mr. Salma Begum)", time: "30 min overdue" },
-  { type: "no-log", text: "No care log from Rashid Khan for 1h 20m (Mr. Rafiqul Islam)", time: "Warning" },
+  {
+    type: "missed",
+    text: "Nasrin Begum has not checked in for 8PM shift (Mr. Salma Begum)",
+    time: "30 min overdue",
+    caregiverName: "Nasrin Begum",
+    patientName: "Mrs. Salma Begum",
+  },
+  {
+    type: "no-log",
+    text: "No care log from Rashid Khan for 1h 20m (Mr. Rafiqul Islam)",
+    time: "Warning",
+    caregiverName: "Rashid Khan",
+    patientName: "Mr. Rafiqul Islam",
+  },
 ];
 
 // ─── Agency Revenue Chart Data (Dashboard) ───

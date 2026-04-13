@@ -8,6 +8,7 @@
 
 import { USE_SUPABASE, getSupabaseClient } from "@/backend/services/supabase";
 import { getStoredDeviceToken, clearStoredDeviceToken } from "./registerDevice";
+import { isCapacitorNativeShell } from "./platform";
 
 /**
  * Deactivates this device's push token for the current user.
@@ -18,6 +19,28 @@ import { getStoredDeviceToken, clearStoredDeviceToken } from "./registerDevice";
 export async function unregisterDeviceForPush(): Promise<boolean> {
   if (!USE_SUPABASE) {
     console.log("[unregisterDevice] Skipped — Supabase not connected");
+    return false;
+  }
+
+  // Push tokens are registered only on real native shells; avoid direct `device_tokens`
+  // REST calls from web (RLS expects a normal user session — logout races can surface as 401).
+  if (!isCapacitorNativeShell()) {
+    // #region agent log
+    fetch("http://127.0.0.1:7557/ingest/04d63fde-28d9-48a9-bc93-871ef0a09c70", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "672241" },
+      body: JSON.stringify({
+        sessionId: "672241",
+        runId: "pre-fix",
+        hypothesisId: "H-push-skip-web",
+        location: "unregisterDevice.ts:native-gate",
+        message: "unregister push skipped (not Capacitor native shell)",
+        data: {},
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+    clearStoredDeviceToken();
     return false;
   }
 
@@ -33,6 +56,22 @@ export async function unregisterDeviceForPush(): Promise<boolean> {
     }
 
     const storedToken = getStoredDeviceToken();
+
+    // #region agent log
+    fetch("http://127.0.0.1:7557/ingest/04d63fde-28d9-48a9-bc93-871ef0a09c70", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "672241" },
+      body: JSON.stringify({
+        sessionId: "672241",
+        runId: "pre-fix",
+        hypothesisId: "H-push-native-update",
+        location: "unregisterDevice.ts:before-update",
+        message: "unregister will call device_tokens update",
+        data: { hasStoredToken: Boolean(storedToken) },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
 
     if (storedToken) {
       // Target only this device's token

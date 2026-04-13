@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "@/frontend/components/shared/LanguageSwitcher";
 import { useUnreadCounts } from "@/frontend/hooks/useUnreadCounts";
 import type { Role } from "@/frontend/theme/tokens";
+import { AUTH_PUBLIC_SIGNUP_PATH } from "@/frontend/constants/authPublicPaths";
 
 const ROLE_SEGMENTS: Role[] = ["caregiver", "guardian", "admin", "moderator", "patient", "agency", "shop"];
 
@@ -155,7 +156,7 @@ export function PublicNavBar() {
             <div className="hidden md:block w-px h-6 mx-1" style={{ background: cn.borderLight }} />
 
             {/* Auth buttons — md+ only; mobile: drawer + BottomNav */}
-            <Link to="/auth/register" className="hidden md:flex no-underline">
+            <Link to={AUTH_PUBLIC_SIGNUP_PATH} className="hidden md:flex no-underline">
               <Button
                 size="sm"
                 className="gap-1.5"
@@ -224,7 +225,7 @@ export function PublicNavBar() {
 
         {/* Auth buttons in drawer */}
         <div className="px-4 pt-4 pb-2 flex flex-col gap-2">
-          <Link to="/auth/register" onClick={() => setMenuOpen(false)} className="no-underline">
+          <Link to={AUTH_PUBLIC_SIGNUP_PATH} onClick={() => setMenuOpen(false)} className="no-underline">
             <Button
               size="sm"
               className="w-full gap-1.5"

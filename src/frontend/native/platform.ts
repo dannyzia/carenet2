@@ -6,9 +6,15 @@
  * choose between native Capacitor plugins and web fallbacks.
  */
 
-/** Returns true when running inside a Capacitor native shell (Android/iOS) */
+/** Returns true when the Capacitor runtime is present (including web builds that load Capacitor). */
 export function isNative(): boolean {
   return typeof (window as any)?.Capacitor !== "undefined";
+}
+
+/** True only on an Android/iOS shell build — not the in-browser “web” Capacitor host. */
+export function isCapacitorNativeShell(): boolean {
+  const cap = typeof window !== "undefined" ? (window as any).Capacitor : undefined;
+  return typeof cap?.isNativePlatform === "function" && cap.isNativePlatform() === true;
 }
 
 /** Returns true when running inside the Capacitor Android shell */

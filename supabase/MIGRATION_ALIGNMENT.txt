@@ -1,0 +1,47 @@
+CareNet — Supabase migration alignment (2026-04-12)
+
+COMPLETED IN REPO / CLI (when pooler allowed)
+1) Renamed invalid migration filenames (CLI requires ^\d+_):
+   - 20260317_notifications_and_preferences.sql -> 20260317000000_notifications_and_preferences.sql
+   - 20260317b_queued_notifications.sql -> 20260317000001_queued_notifications.sql
+   - 20260317c_pgcron_process_queue.sql -> 20260317000002_pgcron_process_queue.sql
+   - 20260317d_cleanup_queued_notifications.sql -> 20260317000003_cleanup_queued_notifications.sql
+2) deployment.md updated to match the new paths.
+3) Remote history cleanup (legacy pharmacy/geography migrations not present locally):
+   npx supabase migration repair --status reverted 001 002 003 004 005 006 007 008 009 010 011 012 --linked
+   (Succeeded — removes those version rows from supabase_migrations.schema_migrations; does not DROP tables.)
+
+REMOTE STATE (audited before breaker)
+- schema_migrations contained 001..012 plus version 20260404 (name 20260404_unique_email_phone).
+- public.wallets and public.wallet_transactions exist (inspect table-sizes).
+
+WHY "Local | Remote" LOOKED WRONG
+- Remote used legacy numeric versions (001..012) absent from this repo → db push refused.
+- Local migrations with timestamps *before* the newest remote version (20260404) require either:
+  A) npx supabase db push --linked --include-all   (executes SQL), or
+  B) npm run supabase:align:mark-applied          (marks versions applied without SQL — only if schema already matches).
+
+20260404 "DUPLICATE" ROW IN migration list
+- Remote row version = 20260404 matches local file 20260404_unique_email_phone.sql (version prefix 20260404).
+- The extra unmatched row was ordering/history drift, not two different migrations. No rename needed.
+
+YOU MUST DO AFTER POOLER / AUTH RECOVERS
+If you see: "Circuit breaker open" or "Set SUPABASE_DB_PASSWORD":
+  PowerShell:
+    $env:SUPABASE_DB_PASSWORD = "<Database password from Supabase Dashboard → Database>"
+  Then either:
+    npm run supabase:align:mark-applied
+  If repair errors because 20260404 is already recorded on remote:
+    $env:SUPABASE_ALIGN_SKIP_VERSIONS = "20260404"
+    npm run supabase:align:mark-applied
+  or (to run SQL instead of only marking history):
+    npm run supabase:align:push-include-all
+  Verify:
+    npm run supabase:align:migration-list
+
+FORWARD FIX (only if push errors)
+- Read the failing migration; prefer idempotent patterns (IF NOT EXISTS / DROP POLICY IF EXISTS).
+- Add a new forward-only migration; avoid editing already-applied history on shared branches.
+
+BACKUP
+- See supabase/backups/BACKUP_NOTE.txt (CLI dump needs Docker; use Dashboard backups for production).
