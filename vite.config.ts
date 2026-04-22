@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import i18nSyncPlugin from './plugins/vite-i18n-sync'
+import { carenetDebugSessionLogPlugin } from './plugins/vite-debug-session-log'
 
 function envTruthy(v: string | undefined): boolean {
   if (!v) return false
@@ -72,6 +73,7 @@ export default defineConfig(({ mode }) => {
     'import.meta.env.VITE_PLAYWRIGHT_E2E': JSON.stringify(playwrightE2E ? 'true' : ''),
   },
   plugins: [
+    carenetDebugSessionLogPlugin(projectRoot),
     // The React and Tailwind plugins are both required for Make, even if
     // Tailwind is not being actively used – do not remove them
     react(),

@@ -20,6 +20,7 @@ import { loadMockBarrel } from "@/backend/api/mock/loadMockBarrel";
 import { USE_SUPABASE, sbRead, sbWrite, sb, currentUserId, useInAppMockDataset } from "./_sb";
 import { EMPTY_MODERATOR_DASHBOARD_STATS } from "./liveEmptyDefaults";
 import { demoOfflineDelayAndPick } from "./demoOfflineMock";
+import { activationService } from "./activation.service";
 
 const delay = (ms = 200) => new Promise((r) => setTimeout(r, ms));
 
@@ -434,5 +435,19 @@ export const moderatorService = {
     }
     await delay(300);
     return { id: Date.now() };
+  },
+
+  // ─── Role Activation Delegation Methods (scoped to caregiver, agency, shop) ───
+
+  async getPendingActivations() {
+    return activationService.getPendingActivations(['caregiver', 'agency', 'shop'] as any);
+  },
+
+  async approveActivation(profileId: string, reviewerName: string, note?: string) {
+    return activationService.approveActivation(profileId, reviewerName, note);
+  },
+
+  async rejectActivation(profileId: string, reviewerName: string, note: string) {
+    return activationService.rejectActivation(profileId, reviewerName, note);
   },
 };

@@ -19,6 +19,8 @@ export const roleCardGradient: Record<Role, string> = {
     "radial-gradient(143.86% 887.35% at -10.97% -22.81%, #FFD180 0%, #FFB74D 100%)",
   admin:
     "radial-gradient(143.86% 887.35% at -10.97% -22.81%, #B8A7FF 0%, #8B7AE8 100%)",
+  channel_partner:
+    "radial-gradient(143.86% 887.35% at -10.97% -22.81%, #A78BFA 0%, #22C55E 100%)",
 };
 
 export function getRoleActionGradient(role: Role): string {

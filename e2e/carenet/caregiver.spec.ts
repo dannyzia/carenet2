@@ -442,6 +442,90 @@ test.describe("Caregiver flows", () => {
   });
 
   // ════════════════════════════════════════════════════════════════
+  // Messages - New Chat Flow
+  // ════════════════════════════════════════════════════════════════
+
+  test.describe("Messages - New Chat", () => {
+    test("New Chat button opens modal with autocomplete", async ({ page }) => {
+      const errors = captureConsoleErrors(page);
+      await page.goto("/caregiver/messages");
+      await page.waitForLoadState("load");
+
+      const main = mainLandmark(page);
+      // New Chat button should be visible for caregivers
+      const newChatButton = main.getByRole("button", { name: /new chat/i });
+      await expect(newChatButton).toBeVisible({ timeout: 10_000 });
+
+      // Click to open modal
+      await newChatButton.click();
+
+      // Modal should appear
+      const modal = page.getByRole("dialog");
+      await expect(modal).toBeVisible({ timeout: 5_000 });
+
+      // Search input should be present
+      const searchInput = modal.getByPlaceholder(/search contacts/i);
+      await expect(searchInput).toBeVisible();
+
+      // Close modal
+      const closeButton = modal.getByRole("button", { name: /close/i });
+      await closeButton.click();
+      await expect(modal).not.toBeVisible();
+
+      expect(errors()).toHaveLength(0);
+    });
+
+    test("Search filters contacts by name", async ({ page }) => {
+      const errors = captureConsoleErrors(page);
+      await page.goto("/caregiver/messages");
+      await page.waitForLoadState("load");
+
+      const main = mainLandmark(page);
+      const newChatButton = main.getByRole("button", { name: /new chat/i });
+      await newChatButton.click();
+
+      const modal = page.getByRole("dialog");
+      const searchInput = modal.getByPlaceholder(/search contacts/i);
+      await searchInput.fill("HealthCare");
+
+      // Wait for debounce and results
+      await page.waitForTimeout(400);
+
+      // Should show filtered results
+      const results = modal.getByText(/HealthCare/i);
+      await expect(results).toBeVisible();
+
+      // Close modal
+      const closeButton = modal.getByRole("button", { name: /close/i });
+      await closeButton.click();
+
+      expect(errors()).toHaveLength(0);
+    });
+
+    test("Contact groups are displayed (Agencies and Active Job Contacts)", async ({ page }) => {
+      const errors = captureConsoleErrors(page);
+      await page.goto("/caregiver/messages");
+      await page.waitForLoadState("load");
+
+      const main = mainLandmark(page);
+      const newChatButton = main.getByRole("button", { name: /new chat/i });
+      await newChatButton.click();
+
+      const modal = page.getByRole("dialog");
+
+      // Should show section headers
+      await expect(modal.getByText(/agencies/i)).toBeVisible({ timeout: 5_000 });
+      await expect(modal.getByText(/active job contacts/i)).toBeVisible();
+
+      // Close modal
+      const closeButton = modal.getByRole("button", { name: /close/i });
+      await closeButton.click();
+
+      expect(errors()).toHaveLength(0);
+    });
+  });
+
+  // ════════════════════════════════════════════════════════════════
   // All remaining caregiver pages — load check
   // ════════════════════════════════════════════════════════════════
 

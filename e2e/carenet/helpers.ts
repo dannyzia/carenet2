@@ -12,6 +12,26 @@ import { type Page, expect } from "@playwright/test";
 export const DEMO_PASSWORD = "demo1234";
 export const DEMO_TOTP = "123456";
 
+export const REAL_ACCOUNTS = {
+  caregiver: {
+    email: "caregiver1@indigobangladesh.xyz",
+    password: "@DELL123dell",
+    dashboard: "/caregiver/dashboard",
+  },
+  guardian: {
+    email: "guardian1@indigobangladesh.xyz",
+    password: "@DELL123dell",
+    dashboard: "/guardian/dashboard",
+  },
+  agency: {
+    email: "agent@indigobangladesh.xyz",
+    password: "@DELL123dell",
+    dashboard: "/agency/dashboard",
+  },
+} as const;
+
+export type RealRole = keyof typeof REAL_ACCOUNTS;
+
 export const DEMO_ACCOUNTS = {
   caregiver:  { email: "caregiver@carenet.demo",  name: "Mock_Karim Uddin",       dashboard: "/caregiver/dashboard"  },
   guardian:   { email: "guardian@carenet.demo",   name: "Mock_Rashed Hossain",    dashboard: "/guardian/dashboard"   },
@@ -20,6 +40,7 @@ export const DEMO_ACCOUNTS = {
   admin:      { email: "admin@carenet.demo",      name: "Mock_Admin User",        dashboard: "/admin/dashboard"      },
   moderator:  { email: "moderator@carenet.demo",  name: "Mock_Mod User",          dashboard: "/moderator/dashboard"  },
   shop:       { email: "shop@carenet.demo",       name: "Mock_MediMart Store",    dashboard: "/shop/dashboard"       },
+  channel_partner: { email: "channelpartner@carenet.demo", name: "Mock_Channel Partner", dashboard: "/cp/dashboard" },
 } as const;
 
 export type DemoRole = keyof typeof DEMO_ACCOUNTS;
@@ -72,6 +93,37 @@ export async function loginAs(page: Page, role: DemoRole) {
 
   // Wait for dashboard
   await page.waitForURL(`**${account.dashboard}`, { timeout: 15_000, waitUntil: "commit" });
+  await page.waitForLoadState("load");
+}
+
+/**
+ * Log in with a real Supabase account (email + password).
+ * Handles MFA redirect if the account has TOTP enabled.
+ * If no MFA is required, lands directly on the role dashboard.
+ */
+export async function loginAsReal(page: Page, role: RealRole) {
+  const account = REAL_ACCOUNTS[role];
+  await page.goto("/auth/login", { waitUntil: "load" });
+  await page.waitForLoadState("load");
+
+  await page.fill('input[type="email"]', account.email);
+  await page.fill('input[type="password"]', account.password);
+
+  await loginSubmitButton(page).click();
+
+  await page.waitForURL(
+    url => {
+      const p = url.pathname;
+      return p.includes("/mfa-verify") || p.includes("/dashboard") || p.includes("/role-selection");
+    },
+    { timeout: 30_000 },
+  );
+
+  const currentPath = page.url();
+  if (currentPath.includes("/mfa-verify")) {
+    await page.waitForURL(/\/.*\/dashboard/, { timeout: 30_000 });
+  }
+
   await page.waitForLoadState("load");
 }
 
@@ -152,14 +204,15 @@ export function captureConsoleErrors(page: Page): () => string[] {
 /**
  * Assert page title contains the expected string.
  */
-export async function assertTitle(page: Page, expected: string) {
-  await expect(page).toHaveTitle(new RegExp(expected, "i"));
+export async function assertTitle(page: Page, expected: string | RegExp) {
+  const re = expected instanceof RegExp ? expected : new RegExp(expected, "i");
+  await expect(page).toHaveTitle(re);
 }
 
 /**
  * Assert a Sonner toast is visible.
  */
-export async function assertToast(page: Page, text?: string) {
+export async function assertToast(page: Page, text?: string | RegExp) {
   const toastLocator = text
     ? page.locator("[data-sonner-toast]").filter({ hasText: text })
     : page.locator("[data-sonner-toast]").first();

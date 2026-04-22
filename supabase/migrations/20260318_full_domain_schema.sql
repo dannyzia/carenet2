@@ -48,8 +48,11 @@ CREATE TRIGGER on_auth_user_created_profile
   FOR EACH ROW EXECUTE FUNCTION create_profile_for_user();
 
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users read own profile" ON profiles;
 CREATE POLICY "Users read own profile" ON profiles FOR SELECT USING (auth.uid() = id);
+DROP POLICY IF EXISTS "Users update own profile" ON profiles;
 CREATE POLICY "Users update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
+DROP POLICY IF EXISTS "Public profiles readable" ON profiles;
 CREATE POLICY "Public profiles readable" ON profiles FOR SELECT USING (TRUE);
 
 -- ─────────────────────────────────────
@@ -78,10 +81,13 @@ CREATE INDEX IF NOT EXISTS idx_patients_guardian ON patients(guardian_id);
 CREATE INDEX IF NOT EXISTS idx_patients_status ON patients(status);
 
 ALTER TABLE patients ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Guardian reads own patients" ON patients;
 CREATE POLICY "Guardian reads own patients" ON patients FOR SELECT
   USING (auth.uid() = guardian_id);
+DROP POLICY IF EXISTS "Guardian manages own patients" ON patients;
 CREATE POLICY "Guardian manages own patients" ON patients FOR ALL
   USING (auth.uid() = guardian_id);
+DROP POLICY IF EXISTS "Admins read all patients" ON patients;
 CREATE POLICY "Admins read all patients" ON patients FOR SELECT
   USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
 
@@ -104,7 +110,9 @@ CREATE TABLE IF NOT EXISTS patient_vitals (
 CREATE INDEX IF NOT EXISTS idx_vitals_patient ON patient_vitals(patient_id, recorded_at DESC);
 
 ALTER TABLE patient_vitals ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Vitals readable by care team" ON patient_vitals;
 CREATE POLICY "Vitals readable by care team" ON patient_vitals FOR SELECT USING (TRUE);
+DROP POLICY IF EXISTS "Caregivers insert vitals" ON patient_vitals;
 CREATE POLICY "Caregivers insert vitals" ON patient_vitals FOR INSERT WITH CHECK (TRUE);
 
 -- ─────────────────────────────────────
@@ -131,6 +139,7 @@ CREATE TABLE IF NOT EXISTS prescriptions (
 CREATE INDEX IF NOT EXISTS idx_prescriptions_patient ON prescriptions(patient_id);
 
 ALTER TABLE prescriptions ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Prescriptions care team access" ON prescriptions;
 CREATE POLICY "Prescriptions care team access" ON prescriptions FOR SELECT USING (TRUE);
 
 -- ─────────────────────────────────────
@@ -152,6 +161,7 @@ CREATE TABLE IF NOT EXISTS medical_records (
 CREATE INDEX IF NOT EXISTS idx_medical_records_patient ON medical_records(patient_id);
 
 ALTER TABLE medical_records ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Medical records care team access" ON medical_records;
 CREATE POLICY "Medical records care team access" ON medical_records FOR SELECT USING (TRUE);
 
 -- ─────────────────────────────────────
@@ -179,7 +189,9 @@ CREATE TABLE IF NOT EXISTS caregiver_profiles (
 );
 
 ALTER TABLE caregiver_profiles ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Caregiver profiles public read" ON caregiver_profiles;
 CREATE POLICY "Caregiver profiles public read" ON caregiver_profiles FOR SELECT USING (TRUE);
+DROP POLICY IF EXISTS "Caregivers update own" ON caregiver_profiles;
 CREATE POLICY "Caregivers update own" ON caregiver_profiles FOR UPDATE USING (auth.uid() = id);
 
 -- ─────────────────────────────────────
@@ -207,10 +219,13 @@ CREATE TABLE IF NOT EXISTS caregiver_documents (
 CREATE INDEX IF NOT EXISTS idx_cg_docs_caregiver ON caregiver_documents(caregiver_id);
 
 ALTER TABLE caregiver_documents ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Caregivers read own docs" ON caregiver_documents;
 CREATE POLICY "Caregivers read own docs" ON caregiver_documents FOR SELECT
   USING (auth.uid() = caregiver_id);
+DROP POLICY IF EXISTS "Caregivers manage own docs" ON caregiver_documents;
 CREATE POLICY "Caregivers manage own docs" ON caregiver_documents FOR ALL
   USING (auth.uid() = caregiver_id);
+DROP POLICY IF EXISTS "Agencies read caregiver docs" ON caregiver_documents;
 CREATE POLICY "Agencies read caregiver docs" ON caregiver_documents FOR SELECT
   USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('agency','admin')));
 
@@ -239,7 +254,9 @@ CREATE TABLE IF NOT EXISTS agencies (
 );
 
 ALTER TABLE agencies ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Agencies public read" ON agencies;
 CREATE POLICY "Agencies public read" ON agencies FOR SELECT USING (TRUE);
+DROP POLICY IF EXISTS "Agency updates own" ON agencies;
 CREATE POLICY "Agency updates own" ON agencies FOR UPDATE USING (auth.uid() = id);
 
 -- ─────────────────────────────────────
@@ -274,12 +291,14 @@ CREATE INDEX IF NOT EXISTS idx_shifts_patient ON shifts(patient_id);
 CREATE INDEX IF NOT EXISTS idx_shifts_status ON shifts(status);
 
 ALTER TABLE shifts ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Shift parties read" ON shifts;
 CREATE POLICY "Shift parties read" ON shifts FOR SELECT
   USING (
     auth.uid() = caregiver_id
     OR auth.uid() IN (SELECT guardian_id FROM patients WHERE id = patient_id)
     OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('agency','admin'))
   );
+DROP POLICY IF EXISTS "Caregivers update own shifts" ON shifts;
 CREATE POLICY "Caregivers update own shifts" ON shifts FOR UPDATE
   USING (auth.uid() = caregiver_id);
 
@@ -299,6 +318,7 @@ CREATE TABLE IF NOT EXISTS shift_ratings (
 CREATE INDEX IF NOT EXISTS idx_shift_ratings_shift ON shift_ratings(shift_id);
 
 ALTER TABLE shift_ratings ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Shift ratings readable" ON shift_ratings;
 CREATE POLICY "Shift ratings readable" ON shift_ratings FOR SELECT USING (TRUE);
 
 -- ─────────────────────────────────────
@@ -328,7 +348,9 @@ CREATE INDEX IF NOT EXISTS idx_incidents_patient ON incident_reports(patient_id)
 CREATE INDEX IF NOT EXISTS idx_incidents_status ON incident_reports(status);
 
 ALTER TABLE incident_reports ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Incidents readable by care team" ON incident_reports;
 CREATE POLICY "Incidents readable by care team" ON incident_reports FOR SELECT USING (TRUE);
+DROP POLICY IF EXISTS "Incidents insertable" ON incident_reports;
 CREATE POLICY "Incidents insertable" ON incident_reports FOR INSERT WITH CHECK (TRUE);
 
 -- ─────────────────────────────────────
@@ -350,6 +372,7 @@ CREATE TABLE IF NOT EXISTS handoff_notes (
 CREATE INDEX IF NOT EXISTS idx_handoffs_shift ON handoff_notes(shift_id);
 
 ALTER TABLE handoff_notes ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Handoff notes care team" ON handoff_notes;
 CREATE POLICY "Handoff notes care team" ON handoff_notes FOR SELECT USING (TRUE);
 
 -- ─────────────────────────────────────
@@ -390,7 +413,9 @@ CREATE INDEX IF NOT EXISTS idx_jobs_posted_by ON jobs(posted_by);
 CREATE INDEX IF NOT EXISTS idx_jobs_status ON jobs(status);
 
 ALTER TABLE jobs ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Jobs public read" ON jobs;
 CREATE POLICY "Jobs public read" ON jobs FOR SELECT USING (TRUE);
+DROP POLICY IF EXISTS "Posters manage own jobs" ON jobs;
 CREATE POLICY "Posters manage own jobs" ON jobs FOR ALL USING (auth.uid() = posted_by);
 
 -- ─────────────────────────────────────
@@ -422,8 +447,10 @@ CREATE INDEX IF NOT EXISTS idx_job_apps_job ON job_applications(job_id);
 CREATE INDEX IF NOT EXISTS idx_job_apps_applicant ON job_applications(applicant_id);
 
 ALTER TABLE job_applications ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Applicants read own apps" ON job_applications;
 CREATE POLICY "Applicants read own apps" ON job_applications FOR SELECT
   USING (auth.uid() = applicant_id);
+DROP POLICY IF EXISTS "Job posters read apps" ON job_applications;
 CREATE POLICY "Job posters read apps" ON job_applications FOR SELECT
   USING (job_id IN (SELECT id FROM jobs WHERE posted_by = auth.uid()));
 
@@ -462,6 +489,7 @@ CREATE INDEX IF NOT EXISTS idx_placements_caregiver ON placements(caregiver_id);
 CREATE INDEX IF NOT EXISTS idx_placements_status ON placements(status);
 
 ALTER TABLE placements ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Placement parties read" ON placements;
 CREATE POLICY "Placement parties read" ON placements FOR SELECT
   USING (
     auth.uid() IN (guardian_id, agency_id, caregiver_id)
@@ -488,6 +516,7 @@ CREATE INDEX IF NOT EXISTS idx_conversations_a ON conversations(participant_a);
 CREATE INDEX IF NOT EXISTS idx_conversations_b ON conversations(participant_b);
 
 ALTER TABLE conversations ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Participants read own conversations" ON conversations;
 CREATE POLICY "Participants read own conversations" ON conversations FOR SELECT
   USING (auth.uid() IN (participant_a, participant_b));
 
@@ -510,17 +539,22 @@ CREATE TABLE IF NOT EXISTS chat_messages (
 CREATE INDEX IF NOT EXISTS idx_chat_msgs_convo ON chat_messages(conversation_id, created_at DESC);
 
 ALTER TABLE chat_messages ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Chat participants read messages" ON chat_messages;
 CREATE POLICY "Chat participants read messages" ON chat_messages FOR SELECT
   USING (
     conversation_id IN (
       SELECT id FROM conversations WHERE auth.uid() IN (participant_a, participant_b)
     )
   );
+DROP POLICY IF EXISTS "Chat participants send messages" ON chat_messages;
 CREATE POLICY "Chat participants send messages" ON chat_messages FOR INSERT
   WITH CHECK (auth.uid() = sender_id);
 
 -- Enable Realtime on chat_messages
-ALTER PUBLICATION supabase_realtime ADD TABLE chat_messages;
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE chat_messages;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- ─────────────────────────────────────
 -- 18. CARE NOTES
@@ -546,6 +580,7 @@ CREATE INDEX IF NOT EXISTS idx_care_notes_caregiver ON care_notes(caregiver_id);
 CREATE INDEX IF NOT EXISTS idx_care_notes_patient ON care_notes(patient_id);
 
 ALTER TABLE care_notes ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Caregivers manage own notes" ON care_notes;
 CREATE POLICY "Caregivers manage own notes" ON care_notes FOR ALL
   USING (auth.uid() = caregiver_id);
 
@@ -566,7 +601,9 @@ CREATE TABLE IF NOT EXISTS guardian_profiles (
 );
 
 ALTER TABLE guardian_profiles ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Guardians read own" ON guardian_profiles;
 CREATE POLICY "Guardians read own" ON guardian_profiles FOR SELECT USING (auth.uid() = id);
+DROP POLICY IF EXISTS "Guardians update own" ON guardian_profiles;
 CREATE POLICY "Guardians update own" ON guardian_profiles FOR UPDATE USING (auth.uid() = id);
 
 -- ─────────────────────────────────────
@@ -607,6 +644,7 @@ CREATE INDEX IF NOT EXISTS idx_invoices_to ON invoices(to_party_id);
 CREATE INDEX IF NOT EXISTS idx_invoices_status ON invoices(status);
 
 ALTER TABLE invoices ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Invoice parties read" ON invoices;
 CREATE POLICY "Invoice parties read" ON invoices FOR SELECT
   USING (auth.uid() IN (from_party_id, to_party_id));
 
@@ -623,6 +661,7 @@ CREATE TABLE IF NOT EXISTS invoice_line_items (
 );
 
 ALTER TABLE invoice_line_items ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Invoice line items via invoice" ON invoice_line_items;
 CREATE POLICY "Invoice line items via invoice" ON invoice_line_items FOR SELECT
   USING (
     invoice_id IN (SELECT id FROM invoices WHERE auth.uid() IN (from_party_id, to_party_id))
@@ -656,6 +695,7 @@ CREATE TABLE IF NOT EXISTS payment_proofs (
 CREATE INDEX IF NOT EXISTS idx_payment_proofs_invoice ON payment_proofs(invoice_id);
 
 ALTER TABLE payment_proofs ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Payment proof parties read" ON payment_proofs;
 CREATE POLICY "Payment proof parties read" ON payment_proofs FOR SELECT
   USING (auth.uid() IN (submitted_by_id, received_by_id));
 
@@ -682,8 +722,10 @@ CREATE TABLE IF NOT EXISTS uploaded_files (
 CREATE INDEX IF NOT EXISTS idx_uploads_by ON uploaded_files(uploaded_by);
 
 ALTER TABLE uploaded_files ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users read own uploads" ON uploaded_files;
 CREATE POLICY "Users read own uploads" ON uploaded_files FOR SELECT
   USING (auth.uid() = uploaded_by);
+DROP POLICY IF EXISTS "Users create uploads" ON uploaded_files;
 CREATE POLICY "Users create uploads" ON uploaded_files FOR INSERT
   WITH CHECK (auth.uid() = uploaded_by);
 
@@ -718,6 +760,7 @@ CREATE INDEX IF NOT EXISTS idx_daily_tasks_caregiver ON daily_tasks(caregiver_id
 CREATE INDEX IF NOT EXISTS idx_daily_tasks_patient ON daily_tasks(patient_id);
 
 ALTER TABLE daily_tasks ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Task participants read" ON daily_tasks;
 CREATE POLICY "Task participants read" ON daily_tasks FOR SELECT
   USING (
     auth.uid() IN (caregiver_id, guardian_id, agency_id, created_by)
@@ -846,8 +889,10 @@ CREATE INDEX IF NOT EXISTS idx_care_contracts_status ON care_contracts(status);
 CREATE INDEX IF NOT EXISTS idx_care_contracts_city ON care_contracts(city);
 
 ALTER TABLE care_contracts ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Care contracts public read published" ON care_contracts;
 CREATE POLICY "Care contracts public read published" ON care_contracts FOR SELECT
   USING (status IN ('published','bidding','matched') OR auth.uid() = owner_id);
+DROP POLICY IF EXISTS "Owners manage own contracts" ON care_contracts;
 CREATE POLICY "Owners manage own contracts" ON care_contracts FOR ALL
   USING (auth.uid() = owner_id);
 
@@ -887,11 +932,13 @@ CREATE INDEX IF NOT EXISTS idx_bids_agency ON care_contract_bids(agency_id);
 CREATE INDEX IF NOT EXISTS idx_bids_status ON care_contract_bids(status);
 
 ALTER TABLE care_contract_bids ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Bid parties read" ON care_contract_bids;
 CREATE POLICY "Bid parties read" ON care_contract_bids FOR SELECT
   USING (
     auth.uid() = agency_id
     OR contract_id IN (SELECT id FROM care_contracts WHERE owner_id = auth.uid())
   );
+DROP POLICY IF EXISTS "Agencies create bids" ON care_contract_bids;
 CREATE POLICY "Agencies create bids" ON care_contract_bids FOR INSERT
   WITH CHECK (auth.uid() = agency_id);
 
@@ -909,6 +956,7 @@ CREATE TABLE IF NOT EXISTS backup_assignments (
 );
 
 ALTER TABLE backup_assignments ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Backup assignments readable by involved" ON backup_assignments;
 CREATE POLICY "Backup assignments readable by involved" ON backup_assignments FOR SELECT USING (TRUE);
 
 -- ─────────────────────────────────────
@@ -930,6 +978,7 @@ CREATE TABLE IF NOT EXISTS shift_reassignments (
 );
 
 ALTER TABLE shift_reassignments ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Reassignment parties read" ON shift_reassignments;
 CREATE POLICY "Reassignment parties read" ON shift_reassignments FOR SELECT USING (TRUE);
 
 -- ─────────────────────────────────────
@@ -959,7 +1008,9 @@ CREATE INDEX IF NOT EXISTS idx_products_merchant ON shop_products(merchant_id);
 CREATE INDEX IF NOT EXISTS idx_products_category ON shop_products(category);
 
 ALTER TABLE shop_products ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Products public read" ON shop_products;
 CREATE POLICY "Products public read" ON shop_products FOR SELECT USING (TRUE);
+DROP POLICY IF EXISTS "Merchants manage own products" ON shop_products;
 CREATE POLICY "Merchants manage own products" ON shop_products FOR ALL
   USING (auth.uid() = merchant_id);
 
@@ -987,6 +1038,7 @@ CREATE INDEX IF NOT EXISTS idx_orders_customer ON shop_orders(customer_id);
 CREATE INDEX IF NOT EXISTS idx_orders_merchant ON shop_orders(merchant_id);
 
 ALTER TABLE shop_orders ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Order parties read" ON shop_orders;
 CREATE POLICY "Order parties read" ON shop_orders FOR SELECT
   USING (auth.uid() IN (customer_id, merchant_id));
 
@@ -1004,6 +1056,7 @@ CREATE TABLE IF NOT EXISTS shop_order_items (
 );
 
 ALTER TABLE shop_order_items ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Order items via order" ON shop_order_items;
 CREATE POLICY "Order items via order" ON shop_order_items FOR SELECT
   USING (
     order_id IN (SELECT id FROM shop_orders WHERE auth.uid() IN (customer_id, merchant_id))
@@ -1021,6 +1074,7 @@ CREATE TABLE IF NOT EXISTS wishlists (
 );
 
 ALTER TABLE wishlists ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users manage own wishlist" ON wishlists;
 CREATE POLICY "Users manage own wishlist" ON wishlists FOR ALL
   USING (auth.uid() = user_id);
 
@@ -1041,7 +1095,9 @@ CREATE TABLE IF NOT EXISTS product_reviews (
 CREATE INDEX IF NOT EXISTS idx_prod_reviews_product ON product_reviews(product_id);
 
 ALTER TABLE product_reviews ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Product reviews public read" ON product_reviews;
 CREATE POLICY "Product reviews public read" ON product_reviews FOR SELECT USING (TRUE);
+DROP POLICY IF EXISTS "Users create reviews" ON product_reviews;
 CREATE POLICY "Users create reviews" ON product_reviews FOR INSERT
   WITH CHECK (auth.uid() = author_id);
 
@@ -1062,6 +1118,7 @@ CREATE TABLE IF NOT EXISTS caregiver_reviews (
 CREATE INDEX IF NOT EXISTS idx_cg_reviews_caregiver ON caregiver_reviews(caregiver_id);
 
 ALTER TABLE caregiver_reviews ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Caregiver reviews public read" ON caregiver_reviews;
 CREATE POLICY "Caregiver reviews public read" ON caregiver_reviews FOR SELECT USING (TRUE);
 
 -- ─────────────────────────────────────
@@ -1081,10 +1138,13 @@ CREATE TABLE IF NOT EXISTS support_tickets (
 CREATE INDEX IF NOT EXISTS idx_tickets_user ON support_tickets(user_id);
 
 ALTER TABLE support_tickets ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users read own tickets" ON support_tickets;
 CREATE POLICY "Users read own tickets" ON support_tickets FOR SELECT
   USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users create tickets" ON support_tickets;
 CREATE POLICY "Users create tickets" ON support_tickets FOR INSERT
   WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Admins read all tickets" ON support_tickets;
 CREATE POLICY "Admins read all tickets" ON support_tickets FOR SELECT
   USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin','moderator')));
 
@@ -1102,6 +1162,7 @@ CREATE TABLE IF NOT EXISTS support_ticket_messages (
 );
 
 ALTER TABLE support_ticket_messages ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Ticket messages via ticket" ON support_ticket_messages;
 CREATE POLICY "Ticket messages via ticket" ON support_ticket_messages FOR SELECT
   USING (
     ticket_id IN (SELECT id FROM support_tickets WHERE user_id = auth.uid())
@@ -1126,8 +1187,10 @@ CREATE TABLE IF NOT EXISTS blog_posts (
 );
 
 ALTER TABLE blog_posts ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Blog posts public read" ON blog_posts;
 CREATE POLICY "Blog posts public read" ON blog_posts FOR SELECT
   USING (published = TRUE);
+DROP POLICY IF EXISTS "Admins manage blog" ON blog_posts;
 CREATE POLICY "Admins manage blog" ON blog_posts FOR ALL
   USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin','moderator')));
 
@@ -1151,6 +1214,7 @@ CREATE TABLE IF NOT EXISTS moderator_sanctions (
 CREATE INDEX IF NOT EXISTS idx_sanctions_user ON moderator_sanctions(user_id);
 
 ALTER TABLE moderator_sanctions ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Mods manage sanctions" ON moderator_sanctions;
 CREATE POLICY "Mods manage sanctions" ON moderator_sanctions FOR ALL
   USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin','moderator')));
 
@@ -1174,6 +1238,7 @@ CREATE TABLE IF NOT EXISTS moderator_escalations (
 );
 
 ALTER TABLE moderator_escalations ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Mods manage escalations" ON moderator_escalations;
 CREATE POLICY "Mods manage escalations" ON moderator_escalations FOR ALL
   USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin','moderator')));
 
@@ -1200,6 +1265,7 @@ CREATE TABLE IF NOT EXISTS contract_disputes (
 CREATE INDEX IF NOT EXISTS idx_disputes_filed_by ON contract_disputes(filed_by);
 
 ALTER TABLE contract_disputes ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Dispute parties read" ON contract_disputes;
 CREATE POLICY "Dispute parties read" ON contract_disputes FOR SELECT
   USING (auth.uid() = filed_by OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin','moderator')));
 
@@ -1217,6 +1283,7 @@ CREATE TABLE IF NOT EXISTS dispute_messages (
 );
 
 ALTER TABLE dispute_messages ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Dispute messages via dispute" ON dispute_messages;
 CREATE POLICY "Dispute messages via dispute" ON dispute_messages FOR SELECT
   USING (
     dispute_id IN (SELECT id FROM contract_disputes WHERE filed_by = auth.uid())
@@ -1242,34 +1309,68 @@ CREATE TABLE IF NOT EXISTS refund_requests (
 );
 
 ALTER TABLE refund_requests ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users read own refunds" ON refund_requests;
 CREATE POLICY "Users read own refunds" ON refund_requests FOR SELECT
   USING (auth.uid() = user_id);
 
 -- ─────────────────────────────────────
 -- ENABLE REALTIME ON KEY TABLES
 -- ─────────────────────────────────────
-ALTER PUBLICATION supabase_realtime ADD TABLE shifts;
-ALTER PUBLICATION supabase_realtime ADD TABLE placements;
-ALTER PUBLICATION supabase_realtime ADD TABLE care_contracts;
-ALTER PUBLICATION supabase_realtime ADD TABLE care_contract_bids;
-ALTER PUBLICATION supabase_realtime ADD TABLE invoices;
-ALTER PUBLICATION supabase_realtime ADD TABLE payment_proofs;
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE shifts;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE placements;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE care_contracts;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE care_contract_bids;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE invoices;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE payment_proofs;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- ─────────────────────────────────────
 -- UPDATED_AT TRIGGERS
 -- ─────────────────────────────────────
+DROP TRIGGER IF EXISTS profiles_updated_at ON profiles;
 CREATE TRIGGER profiles_updated_at BEFORE UPDATE ON profiles FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+DROP TRIGGER IF EXISTS patients_updated_at ON patients;
 CREATE TRIGGER patients_updated_at BEFORE UPDATE ON patients FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+DROP TRIGGER IF EXISTS caregiver_profiles_updated_at ON caregiver_profiles;
 CREATE TRIGGER caregiver_profiles_updated_at BEFORE UPDATE ON caregiver_profiles FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+DROP TRIGGER IF EXISTS agencies_updated_at ON agencies;
 CREATE TRIGGER agencies_updated_at BEFORE UPDATE ON agencies FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+DROP TRIGGER IF EXISTS shifts_updated_at ON shifts;
 CREATE TRIGGER shifts_updated_at BEFORE UPDATE ON shifts FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+DROP TRIGGER IF EXISTS placements_updated_at ON placements;
 CREATE TRIGGER placements_updated_at BEFORE UPDATE ON placements FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+DROP TRIGGER IF EXISTS invoices_updated_at ON invoices;
 CREATE TRIGGER invoices_updated_at BEFORE UPDATE ON invoices FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+DROP TRIGGER IF EXISTS care_contracts_updated_at ON care_contracts;
 CREATE TRIGGER care_contracts_updated_at BEFORE UPDATE ON care_contracts FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+DROP TRIGGER IF EXISTS shop_products_updated_at ON shop_products;
 CREATE TRIGGER shop_products_updated_at BEFORE UPDATE ON shop_products FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+DROP TRIGGER IF EXISTS shop_orders_updated_at ON shop_orders;
 CREATE TRIGGER shop_orders_updated_at BEFORE UPDATE ON shop_orders FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+DROP TRIGGER IF EXISTS guardian_profiles_updated_at ON guardian_profiles;
 CREATE TRIGGER guardian_profiles_updated_at BEFORE UPDATE ON guardian_profiles FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+DROP TRIGGER IF EXISTS conversations_updated_at ON conversations;
 CREATE TRIGGER conversations_updated_at BEFORE UPDATE ON conversations FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+DROP TRIGGER IF EXISTS support_tickets_updated_at ON support_tickets;
 CREATE TRIGGER support_tickets_updated_at BEFORE UPDATE ON support_tickets FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+DROP TRIGGER IF EXISTS blog_posts_updated_at ON blog_posts;
 CREATE TRIGGER blog_posts_updated_at BEFORE UPDATE ON blog_posts FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+DROP TRIGGER IF EXISTS incident_reports_updated_at ON incident_reports;
 CREATE TRIGGER incident_reports_updated_at BEFORE UPDATE ON incident_reports FOR EACH ROW EXECUTE FUNCTION update_updated_at();

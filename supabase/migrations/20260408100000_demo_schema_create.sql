@@ -38,8 +38,12 @@ CREATE TABLE IF NOT EXISTS demo.patients (
   LIKE public.patients INCLUDING DEFAULTS INCLUDING GENERATED INCLUDING IDENTITY
     EXCLUDING CONSTRAINTS EXCLUDING INDEXES
 );
-ALTER TABLE demo.patients ADD PRIMARY KEY (id);
+DO $$ BEGIN
+  ALTER TABLE demo.patients ADD PRIMARY KEY (id);
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
 ALTER TABLE demo.patients
+  DROP CONSTRAINT IF EXISTS demo_patients_guardian_fk,
   ADD CONSTRAINT demo_patients_guardian_fk FOREIGN KEY (guardian_id)
   REFERENCES auth.users(id) ON DELETE SET NULL;
 ALTER TABLE demo.patients ADD COLUMN IF NOT EXISTS demo_expires_at TIMESTAMPTZ;
@@ -48,10 +52,15 @@ CREATE TABLE IF NOT EXISTS demo.caregiver_profiles (
   LIKE public.caregiver_profiles INCLUDING DEFAULTS INCLUDING GENERATED INCLUDING IDENTITY
     EXCLUDING CONSTRAINTS EXCLUDING INDEXES
 );
-ALTER TABLE demo.caregiver_profiles ADD PRIMARY KEY (id);
+DO $$ BEGIN
+  ALTER TABLE demo.caregiver_profiles ADD PRIMARY KEY (id);
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
 ALTER TABLE demo.caregiver_profiles
+  DROP CONSTRAINT IF EXISTS demo_cg_profiles_id_fk,
   ADD CONSTRAINT demo_cg_profiles_id_fk FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE;
 ALTER TABLE demo.caregiver_profiles
+  DROP CONSTRAINT IF EXISTS demo_cg_profiles_agency_fk,
   ADD CONSTRAINT demo_cg_profiles_agency_fk FOREIGN KEY (agency_id) REFERENCES auth.users(id);
 ALTER TABLE demo.caregiver_profiles ADD COLUMN IF NOT EXISTS demo_expires_at TIMESTAMPTZ;
 
@@ -59,8 +68,12 @@ CREATE TABLE IF NOT EXISTS demo.guardian_profiles (
   LIKE public.guardian_profiles INCLUDING DEFAULTS INCLUDING GENERATED INCLUDING IDENTITY
     EXCLUDING CONSTRAINTS EXCLUDING INDEXES
 );
-ALTER TABLE demo.guardian_profiles ADD PRIMARY KEY (id);
+DO $$ BEGIN
+  ALTER TABLE demo.guardian_profiles ADD PRIMARY KEY (id);
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
 ALTER TABLE demo.guardian_profiles
+  DROP CONSTRAINT IF EXISTS demo_gd_profiles_id_fk,
   ADD CONSTRAINT demo_gd_profiles_id_fk FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE;
 ALTER TABLE demo.guardian_profiles ADD COLUMN IF NOT EXISTS demo_expires_at TIMESTAMPTZ;
 
@@ -68,8 +81,12 @@ CREATE TABLE IF NOT EXISTS demo.agencies (
   LIKE public.agencies INCLUDING DEFAULTS INCLUDING GENERATED INCLUDING IDENTITY
     EXCLUDING CONSTRAINTS EXCLUDING INDEXES
 );
-ALTER TABLE demo.agencies ADD PRIMARY KEY (id);
+DO $$ BEGIN
+  ALTER TABLE demo.agencies ADD PRIMARY KEY (id);
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
 ALTER TABLE demo.agencies
+  DROP CONSTRAINT IF EXISTS demo_agencies_id_fk,
   ADD CONSTRAINT demo_agencies_id_fk FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE;
 ALTER TABLE demo.agencies ADD COLUMN IF NOT EXISTS demo_expires_at TIMESTAMPTZ;
 
@@ -77,14 +94,21 @@ CREATE TABLE IF NOT EXISTS demo.placements (
   LIKE public.placements INCLUDING DEFAULTS INCLUDING GENERATED INCLUDING IDENTITY
     EXCLUDING CONSTRAINTS EXCLUDING INDEXES
 );
-ALTER TABLE demo.placements ADD PRIMARY KEY (id);
+DO $$ BEGIN
+  ALTER TABLE demo.placements ADD PRIMARY KEY (id);
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
 ALTER TABLE demo.placements
+  DROP CONSTRAINT IF EXISTS demo_placements_guardian_fk,
   ADD CONSTRAINT demo_placements_guardian_fk FOREIGN KEY (guardian_id) REFERENCES auth.users(id);
 ALTER TABLE demo.placements
+  DROP CONSTRAINT IF EXISTS demo_placements_agency_fk,
   ADD CONSTRAINT demo_placements_agency_fk FOREIGN KEY (agency_id) REFERENCES auth.users(id);
 ALTER TABLE demo.placements
+  DROP CONSTRAINT IF EXISTS demo_placements_caregiver_fk,
   ADD CONSTRAINT demo_placements_caregiver_fk FOREIGN KEY (caregiver_id) REFERENCES auth.users(id);
 ALTER TABLE demo.placements
+  DROP CONSTRAINT IF EXISTS demo_placements_patient_fk,
   ADD CONSTRAINT demo_placements_patient_fk FOREIGN KEY (patient_id) REFERENCES demo.patients(id);
 ALTER TABLE demo.placements ADD COLUMN IF NOT EXISTS demo_expires_at TIMESTAMPTZ;
 
@@ -92,12 +116,18 @@ CREATE TABLE IF NOT EXISTS demo.shifts (
   LIKE public.shifts INCLUDING DEFAULTS INCLUDING GENERATED INCLUDING IDENTITY
     EXCLUDING CONSTRAINTS EXCLUDING INDEXES
 );
-ALTER TABLE demo.shifts ADD PRIMARY KEY (id);
+DO $$ BEGIN
+  ALTER TABLE demo.shifts ADD PRIMARY KEY (id);
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
 ALTER TABLE demo.shifts
+  DROP CONSTRAINT IF EXISTS demo_shifts_caregiver_fk,
   ADD CONSTRAINT demo_shifts_caregiver_fk FOREIGN KEY (caregiver_id) REFERENCES auth.users(id);
 ALTER TABLE demo.shifts
+  DROP CONSTRAINT IF EXISTS demo_shifts_patient_fk,
   ADD CONSTRAINT demo_shifts_patient_fk FOREIGN KEY (patient_id) REFERENCES demo.patients(id);
 ALTER TABLE demo.shifts
+  DROP CONSTRAINT IF EXISTS demo_shifts_placement_fk,
   ADD CONSTRAINT demo_shifts_placement_fk FOREIGN KEY (placement_id) REFERENCES demo.placements(id);
 ALTER TABLE demo.shifts ADD COLUMN IF NOT EXISTS demo_expires_at TIMESTAMPTZ;
 
@@ -105,10 +135,15 @@ CREATE TABLE IF NOT EXISTS demo.care_contracts (
   LIKE public.care_contracts INCLUDING DEFAULTS INCLUDING GENERATED INCLUDING IDENTITY
     EXCLUDING CONSTRAINTS EXCLUDING INDEXES
 );
-ALTER TABLE demo.care_contracts ADD PRIMARY KEY (id);
+DO $$ BEGIN
+  ALTER TABLE demo.care_contracts ADD PRIMARY KEY (id);
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
 ALTER TABLE demo.care_contracts
+  DROP CONSTRAINT IF EXISTS demo_cc_owner_fk,
   ADD CONSTRAINT demo_cc_owner_fk FOREIGN KEY (owner_id) REFERENCES auth.users(id);
 ALTER TABLE demo.care_contracts
+  DROP CONSTRAINT IF EXISTS demo_cc_agency_fk,
   ADD CONSTRAINT demo_cc_agency_fk FOREIGN KEY (agency_id) REFERENCES auth.users(id);
 ALTER TABLE demo.care_contracts ADD COLUMN IF NOT EXISTS demo_expires_at TIMESTAMPTZ;
 
@@ -122,10 +157,15 @@ CREATE TABLE IF NOT EXISTS demo.care_contract_bids (
   LIKE public.care_contract_bids INCLUDING DEFAULTS INCLUDING GENERATED INCLUDING IDENTITY
     EXCLUDING CONSTRAINTS EXCLUDING INDEXES
 );
-ALTER TABLE demo.care_contract_bids ADD PRIMARY KEY (id);
+DO $$ BEGIN
+  ALTER TABLE demo.care_contract_bids ADD PRIMARY KEY (id);
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
 ALTER TABLE demo.care_contract_bids
+  DROP CONSTRAINT IF EXISTS demo_ccb_contract_fk,
   ADD CONSTRAINT demo_ccb_contract_fk FOREIGN KEY (contract_id) REFERENCES demo.care_contracts(id) ON DELETE CASCADE;
 ALTER TABLE demo.care_contract_bids
+  DROP CONSTRAINT IF EXISTS demo_ccb_agency_fk,
   ADD CONSTRAINT demo_ccb_agency_fk FOREIGN KEY (agency_id) REFERENCES auth.users(id);
 ALTER TABLE demo.care_contract_bids ADD COLUMN IF NOT EXISTS demo_expires_at TIMESTAMPTZ;
 
@@ -133,8 +173,12 @@ CREATE TABLE IF NOT EXISTS demo.jobs (
   LIKE public.jobs INCLUDING DEFAULTS INCLUDING GENERATED INCLUDING IDENTITY
     EXCLUDING CONSTRAINTS EXCLUDING INDEXES
 );
-ALTER TABLE demo.jobs ADD PRIMARY KEY (id);
+DO $$ BEGIN
+  ALTER TABLE demo.jobs ADD PRIMARY KEY (id);
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
 ALTER TABLE demo.jobs
+  DROP CONSTRAINT IF EXISTS demo_jobs_posted_by_fk,
   ADD CONSTRAINT demo_jobs_posted_by_fk FOREIGN KEY (posted_by) REFERENCES auth.users(id);
 ALTER TABLE demo.jobs ADD COLUMN IF NOT EXISTS demo_expires_at TIMESTAMPTZ;
 
@@ -142,14 +186,21 @@ CREATE TABLE IF NOT EXISTS demo.invoices (
   LIKE public.invoices INCLUDING DEFAULTS INCLUDING GENERATED INCLUDING IDENTITY
     EXCLUDING CONSTRAINTS EXCLUDING INDEXES
 );
-ALTER TABLE demo.invoices ADD PRIMARY KEY (id);
+DO $$ BEGIN
+  ALTER TABLE demo.invoices ADD PRIMARY KEY (id);
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
 ALTER TABLE demo.invoices
+  DROP CONSTRAINT IF EXISTS demo_inv_from_fk,
   ADD CONSTRAINT demo_inv_from_fk FOREIGN KEY (from_party_id) REFERENCES auth.users(id);
 ALTER TABLE demo.invoices
+  DROP CONSTRAINT IF EXISTS demo_inv_to_fk,
   ADD CONSTRAINT demo_inv_to_fk FOREIGN KEY (to_party_id) REFERENCES auth.users(id);
 ALTER TABLE demo.invoices
+  DROP CONSTRAINT IF EXISTS demo_inv_placement_fk,
   ADD CONSTRAINT demo_inv_placement_fk FOREIGN KEY (placement_id) REFERENCES demo.placements(id);
 ALTER TABLE demo.invoices
+  DROP CONSTRAINT IF EXISTS demo_inv_cc_fk,
   ADD CONSTRAINT demo_inv_cc_fk FOREIGN KEY (care_contract_id) REFERENCES demo.care_contracts(id) ON DELETE SET NULL;
 ALTER TABLE demo.invoices ADD COLUMN IF NOT EXISTS demo_expires_at TIMESTAMPTZ;
 
@@ -157,8 +208,12 @@ CREATE TABLE IF NOT EXISTS demo.invoice_line_items (
   LIKE public.invoice_line_items INCLUDING DEFAULTS INCLUDING GENERATED INCLUDING IDENTITY
     EXCLUDING CONSTRAINTS EXCLUDING INDEXES
 );
-ALTER TABLE demo.invoice_line_items ADD PRIMARY KEY (id);
+DO $$ BEGIN
+  ALTER TABLE demo.invoice_line_items ADD PRIMARY KEY (id);
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
 ALTER TABLE demo.invoice_line_items
+  DROP CONSTRAINT IF EXISTS demo_ili_invoice_fk,
   ADD CONSTRAINT demo_ili_invoice_fk FOREIGN KEY (invoice_id) REFERENCES demo.invoices(id) ON DELETE CASCADE;
 ALTER TABLE demo.invoice_line_items ADD COLUMN IF NOT EXISTS demo_expires_at TIMESTAMPTZ;
 
@@ -166,12 +221,18 @@ CREATE TABLE IF NOT EXISTS demo.payment_proofs (
   LIKE public.payment_proofs INCLUDING DEFAULTS INCLUDING GENERATED INCLUDING IDENTITY
     EXCLUDING CONSTRAINTS EXCLUDING INDEXES
 );
-ALTER TABLE demo.payment_proofs ADD PRIMARY KEY (id);
+DO $$ BEGIN
+  ALTER TABLE demo.payment_proofs ADD PRIMARY KEY (id);
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
 ALTER TABLE demo.payment_proofs
+  DROP CONSTRAINT IF EXISTS demo_pp_invoice_fk,
   ADD CONSTRAINT demo_pp_invoice_fk FOREIGN KEY (invoice_id) REFERENCES demo.invoices(id) ON DELETE CASCADE;
 ALTER TABLE demo.payment_proofs
+  DROP CONSTRAINT IF EXISTS demo_pp_submitted_fk,
   ADD CONSTRAINT demo_pp_submitted_fk FOREIGN KEY (submitted_by_id) REFERENCES auth.users(id);
 ALTER TABLE demo.payment_proofs
+  DROP CONSTRAINT IF EXISTS demo_pp_received_fk,
   ADD CONSTRAINT demo_pp_received_fk FOREIGN KEY (received_by_id) REFERENCES auth.users(id);
 ALTER TABLE demo.payment_proofs ADD COLUMN IF NOT EXISTS demo_expires_at TIMESTAMPTZ;
 

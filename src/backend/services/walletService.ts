@@ -320,3 +320,21 @@ export async function adminUpdateFeeConfig(
   }, WRITE_RETRY);
 }
 
+// ─── Escrow: Credit provider wallet on payment verification ───
+export async function creditEscrowEarning(
+  invoiceId: string,
+  providerUserId: string,
+  amount: number
+): Promise<{ success: boolean; error?: string }> {
+  if (!shouldUseSupabase()) {
+    console.log(`[Mock] Escrow credit ${amount} CP → ${providerUserId} for invoice ${invoiceId}`);
+    return { success: true };
+  }
+  return withRetry(async () => {
+    const { error } = await getSupabaseClient().rpc("credit_escrow_earning", {
+      p_invoice_id: invoiceId, p_provider_user_id: providerUserId, p_amount: amount,
+    });
+    if (error) return { success: false, error: error.message };
+    return { success: true };
+  }, WRITE_RETRY);
+}

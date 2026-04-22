@@ -1,0 +1,22 @@
+{
+  "newChat": "New Chat",
+  "newChatTitle": "Start a Conversation",
+  "searchContacts": "Search contacts...",
+  "loading": "Loading contacts...",
+  "noContactsFound": "No contacts found. You can only chat with agencies and active job contacts.",
+  "noContactsAvailable": "No contacts available. You can chat with agencies and active job contacts.",
+  "section": {
+    "agencies": "Agencies",
+    "jobContacts": "Active Job Contacts"
+  },
+  "contactRole": {
+    "agency": "Agency",
+    "guardian": "Guardian",
+    "patient": "Patient",
+    "caregiver": "Fellow Caregiver"
+  },
+  "errors": {
+    "startFailed": "Failed to start conversation. Please try again.",
+    "blocked": "Cannot start chat with this contact."
+  }
+}

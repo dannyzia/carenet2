@@ -40,10 +40,13 @@ CREATE TABLE IF NOT EXISTS public.v2_care_diary_entries (
 CREATE INDEX IF NOT EXISTS idx_v2_care_diary_patient ON public.v2_care_diary_entries(patient_id);
 CREATE INDEX IF NOT EXISTS idx_v2_care_diary_date ON public.v2_care_diary_entries(entry_date DESC);
 ALTER TABLE public.v2_care_diary_entries ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS v2_care_diary_select ON public.v2_care_diary_entries;
 CREATE POLICY v2_care_diary_select ON public.v2_care_diary_entries
   FOR SELECT USING (public.v2_can_access_patient(patient_id));
+DROP POLICY IF EXISTS v2_care_diary_insert ON public.v2_care_diary_entries;
 CREATE POLICY v2_care_diary_insert ON public.v2_care_diary_entries
   FOR INSERT WITH CHECK (public.v2_can_access_patient(patient_id) AND created_by = auth.uid());
+DROP POLICY IF EXISTS v2_care_diary_update ON public.v2_care_diary_entries;
 CREATE POLICY v2_care_diary_update ON public.v2_care_diary_entries
   FOR UPDATE USING (public.v2_can_access_patient(patient_id) AND created_by = auth.uid());
 
@@ -58,8 +61,10 @@ CREATE TABLE IF NOT EXISTS public.v2_patient_care_plans (
 );
 CREATE INDEX IF NOT EXISTS idx_v2_care_plans_patient ON public.v2_patient_care_plans(patient_id);
 ALTER TABLE public.v2_patient_care_plans ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS v2_care_plans_select ON public.v2_patient_care_plans;
 CREATE POLICY v2_care_plans_select ON public.v2_patient_care_plans
   FOR SELECT USING (public.v2_can_access_patient(patient_id));
+DROP POLICY IF EXISTS v2_care_plans_all_guardian ON public.v2_patient_care_plans;
 CREATE POLICY v2_care_plans_all_guardian ON public.v2_patient_care_plans
   FOR ALL USING (
     EXISTS (SELECT 1 FROM public.patients p WHERE p.id = patient_id AND p.guardian_id = auth.uid())
@@ -83,8 +88,10 @@ CREATE TABLE IF NOT EXISTS public.v2_health_alert_rules (
 );
 CREATE INDEX IF NOT EXISTS idx_v2_alert_rules_patient ON public.v2_health_alert_rules(patient_id);
 ALTER TABLE public.v2_health_alert_rules ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS v2_alert_rules_select ON public.v2_health_alert_rules;
 CREATE POLICY v2_alert_rules_select ON public.v2_health_alert_rules
   FOR SELECT USING (public.v2_can_access_patient(patient_id));
+DROP POLICY IF EXISTS v2_alert_rules_write ON public.v2_health_alert_rules;
 CREATE POLICY v2_alert_rules_write ON public.v2_health_alert_rules
   FOR ALL USING (public.v2_can_access_patient(patient_id) AND created_by = auth.uid())
   WITH CHECK (public.v2_can_access_patient(patient_id) AND created_by = auth.uid());
@@ -102,8 +109,10 @@ CREATE TABLE IF NOT EXISTS public.v2_caregiver_location_pings (
 CREATE INDEX IF NOT EXISTS idx_v2_loc_pings_patient ON public.v2_caregiver_location_pings(patient_id);
 CREATE INDEX IF NOT EXISTS idx_v2_loc_pings_time ON public.v2_caregiver_location_pings(recorded_at DESC);
 ALTER TABLE public.v2_caregiver_location_pings ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS v2_loc_select ON public.v2_caregiver_location_pings;
 CREATE POLICY v2_loc_select ON public.v2_caregiver_location_pings
   FOR SELECT USING (public.v2_can_access_patient(patient_id));
+DROP POLICY IF EXISTS v2_loc_insert ON public.v2_caregiver_location_pings;
 CREATE POLICY v2_loc_insert ON public.v2_caregiver_location_pings
   FOR INSERT WITH CHECK (
     caregiver_id = auth.uid()
@@ -121,8 +130,10 @@ CREATE TABLE IF NOT EXISTS public.v2_symptom_journal_entries (
 );
 CREATE INDEX IF NOT EXISTS idx_v2_symptom_patient ON public.v2_symptom_journal_entries(patient_id);
 ALTER TABLE public.v2_symptom_journal_entries ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS v2_symptom_select ON public.v2_symptom_journal_entries;
 CREATE POLICY v2_symptom_select ON public.v2_symptom_journal_entries
   FOR SELECT USING (public.v2_can_access_patient(patient_id));
+DROP POLICY IF EXISTS v2_symptom_write ON public.v2_symptom_journal_entries;
 CREATE POLICY v2_symptom_write ON public.v2_symptom_journal_entries
   FOR ALL USING (public.v2_can_access_patient(patient_id) AND created_by = auth.uid())
   WITH CHECK (public.v2_can_access_patient(patient_id) AND created_by = auth.uid());
@@ -138,8 +149,10 @@ CREATE TABLE IF NOT EXISTS public.v2_photo_journal_entries (
 );
 CREATE INDEX IF NOT EXISTS idx_v2_photo_patient ON public.v2_photo_journal_entries(patient_id);
 ALTER TABLE public.v2_photo_journal_entries ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS v2_photo_select ON public.v2_photo_journal_entries;
 CREATE POLICY v2_photo_select ON public.v2_photo_journal_entries
   FOR SELECT USING (public.v2_can_access_patient(patient_id));
+DROP POLICY IF EXISTS v2_photo_write ON public.v2_photo_journal_entries;
 CREATE POLICY v2_photo_write ON public.v2_photo_journal_entries
   FOR ALL USING (public.v2_can_access_patient(patient_id) AND created_by = auth.uid())
   WITH CHECK (public.v2_can_access_patient(patient_id) AND created_by = auth.uid());
@@ -156,8 +169,10 @@ CREATE TABLE IF NOT EXISTS public.v2_nutrition_logs (
 );
 CREATE INDEX IF NOT EXISTS idx_v2_nutrition_patient ON public.v2_nutrition_logs(patient_id);
 ALTER TABLE public.v2_nutrition_logs ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS v2_nutrition_select ON public.v2_nutrition_logs;
 CREATE POLICY v2_nutrition_select ON public.v2_nutrition_logs
   FOR SELECT USING (public.v2_can_access_patient(patient_id));
+DROP POLICY IF EXISTS v2_nutrition_write ON public.v2_nutrition_logs;
 CREATE POLICY v2_nutrition_write ON public.v2_nutrition_logs
   FOR ALL USING (public.v2_can_access_patient(patient_id) AND created_by = auth.uid())
   WITH CHECK (public.v2_can_access_patient(patient_id) AND created_by = auth.uid());
@@ -174,8 +189,10 @@ CREATE TABLE IF NOT EXISTS public.v2_rehab_logs (
 );
 CREATE INDEX IF NOT EXISTS idx_v2_rehab_patient ON public.v2_rehab_logs(patient_id);
 ALTER TABLE public.v2_rehab_logs ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS v2_rehab_select ON public.v2_rehab_logs;
 CREATE POLICY v2_rehab_select ON public.v2_rehab_logs
   FOR SELECT USING (public.v2_can_access_patient(patient_id));
+DROP POLICY IF EXISTS v2_rehab_write ON public.v2_rehab_logs;
 CREATE POLICY v2_rehab_write ON public.v2_rehab_logs
   FOR ALL USING (public.v2_can_access_patient(patient_id) AND created_by = auth.uid())
   WITH CHECK (public.v2_can_access_patient(patient_id) AND created_by = auth.uid());
@@ -190,8 +207,10 @@ CREATE TABLE IF NOT EXISTS public.v2_family_board_posts (
 );
 CREATE INDEX IF NOT EXISTS idx_v2_family_board_patient ON public.v2_family_board_posts(patient_id);
 ALTER TABLE public.v2_family_board_posts ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS v2_family_select ON public.v2_family_board_posts;
 CREATE POLICY v2_family_select ON public.v2_family_board_posts
   FOR SELECT USING (public.v2_can_access_patient(patient_id));
+DROP POLICY IF EXISTS v2_family_insert ON public.v2_family_board_posts;
 CREATE POLICY v2_family_insert ON public.v2_family_board_posts
   FOR INSERT WITH CHECK (public.v2_can_access_patient(patient_id) AND author_id = auth.uid());
 
@@ -208,8 +227,10 @@ CREATE TABLE IF NOT EXISTS public.v2_insurance_policies (
 );
 CREATE INDEX IF NOT EXISTS idx_v2_insurance_patient ON public.v2_insurance_policies(patient_id);
 ALTER TABLE public.v2_insurance_policies ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS v2_insurance_select ON public.v2_insurance_policies;
 CREATE POLICY v2_insurance_select ON public.v2_insurance_policies
   FOR SELECT USING (public.v2_can_access_patient(patient_id));
+DROP POLICY IF EXISTS v2_insurance_write ON public.v2_insurance_policies;
 CREATE POLICY v2_insurance_write ON public.v2_insurance_policies
   FOR ALL USING (public.v2_can_access_patient(patient_id) AND created_by = auth.uid())
   WITH CHECK (public.v2_can_access_patient(patient_id) AND created_by = auth.uid());
@@ -227,8 +248,10 @@ CREATE TABLE IF NOT EXISTS public.v2_telehealth_sessions (
 );
 CREATE INDEX IF NOT EXISTS idx_v2_telehealth_patient ON public.v2_telehealth_sessions(patient_id);
 ALTER TABLE public.v2_telehealth_sessions ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS v2_telehealth_select ON public.v2_telehealth_sessions;
 CREATE POLICY v2_telehealth_select ON public.v2_telehealth_sessions
   FOR SELECT USING (public.v2_can_access_patient(patient_id));
+DROP POLICY IF EXISTS v2_telehealth_write ON public.v2_telehealth_sessions;
 CREATE POLICY v2_telehealth_write ON public.v2_telehealth_sessions
   FOR ALL USING (public.v2_can_access_patient(patient_id) AND created_by = auth.uid())
   WITH CHECK (public.v2_can_access_patient(patient_id) AND created_by = auth.uid());
@@ -246,8 +269,10 @@ CREATE TABLE IF NOT EXISTS public.v2_care_scorecards (
 );
 CREATE INDEX IF NOT EXISTS idx_v2_scorecards_patient ON public.v2_care_scorecards(patient_id);
 ALTER TABLE public.v2_care_scorecards ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS v2_scorecards_select ON public.v2_care_scorecards;
 CREATE POLICY v2_scorecards_select ON public.v2_care_scorecards
   FOR SELECT USING (public.v2_can_access_patient(patient_id));
+DROP POLICY IF EXISTS v2_scorecards_insert ON public.v2_care_scorecards;
 CREATE POLICY v2_scorecards_insert ON public.v2_care_scorecards
   FOR INSERT WITH CHECK (
     public.v2_can_access_patient(patient_id)

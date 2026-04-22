@@ -13,12 +13,15 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Search, Send, Paperclip, Phone, Video, MoreVertical,
-  Check, CheckCheck, ChevronLeft, MessageSquare, Pin,
+  Check, CheckCheck, ChevronLeft, MessageSquare, Pin, Plus,
 } from "lucide-react";
 import { cn } from "@/frontend/theme/tokens";
 import { messageService } from "@/backend/services";
 import type { ConversationItem, ChatMessage } from "@/backend/models";
 import { useUnreadCountsCtx } from "@/frontend/hooks/UnreadCountsContext";
+import { useAuth } from "@/backend/store";
+import { NewChatModal } from "./NewChatModal";
+import type { CaregiverContact } from "@/backend/services/caregiverContacts.service";
 
 export interface ChatPanelProps {
   conversations: ConversationItem[];
@@ -27,6 +30,7 @@ export interface ChatPanelProps {
   initialConvoId?: string | null;
   showRoleFilter?: boolean;
   roleLabels?: Record<string, string>;
+  onConversationsUpdate?: () => void;
 }
 
 const DEFAULT_ROLE_LABELS: Record<string, string> = {
@@ -47,6 +51,7 @@ export function ChatPanel({
   initialConvoId,
   showRoleFilter,
   roleLabels = DEFAULT_ROLE_LABELS,
+  onConversationsUpdate,
 }: ChatPanelProps) {
   const [selectedId, setSelectedId] = useState<string | null>(() => {
     if (!initialConvoId) return null;
@@ -66,8 +71,11 @@ export function ChatPanel({
   // Mobile toggles list vs chat; desktop layout ignores this (both panes always shown).
   // When a conversation is pre-selected, open the chat pane on mobile so the composer is mounted.
   const [sidebarOpen, setSidebarOpen] = useState(() => !initialConvoId);
+  const [newChatOpen, setNewChatOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const { user } = useAuth();
+  const userRole = user?.activeRole || "guardian";
   const activeConvo = conversations.find((c) => c.id === selectedId);
   const { decrementMessages } = useUnreadCountsCtx();
 
@@ -107,6 +115,20 @@ export function ChatPanel({
     setSelectedId(id);
     setSidebarOpen(false);
   }, []);
+
+  const handleStartNewChat = useCallback(async (contact: CaregiverContact) => {
+    setNewChatOpen(false);
+    try {
+      const convoId = await messageService.getOrCreateConversation(contact.id);
+      // Trigger parent to refresh conversations
+      if (onConversationsUpdate) {
+        onConversationsUpdate();
+      }
+      selectConvo(convoId);
+    } catch (err) {
+      console.error("[ChatPanel] Failed to start new chat:", err);
+    }
+  }, [onConversationsUpdate, selectConvo]);
 
   const handleSend = useCallback(async () => {
     if (!input.trim() || !selectedId) return;
@@ -148,7 +170,22 @@ export function ChatPanel({
   const ConvoList = (
     <div className="flex flex-col h-full overflow-hidden rounded-xl" style={{ background: cn.bgCard, boxShadow: cn.shadowCard }}>
       <div className="p-4 space-y-3" style={{ borderBottom: `1px solid ${cn.borderLight}` }}>
-        <h2 className="text-xl" style={{ color: cn.textHeading }}>Messages</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl" style={{ color: cn.textHeading }}>Messages</h2>
+          {userRole === "caregiver" && (
+            <button
+              onClick={() => setNewChatOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+              style={{
+                background: accentColor,
+                color: "#fff",
+              }}
+            >
+              <Plus className="w-4 h-4" />
+              New Chat
+            </button>
+          )}
+        </div>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: cn.textSecondary }} />
           <input
@@ -374,6 +411,16 @@ export function ChatPanel({
       <div className="lg:hidden h-[calc(100vh-120px)]">
         {sidebarOpen ? ConvoList : ChatArea}
       </div>
+
+      {/* New Chat Modal */}
+      {userRole === "caregiver" && (
+        <NewChatModal
+          isOpen={newChatOpen}
+          onClose={() => setNewChatOpen(false)}
+          onSelectContact={handleStartNewChat}
+          accentColor={accentColor}
+        />
+      )}
     </>
   );
 }

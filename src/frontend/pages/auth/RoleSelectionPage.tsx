@@ -3,13 +3,13 @@ import { cn } from "@/frontend/theme/tokens";
 import { roleCardGradient } from "@/frontend/theme/roleActionGradients";
 import { useLocation } from "react-router";
 import { useTransitionNavigate } from "@/frontend/hooks/useTransitionNavigate";
-import { Users, Building2, Heart, Shield, User, ShoppingBag, Scale, ArrowRight } from "lucide-react";
+import { Users, Building2, Heart, Shield, User, ShoppingBag, Scale, ArrowRight, Handshake } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useDocumentTitle } from "@/frontend/hooks";
 import { useAuth } from "@/frontend/auth/AuthContext";
 import type { Role } from "@/frontend/auth/types";
 
-const SELF_REGISTER_ROLES: Role[] = ["guardian", "caregiver", "patient", "agency", "shop"];
+const SELF_REGISTER_ROLES: Role[] = ["guardian", "caregiver", "patient", "agency", "shop", "channel_partner"];
 
 const allRoles: { id: Role; icon: React.ElementType; titleKey: string; descKey: string }[] = [
   { id: "guardian", icon: Users, titleKey: "guardian", descKey: "guardianDesc" },
@@ -17,6 +17,7 @@ const allRoles: { id: Role; icon: React.ElementType; titleKey: string; descKey: 
   { id: "caregiver", icon: Heart, titleKey: "caregiver", descKey: "caregiverDesc" },
   { id: "agency", icon: Building2, titleKey: "agencyOwner", descKey: "agencyOwnerDesc" },
   { id: "shop", icon: ShoppingBag, titleKey: "shopOwner", descKey: "shopOwnerDesc" },
+  { id: "channel_partner", icon: Handshake, titleKey: "channelPartner", descKey: "channelPartnerDesc" },
   { id: "moderator", icon: Scale, titleKey: "moderator", descKey: "moderatorDesc" },
   { id: "admin", icon: Shield, titleKey: "admin", descKey: "adminDesc" },
 ];

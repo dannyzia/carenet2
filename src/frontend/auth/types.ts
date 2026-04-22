@@ -9,7 +9,15 @@ export type Role =
   | "agency"
   | "admin"
   | "moderator"
-  | "shop";
+  | "shop"
+  | "channel_partner";
+
+export type ActivationStatus =
+  | "profile_incomplete"
+  | "pending_approval"
+  | "approved"
+  | "rejected"
+  | "suspended";
 
 export interface User {
   id: string;
@@ -25,6 +33,12 @@ export interface User {
   mfaEnrolled?: boolean;
   /** Role-specific profile data */
   profile?: Record<string, any>;
+  /** Cached channel_partners.id for channel_partner role (for realtime subscriptions) */
+  myChanPId?: string;
+  /** Account activation status for role approval gate */
+  activationStatus?: ActivationStatus;
+  /** Rejection reason or admin note (present when status is rejected) */
+  activationNote?: string;
 }
 
 export interface AuthState {
@@ -77,6 +91,8 @@ export interface AuthContextType {
   logout: () => void;
   /** Quick demo login — bypasses email/password/MFA; clears Supabase session when configured so Dexie keys stay stable */
   demoLogin: (role: Role) => Promise<void>;
+  /** Refresh activation status from the server */
+  refreshActivationStatus: () => Promise<void>;
 
   // Legacy aliases for backward compatibility with pages that haven't migrated
   /** @deprecated Use login() instead */

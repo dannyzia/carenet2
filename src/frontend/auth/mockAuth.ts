@@ -4,7 +4,7 @@
  * Simulates backend auth: email/password login, TOTP verification, registration.
  * All demo accounts use password "demo1234" and TOTP code "123456".
  */
-import type { Role, User, RegisterData } from "./types";
+import type { Role, User, RegisterData, ActivationStatus } from "./types";
 
 /** True for one-click demo users and @carenet.demo accounts — stable ids for Dexie drafts / offline queue */
 export function isDemoUser(user: Pick<User, "email" | "id">): boolean {
@@ -21,9 +21,22 @@ export const DEMO_OTP = DEMO_TOTP;
 
 const MOCK_REGISTRY_KEY = "carenet-mock-registry";
 
+function inferRoleFromEmail(email: string): Role {
+  const local = email.split("@")[0].toLowerCase();
+  if (local.startsWith("caregiver")) return "caregiver";
+  if (local.startsWith("guardian")) return "guardian";
+  if (local.startsWith("patient")) return "patient";
+  if (local.startsWith("shopowner")) return "shop";
+  if (local.startsWith("channelpartner") || local.startsWith("channel_partner") || local.startsWith("cp")) return "channel_partner";
+  if (local === "agent1") return "admin";
+  if (local === "agent") return "agency";
+  return "guardian";
+}
+
 interface MockRegistry {
   emails: string[];
   phones: string[];
+  users: Record<string, User>;
 }
 
 function loadMockRegistry(): MockRegistry {
@@ -31,10 +44,14 @@ function loadMockRegistry(): MockRegistry {
     const raw = localStorage.getItem(MOCK_REGISTRY_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      return { emails: parsed.emails || [], phones: parsed.phones || [] };
+      return {
+        emails: parsed.emails || [],
+        phones: parsed.phones || [],
+        users: parsed.users || {},
+      };
     }
   } catch { /* ignore */ }
-  return { emails: [], phones: [] };
+  return { emails: [], phones: [], users: {} };
 }
 
 function saveMockRegistry(registry: MockRegistry) {
@@ -53,6 +70,7 @@ const DEMO_USERS: User[] = [
     district: "Dhaka",
     createdAt: "2024-06-15",
     mfaEnrolled: true,
+    activationStatus: "approved",
     profile: { specialty: "Elderly Care", experience: 5, rating: 4.8 },
   },
   {
@@ -124,6 +142,18 @@ const DEMO_USERS: User[] = [
     profile: { shopName: "Mock_MediMart", category: "Medicines" },
   },
   {
+    id: "demo-channel-partner-1",
+    name: "Mock_Channel Partner",
+    email: "channelpartner@carenet.demo",
+    phone: "01212345678",
+    roles: ["channel_partner"],
+    activeRole: "channel_partner",
+    district: "Dhaka",
+    createdAt: "2024-02-01",
+    mfaEnrolled: true,
+    profile: { partnerName: "Mock Referral Hub", region: "Dhaka" },
+  },
+  {
     id: "demo-multi-1",
     name: "Mock_Multi-Role Demo",
     email: "multi@carenet.demo",
@@ -145,6 +175,7 @@ export const DEMO_ACCOUNTS: { role: Role; email: string; name: string }[] = [
   { role: "admin", email: "admin@carenet.demo", name: "Mock_Admin User" },
   { role: "moderator", email: "moderator@carenet.demo", name: "Mock_Mod User" },
   { role: "shop", email: "shop@carenet.demo", name: "Mock_MediMart Store" },
+  { role: "channel_partner", email: "channelpartner@carenet.demo", name: "Mock_Channel Partner" },
 ];
 
 /**
@@ -170,18 +201,49 @@ export async function mockLogin(
     return { success: true, user: { ...demoUser }, needsMfa: true };
   }
 
+  // Check previously registered mock users
+  const registry = loadMockRegistry();
+  const registered = registry.users[normalizedEmail];
+  if (registered) {
+    if (password.length < 8) {
+      return { success: false, error: "Invalid email or password" };
+    }
+    return { success: true, user: { ...registered }, needsMfa: registered.mfaEnrolled };
+  }
+
+  // Legacy: email registered before users map existed — infer role from email
+  if (registry.emails.includes(normalizedEmail)) {
+    const role = inferRoleFromEmail(normalizedEmail);
+    const migrated: User = {
+      id: `user-${Date.now()}`,
+      name: normalizedEmail.split("@")[0],
+      email: normalizedEmail,
+      roles: [role],
+      activeRole: role,
+      mfaEnrolled: false,
+      createdAt: new Date().toISOString(),
+    };
+    registry.users[normalizedEmail] = migrated;
+    saveMockRegistry(registry);
+    if (password.length < 8) {
+      return { success: false, error: "Invalid email or password" };
+    }
+    return { success: true, user: { ...migrated }, needsMfa: false };
+  }
+
   // For non-demo: any email with password >= 8 chars succeeds
   if (password.length < 8) {
     return { success: false, error: "Invalid email or password" };
   }
 
-  // New/unknown user — simulate MFA-enrolled user
+  // New/unknown user — infer role from email pattern
+  const role = inferRoleFromEmail(normalizedEmail);
   const newUser: User = {
     id: `user-${Date.now()}`,
     name: normalizedEmail.split("@")[0],
     email: normalizedEmail,
-    roles: [],
-    activeRole: "guardian",
+    roles: [role],
+    activeRole: role,
     mfaEnrolled: true,
     createdAt: new Date().toISOString(),
   };
@@ -233,6 +295,10 @@ export async function mockRegister(
     return { success: false, error: "This phone number is already registered." };
   }
 
+  // Auto-approve low-risk roles (guardian, patient)
+  const initialStatus: ActivationStatus =
+    data.role === 'guardian' || data.role === 'patient' ? 'approved' : 'profile_incomplete';
+
   const newUser: User = {
     id: `user-${Date.now()}`,
     name: data.name,
@@ -244,10 +310,12 @@ export async function mockRegister(
     mfaEnrolled: false,
     createdAt: new Date().toISOString(),
     profile: data.roleData,
+    activationStatus: initialStatus,
   };
 
   registry.emails.push(normalizedEmail);
   if (normalizedPhone) registry.phones.push(normalizedPhone);
+  registry.users[normalizedEmail] = newUser;
   saveMockRegistry(registry);
 
   return { success: true, user: newUser };
@@ -288,7 +356,7 @@ export function getDemoUserByRole(role: Role): User {
   const found = DEMO_USERS.find(
     (u) => u.activeRole === role || u.roles.includes(role)
   );
-  if (found) return { ...found, activeRole: role };
+  if (found) return { ...found, activeRole: role, activationStatus: 'approved' };
 
   return {
     id: `demo-${role}`,
@@ -298,6 +366,7 @@ export function getDemoUserByRole(role: Role): User {
     activeRole: role,
     mfaEnrolled: true,
     createdAt: new Date().toISOString(),
+    activationStatus: 'approved',
   };
 }
 
@@ -337,4 +406,110 @@ export async function mockVerifyOtp(
 
 function delay(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
+}
+
+// ─── Mock activation service helpers ───────────────────────────────
+
+/**
+ * Mock: submit profile for review (profile_incomplete -> pending_approval)
+ */
+export async function mockSubmitProfileForReview(
+  profileId: string
+): Promise<{ success: boolean; error?: string }> {
+  await delay(500);
+  const registry = loadMockRegistry();
+  const user = Object.values(registry.users).find((u) => u.id === profileId);
+  if (!user) {
+    return { success: false, error: 'User not found' };
+  }
+  if (user.activationStatus !== 'profile_incomplete') {
+    return { success: false, error: 'Profile must be incomplete to submit' };
+  }
+  user.activationStatus = 'pending_approval';
+  saveMockRegistry(registry);
+  return { success: true };
+}
+
+/**
+ * Mock: reopen for editing (rejected -> profile_incomplete)
+ */
+export async function mockReopenForEditing(
+  profileId: string
+): Promise<{ success: boolean; error?: string }> {
+  await delay(500);
+  const registry = loadMockRegistry();
+  const user = Object.values(registry.users).find((u) => u.id === profileId);
+  if (!user) {
+    return { success: false, error: 'User not found' };
+  }
+  if (user.activationStatus !== 'rejected') {
+    return { success: false, error: 'Profile must be rejected to reopen' };
+  }
+  user.activationStatus = 'profile_incomplete';
+  user.activationNote = undefined;
+  saveMockRegistry(registry);
+  return { success: true };
+}
+
+/**
+ * Mock: approve activation (pending_approval -> approved)
+ */
+export async function mockApproveUser(
+  profileId: string,
+  reviewerName: string,
+  note?: string
+): Promise<{ success: boolean; error?: string }> {
+  await delay(500);
+  const registry = loadMockRegistry();
+  const user = Object.values(registry.users).find((u) => u.id === profileId);
+  if (!user) {
+    return { success: false, error: 'User not found' };
+  }
+  if (user.activationStatus !== 'pending_approval') {
+    return { success: false, error: 'Profile must be pending to approve' };
+  }
+  user.activationStatus = 'approved';
+  user.activationNote = undefined;
+  saveMockRegistry(registry);
+  console.log(`[MockAuth] User ${profileId} approved by ${reviewerName}`);
+  return { success: true };
+}
+
+/**
+ * Mock: reject activation (pending_approval -> rejected)
+ */
+export async function mockRejectUser(
+  profileId: string,
+  reviewerName: string,
+  note: string
+): Promise<{ success: boolean; error?: string }> {
+  await delay(500);
+  const registry = loadMockRegistry();
+  const user = Object.values(registry.users).find((u) => u.id === profileId);
+  if (!user) {
+    return { success: false, error: 'User not found' };
+  }
+  if (user.activationStatus !== 'pending_approval') {
+    return { success: false, error: 'Profile must be pending to reject' };
+  }
+  user.activationStatus = 'rejected';
+  user.activationNote = note;
+  saveMockRegistry(registry);
+  console.log(`[MockAuth] User ${profileId} rejected by ${reviewerName}: ${note}`);
+  return { success: true };
+}
+
+/**
+ * Mock: get my activation status from registry
+ */
+export function mockGetMyActivationStatus(
+  profileId: string
+): { activationStatus: ActivationStatus; activationNote?: string } | null {
+  const registry = loadMockRegistry();
+  const user = Object.values(registry.users).find((u) => u.id === profileId);
+  if (!user) return null;
+  return {
+    activationStatus: user.activationStatus || 'approved',
+    activationNote: user.activationNote,
+  };
 }

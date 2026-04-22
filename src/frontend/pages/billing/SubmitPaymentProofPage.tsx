@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router";
 import {
   ArrowLeft, Upload, CreditCard, CheckCircle2, FileImage,
-  Smartphone, Building2, Banknote, AlertCircle, Loader2, Save,
+  Smartphone, Building2, Banknote, AlertCircle, Loader2, Save, Copy,
 } from "lucide-react";
 import { useAriaToast } from "@/frontend/hooks/useAriaToast";
 import { cn } from "@/frontend/theme/tokens";
@@ -31,6 +31,7 @@ interface ProofFormData {
 }
 
 export default function SubmitPaymentProofPage() {
+  const { t } = useTranslation("common");
   const { t: tDocTitle } = useTranslation("common");
   useDocumentTitle(tDocTitle("pageTitles.submitPaymentProof", "Submit Payment Proof"));
 
@@ -38,7 +39,10 @@ export default function SubmitPaymentProofPage() {
   const navigate = useNavigate();
   const { invoiceId } = useParams();
   const { data: invoice, loading } = useAsyncData(() => billingService.getInvoiceById(invoiceId ?? ""), [invoiceId]);
+  const { data: platformDetails } = useAsyncData(() => billingService.getPlatformPaymentDetails(), []);
   const { draft, isRestored, isSaving, updateDraft, clearDraft } = useFormDraft<ProofFormData>("payment-proof-" + invoiceId, "current-user");
+
+  const [copiedField, setCopiedField] = useState<string | null>(null);
 
   const [step, setStep] = useState<"form" | "submitting" | "success">("form");
   const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
@@ -50,6 +54,12 @@ export default function SubmitPaymentProofPage() {
 
   const selectedMethod = METHODS.find((m) => m.id === form.method);
   const isValid = form.method && form.referenceNumber.trim().length >= 5;
+
+  const handleCopy = (text: string, field: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(null), 2000);
+  };
 
   const handleSubmit = async () => {
     if (!isValid) return;
@@ -65,7 +75,7 @@ export default function SubmitPaymentProofPage() {
       });
       await clearDraft();
       toast.success("Payment proof submitted successfully", {
-        description: `${invoice.fromParty.name} has been notified to verify your payment.`,
+        description: t("billing.platformVerifying", "CareNet Platform is verifying your payment."),
       });
       setStep("success");
     } catch {
@@ -93,7 +103,7 @@ export default function SubmitPaymentProofPage() {
           </div>
           <h2 className="text-xl mb-2" style={{ color: cn.text }}>Payment Proof Submitted!</h2>
           <p className="text-sm mb-2" style={{ color: cn.textSecondary }}>
-            Your payment proof for <span style={{ color: cn.text }}>{invoice.id}</span> has been sent to <span style={{ color: cn.text }}>{invoice.fromParty.name}</span> for verification.
+            Your payment proof for <span style={{ color: cn.text }}>{invoice.id}</span> is being verified by the {t("billing.platformName", "CareNet Platform")}.
           </p>
           <p className="text-sm mb-6" style={{ color: cn.textSecondary }}>
             You'll receive a notification once it's verified.
@@ -144,8 +154,48 @@ export default function SubmitPaymentProofPage() {
         <div className="bg-white/95 backdrop-blur-md rounded-2xl p-6 text-center" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.04)", border: "1px solid rgba(255,255,255,0.4)" }}>
           <p className="text-xs uppercase tracking-widest mb-1" style={{ color: cn.textSecondary }}>Amount to Pay</p>
           <p className="text-3xl" style={{ color: cn.pink }}>{formatBDT(invoice.total)}</p>
-          <p className="text-xs mt-1" style={{ color: cn.textSecondary }}>To: {invoice.fromParty.name}</p>
+          <p className="text-xs mt-1" style={{ color: cn.textSecondary }}>To: {t("billing.payToPlatform", "CareNet Platform")}</p>
         </div>
+
+        {platformDetails && (platformDetails.bkash || platformDetails.bankAccount) && (
+          <div className="bg-white/95 backdrop-blur-md rounded-3xl p-6" style={{ boxShadow: "0 20px 60px rgba(0,0,0,0.05)", border: "1px solid rgba(255,255,255,0.4)" }}>
+            <h3 className="text-sm mb-4" style={{ color: cn.text }}>
+              {t("billing.payInstructions", "Send payment to CareNet using one of the methods below, then upload your proof.")}
+            </h3>
+            {platformDetails.bkash && (
+              <div className="flex items-center justify-between p-3 rounded-xl mb-3" style={{ background: cn.bgInput }}>
+                <div>
+                  <p className="text-xs" style={{ color: cn.textSecondary }}>{t("billing.platformBkashLabel", "bKash Number")}</p>
+                  <p className="text-sm font-mono" style={{ color: cn.text }}>{platformDetails.bkash}</p>
+                </div>
+                <button
+                  onClick={() => handleCopy(platformDetails.bkash, "bkash")}
+                  className="p-2 rounded-lg"
+                  style={{ background: cn.surface }}
+                  title={t("billing.copyToClipboard", "Copy")}
+                >
+                  <Copy className="w-4 h-4" style={{ color: cn.textSecondary }} />
+                </button>
+              </div>
+            )}
+            {platformDetails.bankAccount && (
+              <div className="flex items-center justify-between p-3 rounded-xl" style={{ background: cn.bgInput }}>
+                <div>
+                  <p className="text-xs" style={{ color: cn.textSecondary }}>{t("billing.platformBankLabel", "Bank Account")}</p>
+                  <p className="text-sm" style={{ color: cn.text }}>{platformDetails.bankName} — {platformDetails.bankAccount}</p>
+                </div>
+                <button
+                  onClick={() => handleCopy(`${platformDetails.bankName} — ${platformDetails.bankAccount}`, "bank")}
+                  className="p-2 rounded-lg"
+                  style={{ background: cn.surface }}
+                  title={t("billing.copyToClipboard", "Copy")}
+                >
+                  <Copy className="w-4 h-4" style={{ color: cn.textSecondary }} />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="bg-white/95 backdrop-blur-md rounded-3xl p-6" style={{ boxShadow: "0 20px 60px rgba(0,0,0,0.05)", border: "1px solid rgba(255,255,255,0.4)" }}>
           <h3 className="text-sm mb-4" style={{ color: cn.text }}>
@@ -214,9 +264,9 @@ export default function SubmitPaymentProofPage() {
         <div className="flex items-start gap-3 p-4 rounded-xl" style={{ background: cn.amberBg }}>
           <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" style={{ color: cn.amber }} />
           <div>
-            <p className="text-sm" style={{ color: cn.amber }}>Manual Verification Required</p>
+            <p className="text-sm" style={{ color: cn.amber }}>{t("billing.pendingAdminVerification", "Pending Admin Verification")}</p>
             <p className="text-xs mt-1" style={{ color: "#B8860B" }}>
-              Your payment proof will be reviewed by {invoice.fromParty.name}. Please ensure the reference number and amount are correct to avoid delays.
+              Your payment proof will be reviewed by the {t("billing.platformName", "CareNet Platform")}. Please ensure the reference number and amount are correct to avoid delays.
             </p>
           </div>
         </div>

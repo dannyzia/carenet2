@@ -4,9 +4,10 @@
 import type { ConversationItem, ChatMessage } from "@/backend/models";
 import type { Role } from "@/frontend/auth/types";
 import { loadMockBarrel } from "@/backend/api/mock/loadMockBarrel";
-import { USE_SUPABASE, sbRead, sbWrite, sb, currentUserId, useInAppMockDataset } from "./_sb";
+import { USE_SUPABASE, sbRead, sbWrite, sb, sbData, currentUserId, useInAppMockDataset } from "./_sb";
 import { features } from "@/config/features";
 import { demoOfflineDelayAndPick } from "./demoOfflineMock";
+import { caregiverContactsService } from "./caregiverContacts.service";
 
 const delay = (ms = 200) => new Promise((r) => setTimeout(r, ms));
 
@@ -65,6 +66,7 @@ function mapConversation(d: any, myId: string, profiles: Map<string, any>): Conv
     unread: 0, // TODO: compute from unread messages count
     online: false,
     pinned: isPinned,
+    participantId: otherId,
   };
 }
 
@@ -119,12 +121,51 @@ export const messageService = {
     if (USE_SUPABASE) {
       return sbRead(`convos:${role || "all"}`, async () => {
         const myId = await currentUserId();
-        return fetchConversations(myId);
+        const convos = await fetchConversations(myId);
+
+        // For caregivers, filter to only show agency conversations and active job contacts
+        if (role === "caregiver") {
+          const [agencies, activeJobIds] = await Promise.all([
+            caregiverContactsService.getAgenciesForCaregiver(myId),
+            caregiverContactsService.getActiveJobParticipantIds(myId),
+          ]);
+          const agencyIds = new Set(agencies.map((a) => a.id));
+
+          return convos.filter((convo) => {
+            // Always allow agency conversations
+            if (agencyIds.has(convo.participantId ?? "")) return true;
+            // Allow active job contacts
+            if (activeJobIds.has(convo.participantId ?? "")) return true;
+            return false;
+          });
+        }
+
+        return convos;
       });
     }
     await delay();
     await ensureMessageMock();
-    return conversationsByRole![role || "guardian"] || [];
+    const conversations = conversationsByRole![role || "guardian"] || [];
+
+    // For caregivers, filter to only show agency conversations and active job contacts
+    if (role === "caregiver") {
+      const myId = await currentUserId();
+      const [agencies, activeJobParticipantIds] = await Promise.all([
+        caregiverContactsService.getAgenciesForCaregiver(myId),
+        caregiverContactsService.getActiveJobParticipantIds(myId),
+      ]);
+      const agencyIds = new Set(agencies.map((a) => a.id));
+
+      return conversations.filter((convo) => {
+        // Always allow agency conversations
+        if (agencyIds.has(convo.participantId ?? "")) return true;
+        // Allow active job contacts
+        if (activeJobParticipantIds.has(convo.participantId ?? "")) return true;
+        return false;
+      });
+    }
+
+    return conversations;
   },
 
   // ─── Generic: get messages for a conversation ─────────────
@@ -145,15 +186,19 @@ export const messageService = {
     if (USE_SUPABASE) {
       const myId = await currentUserId();
       if (!features.careSeekerCaregiverContactEnabled) {
-        const { data: me } = await sb().from("profiles").select("role").eq("id", myId).maybeSingle();
-        const { data: other } = await sb().from("profiles").select("role").eq("id", otherUserId).maybeSingle();
+        const { data: me } = await sbData().from("profiles").select("role").eq("id", myId).maybeSingle();
+        const { data: other } = await sbData().from("profiles").select("role").eq("id", otherUserId).maybeSingle();
         const r1 = me?.role as string | undefined;
         const r2 = other?.role as string | undefined;
         const blocked =
           (r1 === "caregiver" && (r2 === "guardian" || r2 === "patient")) ||
           (r2 === "caregiver" && (r1 === "guardian" || r1 === "patient"));
         if (blocked) {
-          throw new Error("CARENET_BLOCK_CARE_SEEKER_CAREGIVER_CONVERSATION");
+          // Check if caregiver can chat with this user via eligible contacts (agency or active job)
+          const isEligible = await this._isEligibleCaregiverContact(myId, otherUserId, r2 as string);
+          if (!isEligible) {
+            throw new Error("CARENET_BLOCK_CARE_SEEKER_CAREGIVER_CONVERSATION");
+          }
         }
       }
       // Check if conversation already exists
@@ -264,6 +309,31 @@ export const messageService = {
     }
     // Mock mode: no-op (unread counts come from static mock data)
     await delay(50);
+  },
+
+  // ─── Get eligible chat targets for caregiver ───────────────────────
+  async getEligibleChatTargets(caregiverId: string): Promise<import("./caregiverContacts.service").CaregiverContact[]> {
+    // Delegates to caregiverContactsService
+    // Caches results for 30 seconds (handled by sbRead in the service)
+    const [agencies, jobContacts] = await Promise.all([
+      caregiverContactsService.getAgenciesForCaregiver(caregiverId),
+      caregiverContactsService.getActiveJobContacts(caregiverId),
+    ]);
+    return [...agencies, ...jobContacts];
+  },
+
+  // ─── Helper: Check if caregiver can chat with another user ─
+  async _isEligibleCaregiverContact(
+    myId: string,
+    otherUserId: string,
+    otherRole: string,
+  ): Promise<boolean> {
+    // Agencies are always eligible
+    if (otherRole === "agency") return true;
+
+    // Check if other user is in active job contacts (guardian, patient, fellow caregiver)
+    const activeJobIds = await caregiverContactsService.getActiveJobParticipantIds(myId);
+    return activeJobIds.has(otherUserId);
   },
 };
 

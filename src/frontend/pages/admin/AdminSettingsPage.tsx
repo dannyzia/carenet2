@@ -5,6 +5,7 @@ import { adminService } from "@/backend/services/admin.service";
 import { PageSkeleton } from "@/frontend/components/PageSkeleton";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { persistAdminSettings, loadAdminSettings } from "@/frontend/auth/mfaConfig";
 
 const sections = [{ id: "general", label: "General", icon: Settings }, { id: "security", label: "Security", icon: Shield }, { id: "payments", label: "Payments", icon: CreditCard }, { id: "notifications", label: "Notifications", icon: Bell }, { id: "platform", label: "Platform", icon: Globe }, { id: "roles", label: "Roles & Permissions", icon: Users }];
 
@@ -20,7 +21,8 @@ export default function AdminSettingsPage() {
   // Sync loaded settings into local state
   useEffect(() => {
     if (initialSettings && !settings) {
-      setSettings(initialSettings);
+      const persisted = loadAdminSettings();
+      setSettings(persisted ? { ...initialSettings, ...persisted } : initialSettings);
     }
   }, [initialSettings, settings]);
 
@@ -28,7 +30,11 @@ export default function AdminSettingsPage() {
     return <PageSkeleton cards={2} />;
   }
 
-  const handleSave = () => { setSaved(true); setTimeout(() => setSaved(false), 2000); };
+  const handleSave = () => {
+    if (settings) persistAdminSettings(settings);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
   const toggle = (key: string) => setSettings(s => ({ ...s, [key]: !s[key as keyof typeof s] }));
   const update = (key: string, val: string) => setSettings(s => ({ ...s, [key]: val }));
   const Toggle = ({ settingKey }: { settingKey: string }) => (<button onClick={() => toggle(settingKey)} className="relative w-12 h-6 rounded-full transition-all" style={{ background: settings[settingKey] ? "#5FB865" : "#E5E7EB" }}><span className="absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all" style={{ left: settings[settingKey] ? "calc(100% - 22px)" : "2px" }} /></button>);

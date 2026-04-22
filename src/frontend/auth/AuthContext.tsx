@@ -12,11 +12,16 @@ import {
   isDemoUser,
 } from "./mockAuth";
 import { USE_SUPABASE, supabase } from "@/backend/services/supabase";
+import { activationService } from "@/backend/services/activation.service";
+import { agentDebugLog } from "@/frontend/auth/debugAuthLog";
+import i18n from "@/frontend/i18n";
 import { getAuthEmailRedirectTo } from "@/frontend/auth/authEmailRedirect";
 import { clearAllDedup } from "@/backend/utils/dedup";
+import { isMfaRequired } from "./mfaConfig";
 import { stopDemoSimulation } from "@/backend/services/realtime";
 import { registerDeviceForPush } from "@/frontend/native/registerDevice";
 import { unregisterDeviceForPush } from "@/frontend/native/unregisterDevice";
+import { getMyChanPProfile } from "@/backend/services/channelPartnerService";
 
 const STORAGE_KEY = "carenet-auth";
 /** `"demo"` = mock / @carenet.demo (Dexie keys must follow this user); `"live"` = Supabase or non-demo mock */
@@ -64,15 +69,37 @@ function migrateAuthModeIfNeeded() {
 }
 
 /**
+ * Infer role from email local-part for known test patterns.
+ * caregiver* → caregiver, guardian* → guardian, patient* → patient,
+ * shopowner* → shop, agent1 → admin, agent → agency.
+ */
+function inferRoleFromEmail(email: string): Role | null {
+  const local = email.split("@")[0].toLowerCase();
+  if (local.startsWith("caregiver")) return "caregiver";
+  if (local.startsWith("guardian")) return "guardian";
+  if (local.startsWith("patient")) return "patient";
+  if (local.startsWith("shopowner")) return "shop";
+  if (local.startsWith("channelpartner") || local.startsWith("channel_partner") || local.startsWith("cp")) return "channel_partner";
+  if (local === "agent1") return "admin";
+  if (local === "agent") return "agency";
+  return null;
+}
+
+/**
  * Map a Supabase auth user + profile to our app User type.
  */
-function mapSupabaseUser(supaUser: any, profile?: any, mfaEnrolled?: boolean): User {
+function mapSupabaseUser(supaUser: any, profile?: any, mfaEnrolled?: boolean, myChanPId?: string): User {
   const meta = supaUser.user_metadata || {};
-  const role = profile?.role || meta.role || "guardian";
+  const email = supaUser.email || "";
+  const role =
+    profile?.role
+    || meta.role
+    || inferRoleFromEmail(email)
+    || "guardian";
   return {
     id: supaUser.id,
-    name: profile?.name || meta.name || supaUser.email?.split("@")[0] || "",
-    email: supaUser.email || "",
+    name: profile?.name || meta.name || email.split("@")[0] || "",
+    email,
     phone: profile?.phone || meta.phone,
     avatarUrl: profile?.avatar_url || meta.avatar_url,
     roles: [role as Role],
@@ -81,7 +108,33 @@ function mapSupabaseUser(supaUser: any, profile?: any, mfaEnrolled?: boolean): U
     createdAt: supaUser.created_at || new Date().toISOString(),
     mfaEnrolled: mfaEnrolled ?? false,
     profile: profile || undefined,
+    myChanPId,
+    activationStatus: profile?.activation_status,
+    activationNote: profile?.activation_note,
   };
+}
+
+/**
+ * Lookup Channel Partner ID for channel_partner role users.
+ * Called during login to cache myChanPId for realtime subscriptions (Spec 2.12c).
+ * @param user - The user object (must have activeRole = channel_partner)
+ */
+async function lookupChanPId(user: User | null): Promise<string | undefined> {
+  if (!user || user.activeRole !== "channel_partner") {
+    return undefined;
+  }
+  // Already cached
+  if (user.myChanPId) {
+    return user.myChanPId;
+  }
+  try {
+    // Pass user.id directly to avoid localStorage race condition (fixes Critical Bug #2)
+    const profile = await getMyChanPProfile(user.id);
+    return profile?.id;
+  } catch (e) {
+    console.warn("[AuthContext] Failed to lookup ChanP ID:", e);
+    return undefined;
+  }
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -134,8 +187,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { data: factors } = await supabase.auth.mfa.listFactors();
         const mfaEnrolled = (factors?.totp?.length ?? 0) > 0;
         const appUser = mapSupabaseUser(session.user, profile, mfaEnrolled);
-        setUser(appUser);
-        persistUser(appUser);
+        // Cache myChanPId for channel_partner users (Spec 2.12c)
+        const chanPId = await lookupChanPId(appUser);
+        const userWithChanPId = chanPId ? { ...appUser, myChanPId: chanPId } : appUser;
+        setUser(userWithChanPId);
+        persistUser(userWithChanPId);
         registerDeviceForPush().catch(() => {});
       } else {
         setUser(null);
@@ -168,29 +224,74 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (email.toLowerCase().endsWith("@carenet.demo")) {
       const demoResult = await mockLogin(email, password);
       if (demoResult.success && demoResult.user) {
-        if (demoResult.needsMfa) {
-          pendingMfaUser.current = demoResult.user;
-          return { success: true, needsMfa: true, user: demoResult.user };
+        // Cache myChanPId for channel_partner users (Spec 2.12c)
+        const chanPId = await lookupChanPId(demoResult.user);
+        const userWithChanPId = chanPId ? { ...demoResult.user, myChanPId: chanPId } : demoResult.user;
+        if (demoResult.needsMfa && isMfaRequired()) {
+          pendingMfaUser.current = userWithChanPId;
+          return { success: true, needsMfa: true, user: userWithChanPId };
         }
-        setUser(demoResult.user);
-        persistUser(demoResult.user);
+        setUser(userWithChanPId);
+        persistUser(userWithChanPId);
         registerDeviceForPush().catch(() => {});
-        return { success: true, user: demoResult.user };
+        return { success: true, user: userWithChanPId };
       }
       return demoResult;
     }
 
     if (USE_SUPABASE) {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const emailForAuth = email.trim();
+      // #region agent log
+      agentDebugLog({
+        runId: "pre-signin",
+        hypothesisId: "H3-H4",
+        location: "AuthContext.tsx:login",
+        message: "supabase signIn pre",
+        data: {
+          useSupabase: USE_SUPABASE,
+          emailTrimLen: emailForAuth.length,
+          passwordLen: password.length,
+          sbHost: (() => {
+            try {
+              return new URL(String(import.meta.env.VITE_SUPABASE_URL || "")).hostname;
+            } catch {
+              return "parse_fail";
+            }
+          })(),
+        },
+      });
+      // #endregion
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: emailForAuth,
+        password,
+      });
       if (error) {
-        if (
-          error.message.toLowerCase().includes("email not confirmed") ||
-          error.message.toLowerCase().includes("invalid login credentials")
-        ) {
+        // #region agent log
+        const em = error.message.toLowerCase();
+        agentDebugLog({
+          runId: "post-fix",
+          hypothesisId: "H1-H2",
+          location: "AuthContext.tsx:login",
+          message: "supabase signIn error",
+          data: {
+            errMessage: error.message,
+            errName: error.name,
+            errStatus: (error as { status?: number }).status,
+            isEmailNotConfirmed: em.includes("email not confirmed"),
+            isInvalidCreds: em.includes("invalid login credentials"),
+          },
+        });
+        // #endregion
+        if (em.includes("email not confirmed")) {
           return {
             success: false,
-            error:
-              "Invalid email or password. If you just signed up, make sure email confirmation is disabled in Supabase Auth settings, or confirm your email first.",
+            error: i18n.t("login.emailNotConfirmed", { ns: "auth" }),
+          };
+        }
+        if (em.includes("invalid login credentials")) {
+          return {
+            success: false,
+            error: i18n.t("login.invalidCredentials", { ns: "auth" }),
           };
         }
         return { success: false, error: error.message };
@@ -202,10 +303,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .eq("id", data.user.id)
           .single();
         const appUser = mapSupabaseUser(data.user, profile, false);
-        setUser(appUser);
-        persistUser(appUser);
+        // Cache myChanPId for channel_partner users (Spec 2.12c)
+        const chanPId = await lookupChanPId(appUser);
+        const userWithChanPId = chanPId ? { ...appUser, myChanPId: chanPId } : appUser;
+        setUser(userWithChanPId);
+        persistUser(userWithChanPId);
         registerDeviceForPush().catch(() => {});
-        return { success: true, user: appUser };
+        return { success: true, user: userWithChanPId };
       }
       return { success: false, error: "Login failed" };
     }
@@ -213,14 +317,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Mock mode
     const result = await mockLogin(email, password);
     if (result.success && result.user) {
-      if (result.needsMfa) {
-        pendingMfaUser.current = result.user;
-        return { success: true, needsMfa: true, user: result.user };
+      // Cache myChanPId for channel_partner users (Spec 2.12c)
+      const chanPId = await lookupChanPId(result.user);
+      const userWithChanPId = chanPId ? { ...result.user, myChanPId: chanPId } : result.user;
+      if (result.needsMfa && isMfaRequired()) {
+        pendingMfaUser.current = userWithChanPId;
+        return { success: true, needsMfa: true, user: userWithChanPId };
       }
-      setUser(result.user);
-      persistUser(result.user);
+      setUser(userWithChanPId);
+      persistUser(userWithChanPId);
       registerDeviceForPush().catch(() => {});
-      return { success: true, user: result.user };
+      return { success: true, user: userWithChanPId };
     }
     return result;
   }, []);
@@ -350,6 +457,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             role: data.role,
             phone: data.phone,
             district: data.district,
+            ...(data.roleData || {}),
           },
         },
       });
@@ -381,6 +489,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (authData.session) {
         return { success: true, signedInWithoutEmailConfirmation: true };
       }
+      
       return { success: true };
     }
 
@@ -446,13 +555,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // ─── Demo Login (always mock, for dev/demo purposes) ───
   const demoLogin = useCallback(async (role: Role) => {
     const demoUser = getDemoUserByRole(role);
-    persistUser(demoUser);
-    setUser(demoUser);
+    // Cache myChanPId for channel_partner users (Spec 2.12c)
+    const chanPId = await lookupChanPId(demoUser);
+    const userWithChanPId = chanPId ? { ...demoUser, myChanPId: chanPId } : demoUser;
+    persistUser(userWithChanPId);
+    setUser(userWithChanPId);
     if (USE_SUPABASE) {
       await supabase.auth.signOut();
     }
     registerDeviceForPush().catch(() => {});
   }, []);
+
+  // ─── Refresh Activation Status ───
+  const refreshActivationStatus = useCallback(async () => {
+    if (!user) return;
+    const status = await activationService.getMyActivationStatus();
+    if (status) {
+      const updated = { ...user, activationStatus: status.activationStatus, activationNote: status.activationNote };
+      setUser(updated);
+      persistUser(updated);
+    }
+  }, [user]);
 
   // Legacy aliases for backward compatibility
   const requestOtp = useCallback(async (_phone: string) => {
@@ -462,8 +585,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const verifyOtp = useCallback(async (phone: string, code: string) => {
     const result = await mockVerifyOtp(phone, code);
     if (result.success && result.user) {
-      setUser(result.user);
-      persistUser(result.user);
+      // Cache myChanPId for channel_partner users (Spec 2.12c)
+      const chanPId = await lookupChanPId(result.user);
+      const userWithChanPId = chanPId ? { ...result.user, myChanPId: chanPId } : result.user;
+      setUser(userWithChanPId);
+      persistUser(userWithChanPId);
     }
     return result;
   }, []);
@@ -492,6 +618,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     switchRole,
     logout,
     demoLogin,
+    refreshActivationStatus,
     // Legacy
     requestOtp,
     verifyOtp,

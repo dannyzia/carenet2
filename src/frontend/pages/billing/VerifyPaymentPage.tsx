@@ -13,6 +13,7 @@ import { formatBDT } from "@/backend/utils/currency";
 import { useAsyncData, useDocumentTitle } from "@/frontend/hooks";
 import { billingService } from "@/backend/services/billing.service";
 import { PageSkeleton } from "@/frontend/components/PageSkeleton";
+import { useAuth } from "@/backend/store/auth";
 import { useTranslation } from "react-i18next";
 
 const methodIcons: Record<string, { icon: typeof Smartphone; color: string; bg: string; label: string }> = {
@@ -31,6 +32,7 @@ const statusConfig: Record<string, { label: string; color: string; bg: string; i
 };
 
 export default function VerifyPaymentPage() {
+  const { t } = useTranslation("common");
   const { t: tDocTitle } = useTranslation("common");
   useDocumentTitle(tDocTitle("pageTitles.verifyPayment", "Verify Payment"));
 
@@ -38,10 +40,28 @@ export default function VerifyPaymentPage() {
   const navigate = useNavigate();
   const { proofId } = useParams();
   const { data: proof, loading } = useAsyncData(() => billingService.getProofById(proofId ?? ""), [proofId]);
+  const { user } = useAuth();
   const [action, setAction] = useState<"idle" | "confirming_verify" | "confirming_reject" | "processing" | "done">("idle");
   const [rejectReason, setRejectReason] = useState("");
 
   if (loading || !proof) return <PageSkeleton />;
+
+  // Auth guard: only admin/moderator can verify
+  const isVerifier = user?.activeRole === 'admin' || user?.activeRole === 'moderator';
+  if (!isVerifier) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-6" style={{ background: cn.bgPage }}>
+        <div className="text-center max-w-sm mx-auto p-6 rounded-xl" style={{ background: cn.surface }}>
+          <ShieldCheck className="w-12 h-12 mx-auto mb-4" style={{ color: cn.textSecondary }} />
+          <h2 className="text-xl mb-2" style={{ color: cn.text }}>Verification Restricted</h2>
+          <p className="text-sm mb-6" style={{ color: cn.textSecondary }}>
+            {t("billing.verificationHandledByPlatform", "Payment verification is handled by the CareNet Platform team.")}
+          </p>
+          <Button className="w-full rounded-xl" onClick={() => navigate("/billing")}>Back to Billing</Button>
+        </div>
+      </div>
+    );
+  }
 
   const st = statusConfig[proof.status] || statusConfig.pending;
   const StatusIcon = st.icon;
@@ -50,21 +70,47 @@ export default function VerifyPaymentPage() {
 
   const handleVerify = async () => {
     setAction("processing");
-    await billingService.verifyPaymentProof(proof.id);
-    toast.success("Payment verified successfully", {
-      description: `${proof.submittedBy.name}'s payment of ${formatBDT(proof.amount)} has been confirmed.`,
-    });
-    setAction("done");
+    try {
+      await billingService.verifyPaymentProof(proof.id);
+      toast.success("Payment verified successfully", {
+        description: t("billing.providerWalletCredited", "Payment verified. Provider wallet credited."),
+      });
+      setAction("done");
+    } catch (err: any) {
+      if (err.message === "UNAUTHORIZED") {
+        toast.error("Unauthorized", {
+          description: t("billing.moderatorFeatureDisabled", "Payment verification is currently restricted to Admins."),
+        });
+      } else {
+        toast.error("Failed to verify payment", {
+          description: err.message || "Please try again.",
+        });
+      }
+      setAction("idle");
+    }
   };
 
   const handleReject = async () => {
     if (!rejectReason.trim()) return;
     setAction("processing");
-    await billingService.rejectPaymentProof(proof.id, rejectReason);
-    toast.error("Payment proof rejected", {
-      description: `${proof.submittedBy.name} has been notified of the rejection.`,
-    });
-    setAction("done");
+    try {
+      await billingService.rejectPaymentProof(proof.id, rejectReason);
+      toast.error("Payment proof rejected", {
+        description: `${proof.submittedBy.name} has been notified of the rejection.`,
+      });
+      setAction("done");
+    } catch (err: any) {
+      if (err.message === "UNAUTHORIZED") {
+        toast.error("Unauthorized", {
+          description: t("billing.moderatorFeatureDisabled", "Payment verification is currently restricted to Admins."),
+        });
+      } else {
+        toast.error("Failed to reject payment", {
+          description: err.message || "Please try again.",
+        });
+      }
+      setAction("idle");
+    }
   };
 
   if (action === "done") {

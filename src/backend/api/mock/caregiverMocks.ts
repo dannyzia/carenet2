@@ -8,6 +8,7 @@ import type {
   CaregiverPortfolio, CaregiverReference, ShiftDetailData,
   SkillsAssessment, TrainingModule,
 } from "@/backend/models";
+import type { CaregiverContact } from "@/backend/services/caregiverContacts.service";
 
 /** Caregiver search results / marketplace profiles */
 export const MOCK_CAREGIVER_PROFILES: CaregiverProfile[] = [
@@ -414,3 +415,97 @@ export const MOCK_SHIFT_CHECKIN_DATA = {
   expectedLocation: { lat: 23.8103, lng: 90.4125, address: "House 42, Road 11, Dhanmondi, Dhaka" },
   maxDistanceMeters: 200,
 };
+
+// ─── Caregiver Chat Contacts (New Chat feature) ───
+export const MOCK_AGENCY_PROFILES: CaregiverContact[] = [
+  {
+    id: "agency1",
+    name: "HealthCare Pro BD",
+    role: "agency",
+    group: "agencies",
+    avatar: "HP",
+  },
+  {
+    id: "agency2",
+    name: "CareNet Services",
+    role: "agency",
+    group: "agencies",
+    avatar: "CS",
+  },
+  {
+    id: "agency3",
+    name: "ElderCare Solutions",
+    role: "agency",
+    group: "agencies",
+    avatar: "ES",
+  },
+  {
+    id: "agency4",
+    name: "Home Health BD",
+    role: "agency",
+    group: "agencies",
+    avatar: "HH",
+  },
+];
+
+export const MOCK_ACTIVE_JOB_CONTACTS: CaregiverContact[] = [
+  // Guardians from active jobs
+  {
+    id: "guardian1",
+    name: "Mrs. Fatema Begum",
+    role: "guardian",
+    group: "active_job_contacts",
+    avatar: "FB",
+  },
+  {
+    id: "guardian2",
+    name: "Rashed Hossain",
+    role: "guardian",
+    group: "active_job_contacts",
+    avatar: "RH",
+  },
+  {
+    id: "guardian3",
+    name: "Rahman Family",
+    role: "guardian",
+    group: "active_job_contacts",
+    avatar: "RF",
+  },
+  // Patients from active jobs
+  {
+    id: "patient1",
+    name: "Mr. Rahim Ahmed",
+    role: "patient",
+    group: "active_job_contacts",
+    avatar: "RA",
+  },
+  {
+    id: "patient2",
+    name: "Mrs. Ayesha Khan",
+    role: "patient",
+    group: "active_job_contacts",
+    avatar: "AK",
+  },
+  // Fellow caregivers from active jobs
+  {
+    id: "caregiver1",
+    name: "Karim Uddin",
+    role: "caregiver",
+    group: "active_job_contacts",
+    avatar: "KU",
+  },
+  {
+    id: "caregiver2",
+    name: "Fatema Akter",
+    role: "caregiver",
+    group: "active_job_contacts",
+    avatar: "FA",
+  },
+  {
+    id: "caregiver3",
+    name: "Jamal Hossain",
+    role: "caregiver",
+    group: "active_job_contacts",
+    avatar: "JH",
+  },
+];

@@ -28,10 +28,10 @@ export function StickySubmit({
 }: StickySubmitProps) {
   return (
     <>
-      <div className="h-20 md:hidden" />
+      <div className="h-[var(--cn-sticky-submit-height)] md:hidden" />
 
       <div
-        className="fixed bottom-0 left-0 right-0 z-30 p-4 md:static md:p-0 md:mt-6"
+        className="fixed bottom-0 left-0 right-0 z-40 p-4 md:static md:p-0 md:mt-6"
         style={{
           background: `linear-gradient(transparent, ${cn.bgCard} 20%)`,
         }}

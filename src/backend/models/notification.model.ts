@@ -10,7 +10,11 @@ export type NotificationChannel =
   | "system"
   | "booking"
   | "document"
-  | "billing";
+  | "billing"
+  | "commission"
+  | "cp_commission"
+  | "cp_rate"
+  | "admin_cp";
 
 /** A single notification entry */
 export interface AppNotification {

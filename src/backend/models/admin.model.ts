@@ -193,6 +193,7 @@ export interface DisputeMessage {
 export interface AuditLogEntry {
   time: string; action: string; uid: string; ip: string;
   severity: "info" | "warning" | "critical";
+  metadata?: Record<string, unknown>;
 }
 
 export interface AuditLogsStat { label: string; val: string; }

@@ -131,7 +131,7 @@ export default function CaregiverProfilePage() {
         </div>
 
         {editing && (
-          <div className="flex gap-3">
+          <div className="flex gap-3 pb-24 md:pb-6">
             <button onClick={() => setEditing(false)} className="flex-1 py-3 rounded-xl font-medium border text-sm" style={{ borderColor: "#E5E7EB", color: "#535353" }}>
               Cancel
             </button>

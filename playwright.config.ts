@@ -47,10 +47,7 @@ export default defineConfig({
   // VITE_PLAYWRIGHT_E2E forces mock Supabase + E2E-only UI (see vite.config + supabase.ts).
   // Windows: `webServer.env` is not always inherited by `npx`; prefix the shell command.
   webServer: {
-    command:
-      process.platform === "win32"
-        ? `cmd /c "set VITE_PLAYWRIGHT_E2E=true&& npx vite --host --port ${testPort}"`
-        : `env VITE_PLAYWRIGHT_E2E=true npx vite --host --port ${testPort}`,
+    command: `npx vite --host --port ${testPort}`,
     url: baseURL,
     // Reusing a normal `npm run dev` server skips `VITE_PLAYWRIGHT_E2E` → dashboards hang on real Supabase.
     // Set `PW_REUSE_VITE=1` if you intentionally want to attach to an already-running dev server.

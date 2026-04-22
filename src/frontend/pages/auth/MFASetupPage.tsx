@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next";
 import { useDocumentTitle } from "@/frontend/hooks";
 import { QRCodeSVG } from "qrcode.react";
 import { USE_SUPABASE } from "@/backend/services/supabase";
+import { isMfaRequired } from "@/frontend/auth/mfaConfig";
 
 const DEMO_SECRET = "JBSWY3DPEHPK3PXP";
 
@@ -28,6 +29,10 @@ export default function MFASetupPage() {
 
   const navigate = useTransitionNavigate();
   const { user, enrollMfa, verifyMfa } = useAuth();
+
+  useEffect(() => {
+    if (!isMfaRequired()) navigate("/", { replace: true });
+  }, [navigate]);
 
   const [step, setStep] = useState<"setup" | "verify" | "done">("setup");
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);

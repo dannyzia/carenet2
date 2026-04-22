@@ -1,7 +1,7 @@
 /**
  * Billing Service — manual payment verification flow
  *
- * Flow: Payer submits proof → Receiver verifies → Status updates
+ * Flow: Payer submits proof → Admin verifies → Escrow payout to provider wallet
  */
 import type {
   BillingOverviewData,
@@ -61,6 +61,7 @@ function mapInvoice(d: any, lineItems: any[], proofs: PaymentProof[]): BillingIn
     issuedDate: d.issued_date,
     dueDate: d.due_date,
     placementId: d.placement_id,
+    careContractId: d.care_contract_id,
     lineItems: lineItems.map((li: any) => ({
       desc: li.description, qty: String(li.qty), rate: li.rate, total: li.total,
     })),
@@ -194,14 +195,17 @@ export const billingService = {
         // Get invoice info
         const { data: inv } = await sbData().from("invoices").select("*").eq("id", data.invoiceId).single();
         if (!inv) throw new Error("Invoice not found");
+        if (inv.status === 'paid') throw new Error('billing.alreadyPaid');
         const { data: profile } = await getSupabaseClient().from("profiles").select("name, role").eq("id", userId).single();
 
-        const receiverId =
-          userId === inv.to_party_id ? inv.from_party_id : inv.to_party_id;
-        const receiverName =
-          userId === inv.to_party_id ? inv.from_party_name : inv.to_party_name;
-        const receiverRole =
-          userId === inv.to_party_id ? inv.from_party_role : inv.to_party_role;
+        const adminId =
+          (import.meta as any).env?.VITE_PLATFORM_ADMIN_ID ||
+          (await sbData().from("profiles").select("id").eq("role", "admin").limit(1).single()).data?.id;
+        if (!adminId) throw new Error("Platform admin not configured");
+
+        const receiverId = adminId;
+        const receiverName = "CareNet Platform";
+        const receiverRole = "admin";
 
         const { data: proof, error } = await sbData().from("payment_proofs").insert(withDemoExpiry({
           invoice_id: data.invoiceId,
@@ -264,6 +268,20 @@ export const billingService = {
     if (USE_SUPABASE) {
       return sbWrite(async () => {
         const userId = await currentUserId();
+        const { data: callerProfile } = await getSupabaseClient().from("profiles").select("role").eq("id", userId).single();
+        const callerRole = callerProfile?.role;
+        if (callerRole !== 'admin') {
+          if (callerRole === 'moderator') {
+            const { data: cfg } = await getSupabaseClient()
+              .from("platform_config").select("value")
+              .eq("key", "moderator_can_verify_payments").single();
+            const allowed = JSON.parse(cfg?.value || "false");
+            if (!allowed) throw new Error("UNAUTHORIZED");
+          } else {
+            throw new Error("UNAUTHORIZED");
+          }
+        }
+
         const { data: profile } = await getSupabaseClient().from("profiles").select("name").eq("id", userId).single();
         const { data: proof } = await sbData().from("payment_proofs").select("*").eq("id", proofId).single();
         if (!proof) throw new Error("Proof not found");
@@ -276,6 +294,32 @@ export const billingService = {
 
         // Update invoice to paid
         await sbData().from("invoices").update({ status: "paid", paid_date: new Date().toISOString().split("T")[0], paid_via: proof.method }).eq("id", proof.invoice_id);
+
+        // Escrow payout
+        const { data: inv } = await sbData().from("invoices")
+          .select("from_party_id, subtotal").eq("id", proof.invoice_id).single();
+        if (!inv) throw new Error("Invoice not found for escrow payout");
+        const { error: rpcErr } = await getSupabaseClient().rpc("credit_escrow_earning", {
+          p_invoice_id: proof.invoice_id,
+          p_provider_user_id: inv.from_party_id,
+          p_amount: inv.subtotal,
+        });
+        if (rpcErr) throw rpcErr;
+
+        // Notifications
+        notificationService.triggerNotification({
+          type: "billing_proof_verified", title: "Payment Verified",
+          body: `Your payment for invoice ${proof.invoice_id} has been verified by the Platform.`,
+          receiverId: proof.submitted_by_id,
+          actionUrl: `/billing/invoice/${proof.invoice_id}`,
+        });
+
+        notificationService.triggerNotification({
+          type: "billing_provider_credited", title: "Funds Credited",
+          body: `You have been credited ${inv.subtotal} CarePoints for invoice ${proof.invoice_id}.`,
+          receiverId: inv.from_party_id,
+          actionUrl: `/wallet`,
+        });
 
         notificationService.triggerBillingProofVerified({
           proofId,
@@ -311,6 +355,20 @@ export const billingService = {
     if (USE_SUPABASE) {
       return sbWrite(async () => {
         const userId = await currentUserId();
+        const { data: callerProfile } = await getSupabaseClient().from("profiles").select("role").eq("id", userId).single();
+        const callerRole = callerProfile?.role;
+        if (callerRole !== 'admin') {
+          if (callerRole === 'moderator') {
+            const { data: cfg } = await getSupabaseClient()
+              .from("platform_config").select("value")
+              .eq("key", "moderator_can_verify_payments").single();
+            const allowed = JSON.parse(cfg?.value || "false");
+            if (!allowed) throw new Error("UNAUTHORIZED");
+          } else {
+            throw new Error("UNAUTHORIZED");
+          }
+        }
+
         const { data: profile } = await getSupabaseClient().from("profiles").select("name").eq("id", userId).single();
         const { data: proof } = await sbData().from("payment_proofs").select("*").eq("id", proofId).single();
         if (!proof) throw new Error("Proof not found");
@@ -450,6 +508,39 @@ export const billingService = {
 
       return invId;
     });
+  },
+
+  async getPaymentProofsForAdmin(statusFilter?: string): Promise<PaymentProof[]> {
+    if (USE_SUPABASE) {
+      return sbRead(`proofs:admin:${statusFilter || "all"}`, async () => {
+        let q = sbData().from("payment_proofs")
+          .select("*").order("submitted_at", { ascending: false });
+        if (statusFilter) q = q.eq("status", statusFilter);
+        const { data, error } = await q;
+        if (error) throw error;
+        return (data || []).map(mapProof);
+      });
+    }
+    return demoOfflineDelayAndPick(200, [] as PaymentProof[], (m) => m.MOCK_PAYMENT_PROOFS);
+  },
+
+  async getPlatformPaymentDetails(): Promise<{
+    bkash: string; bankName: string; bankAccount: string;
+  }> {
+    if (USE_SUPABASE) {
+      const { data } = await getSupabaseClient().from("platform_config")
+        .select("key, value")
+        .in("key", ["platform_bkash_number", "platform_bank_name", "platform_bank_account"]);
+      const cfg = Object.fromEntries(
+        (data || []).map((r: any) => [r.key, JSON.parse(r.value)])
+      );
+      return {
+        bkash: cfg.platform_bkash_number || "",
+        bankName: cfg.platform_bank_name || "",
+        bankAccount: cfg.platform_bank_account || "",
+      };
+    }
+    return { bkash: "", bankName: "", bankAccount: "" };
   },
 };
 

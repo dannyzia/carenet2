@@ -198,10 +198,12 @@ export function PublicNavBar() {
 
       {/* ─── Sidebar drawer ─── */}
       <aside
-        className="fixed left-0 top-0 z-[70] flex h-[100dvh] max-h-[100dvh] w-72 min-w-0 flex-col overflow-hidden pt-[env(safe-area-inset-top,0px)] md:hidden"
+        className="fixed left-0 z-[70] flex w-72 min-w-0 flex-col overflow-hidden md:hidden"
         style={{
+          top: "calc(var(--cn-header-height) + env(safe-area-inset-top, 0px))",
           background: cn.bgSidebar,
           boxShadow: menuOpen ? "4px 0 24px rgba(0,0,0,0.18)" : "none",
+          bottom: "calc(var(--cn-bottom-nav-height) + env(safe-area-inset-bottom, 0px))",
           transform: menuOpen ? "translateX(0)" : "translateX(-100%)",
           transition: "transform 300ms ease-in-out",
         }}

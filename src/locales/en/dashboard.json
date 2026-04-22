@@ -278,7 +278,28 @@
     "secondaryNavAria": "More admin areas",
     "optionalInsightsTitle": "Platform charts & balances (optional)",
     "optionalInsightsHint": "Trends are for context only. For operational decisions, use the work queue above.",
-    "optionalInsightsReportsLink": "Open full reports"
+    "optionalInsightsReportsLink": "Open full reports",
+    "cpRateExpiry": {
+      "title": "Expiring Rates",
+      "viewAll": "View All",
+      "noExpiring": "No rates expiring soon",
+      "expiresToday": "Today",
+      "expiresTomorrow": "Tomorrow",
+      "daysLeft": "{{count}} days left",
+      "moreExpiring": "{{count}} more expiring"
+    },
+    "cpCommissionReports": {
+      "title": "Commission Reports",
+      "viewAll": "View All",
+      "totalCredited": "Total Credited",
+      "totalPending": "Pending",
+      "totalReversed": "Reversed",
+      "totalCommissions": "Total",
+      "monthlyTrend": "Monthly Trend",
+      "topPartners": "Top Channel Partners",
+      "credited": "Credited",
+      "pending": "Pending"
+    }
   },
   "patient": {
     "title": "My Health Dashboard",

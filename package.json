@@ -40,7 +40,7 @@
     "@capacitor/android": "^8.3.0",
     "@capacitor/app": "^8.1.0",
     "@capacitor/camera": "^8.0.2",
-    "@capacitor/core": "^8.3.0",
+    "@capacitor/core": "^8.3.1",
     "@capacitor/filesystem": "^8.1.2",
     "@capacitor/geolocation": "^8.2.0",
     "@capacitor/haptics": "^8.0.2",
@@ -121,7 +121,7 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.1",
-    "@capacitor/cli": "^8.3.0",
+    "@capacitor/cli": "^8.3.1",
     "@tailwindcss/vite": "4.1.12",
     "@vitejs/plugin-react": "4.7.0",
     "fake-indexeddb": "^6.2.5",

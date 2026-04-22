@@ -120,8 +120,8 @@ serve(async (req: Request) => {
       );
     }
 
-    // Validate type prefix (only billing types for now, extensible later)
-    const ALLOWED_PREFIXES = ["billing_", "system_", "shift_", "message_"];
+    // Validate type prefix (billing, CP, and other app notification prefixes)
+    const ALLOWED_PREFIXES = ["billing_", "system_", "shift_", "message_", "cp_"];
     const hasValidPrefix = ALLOWED_PREFIXES.some((p) =>
       payload.type.startsWith(p)
     );

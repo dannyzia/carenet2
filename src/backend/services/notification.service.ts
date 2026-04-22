@@ -10,12 +10,11 @@ import { demoOfflineDelayAndPick } from "./demoOfflineMock";
 const delay = (ms = 200) => new Promise((r) => setTimeout(r, ms));
 
 /**
- * Push a billing notification via Supabase Edge Function (when connected)
- * or emit locally for mock mode. The Edge Function inserts a row into
- * the `notifications` table, which the Realtime subscription picks up
- * and surfaces as a Sonner toast on the receiving party's client.
+ * Trigger a generic notification via Supabase Edge Function (when connected)
+ * or log it in mock mode. The Edge Function inserts a row into the
+ * `notifications` table, which the Realtime subscription picks up.
  */
-async function pushBillingNotification(payload: {
+async function triggerNotification(payload: {
   type: string;
   title: string;
   body: string;
@@ -39,24 +38,34 @@ async function pushBillingNotification(payload: {
       if (error) {
         console.error("[notification.service] Edge Function error:", error);
       }
-      // Realtime subscription in useBillingNotifications will pick up the INSERT
+      return;
     } catch (e) {
       console.error("[notification.service] Failed to invoke push-notification:", e);
+      return;
     }
-    return;
   }
 
   if (!useInAppMockDataset()) return;
 
-  // Mock mode: emit locally so the hook fires a toast
-  emitBillingNotification({
-    id: `bn-${Date.now()}`,
-    type: payload.type as "billing_proof_submitted" | "billing_proof_verified" | "billing_proof_rejected",
+  await delay(50);
+  console.log(`[notification.service] Notification (mock) → ${payload.receiverId}:`, {
+    type: payload.type,
     title: payload.title,
     body: payload.body,
     actionUrl: payload.actionUrl,
-    createdAt: new Date().toISOString(),
+    metadata: payload.metadata,
   });
+}
+
+async function pushBillingNotification(payload: {
+  type: string;
+  title: string;
+  body: string;
+  receiverId: string;
+  actionUrl?: string;
+  metadata?: Record<string, unknown>;
+}): Promise<void> {
+  await triggerNotification(payload);
 }
 
 export const notificationService = {
@@ -221,5 +230,16 @@ export const notificationService = {
         reason: data.reason,
       },
     });
+  },
+
+  async triggerNotification(payload: {
+    type: string;
+    title: string;
+    body: string;
+    receiverId: string;
+    actionUrl?: string;
+    metadata?: Record<string, unknown>;
+  }): Promise<void> {
+    return triggerNotification(payload);
   },
 };

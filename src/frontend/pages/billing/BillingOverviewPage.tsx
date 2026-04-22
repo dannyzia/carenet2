@@ -27,8 +27,19 @@ const statusConfig: Record<string, { label: string; color: string; bg: string; i
   overdue: { label: "Overdue", color: "#EF4444", bg: "rgba(239,68,68,0.1)", icon: AlertTriangle },
 };
 
+// Dynamic status config that uses translations
+const useStatusConfig = (t: (key: string) => string) => ({
+  unpaid: { label: t("billing.unpaid") || "Unpaid", color: "#EF4444", bg: "rgba(239,68,68,0.1)", icon: Clock },
+  proof_submitted: { label: t("billing.pendingAdminVerification") || "Proof Submitted", color: "#E8A838", bg: "rgba(232,168,56,0.1)", icon: Upload },
+  verified: { label: t("billing.verified") || "Verified", color: "#5FB865", bg: "rgba(95,184,101,0.1)", icon: CheckCircle2 },
+  paid: { label: t("billing.paid") || "Paid", color: "#2E7D32", bg: "rgba(46,125,50,0.1)", icon: CheckCircle2 },
+  partial: { label: t("billing.partial") || "Partial", color: "#E8A838", bg: "rgba(232,168,56,0.1)", icon: Clock },
+  disputed: { label: t("billing.disputed") || "Disputed", color: "#EF4444", bg: "rgba(239,68,68,0.1)", icon: AlertTriangle },
+  overdue: { label: t("billing.overdue") || "Overdue", color: "#EF4444", bg: "rgba(239,68,68,0.1)", icon: AlertTriangle },
+});
+
 const proofStatusConfig: Record<string, { label: string; color: string; bg: string }> = {
-  pending: { label: "Pending Review", color: "#E8A838", bg: "rgba(232,168,56,0.1)" },
+  pending: { label: "Pending Platform Verification", color: "#E8A838", bg: "rgba(232,168,56,0.1)" },
   verified: { label: "Verified", color: "#5FB865", bg: "rgba(95,184,101,0.1)" },
   rejected: { label: "Rejected", color: "#EF4444", bg: "rgba(239,68,68,0.1)" },
   expired: { label: "Expired", color: "#9E9E9E", bg: "rgba(158,158,158,0.1)" },
@@ -56,6 +67,8 @@ export default function BillingOverviewPage() {
 
   const filteredInvoices = filter === "all" ? invoices : invoices.filter((i) => i.status === filter);
   const filteredProofs = filter === "all" ? recentProofs : recentProofs.filter((p) => p.status === filter);
+
+  const dynamicStatusConfig = useStatusConfig(t);
 
   const statCards = [
     { label: "Outstanding", value: formatBDT(stats.totalOutstanding), icon: Banknote, color: "#EF4444", bg: "rgba(239,68,68,0.1)" },
@@ -137,7 +150,7 @@ export default function BillingOverviewPage() {
               <div className="space-y-3">
                 {filteredProofs.length === 0 && <p className="text-center py-8 text-sm" style={{ color: cn.textSecondary }}>No payment proofs found</p>}
                 {filteredProofs.map((proof) => (
-                  <ProofCard key={proof.id} proof={proof} onView={() => navigate(`/billing/verify/${proof.id}`)} />
+                  <ProofCard key={proof.id} proof={proof} user={user} onView={() => navigate(`/billing/verify/${proof.id}`)} t={t} />
                 ))}
               </div>
             )}
@@ -209,9 +222,34 @@ function InvoiceCard({ invoice, onView, onPay }: { invoice: BillingInvoice; onVi
   );
 }
 
-function ProofCard({ proof, onView }: { proof: PaymentProof; onView: () => void }) {
+function ProofCard({ proof, user, onView, t }: { proof: PaymentProof; user: any; onView: () => void; t: (key: string) => string }) {
+  const isAdminOrMod = user?.activeRole === 'admin' || user?.activeRole === 'moderator';
   const st = proofStatusConfig[proof.status] || proofStatusConfig.pending;
   const methodLabels: Record<string, string> = { bkash: "bKash", nagad: "Nagad", rocket: "Rocket", bank_transfer: "Bank Transfer", cash: "Cash" };
+
+  // For non-admin/moderator, show read-only badge instead of hiding
+  if (!isAdminOrMod) {
+    return (
+      <div className="flex items-center gap-4 p-4 rounded-xl border transition-all" style={{ borderColor: cn.border }}>
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: st.bg }}>
+          <CreditCard className="w-5 h-5" style={{ color: st.color }} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="text-sm truncate" style={{ color: cn.text }}>{methodLabels[proof.method] || proof.method} — {proof.referenceNumber}</p>
+            <span className="text-[10px] px-2 py-0.5 rounded-full shrink-0" style={{ background: st.bg, color: st.color }}>{t("billing.platformVerifying") || "Platform Verifying"}</span>
+          </div>
+          <p className="text-xs mt-0.5" style={{ color: cn.textSecondary }}>
+            {proof.submittedBy.name} → {proof.receivedBy.name} &middot; {proof.submittedAt}
+          </p>
+        </div>
+        <div className="text-right shrink-0">
+          <p className="text-sm" style={{ color: cn.text }}>{formatBDT(proof.amount)}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex items-center gap-4 p-4 rounded-xl border transition-all hover:shadow-sm cursor-pointer" style={{ borderColor: cn.border }} onClick={onView}>
       <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: st.bg }}>

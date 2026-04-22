@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router";
+import { createBrowserRouter, Navigate } from "react-router";
 import { createElement } from "react";
 import { RootLayout } from "@/frontend/components/shell/RootLayout";
 
@@ -6,10 +6,12 @@ import { RootLayout } from "@/frontend/components/shell/RootLayout";
 import { PublicLayout } from "@/frontend/components/shell/PublicLayout";
 import { AuthenticatedLayout } from "@/frontend/components/shell/AuthenticatedLayout";
 import { ShopFrontLayout } from "@/frontend/components/shell/ShopFrontLayout";
+import { GatedLayout } from "@/frontend/components/shell/GatedLayout";
 
 // ─── Route Guards ───
 import { ProtectedRoute } from "@/frontend/components/guards/ProtectedRoute";
 import { RequireAdminRoute } from "@/frontend/components/guards/RequireRole";
+import { CpRouteGuard } from "@/frontend/components/guards/CpRouteGuard";
 
 // ═══════════════════════════════════════════════════════════════════════
 // Helper — converts a dynamic import of a default-exported page component
@@ -59,6 +61,17 @@ export const router = createBrowserRouter([
           { path: "auth/verification-result", ...p(() => import("@/frontend/pages/auth/VerificationResultPage")) },
           { path: "auth/mfa-verify", ...p(() => import("@/frontend/pages/auth/MFAVerifyPage")) },
           { path: "auth/mfa-setup", ...p(() => import("@/frontend/pages/auth/MFASetupPage")) },
+
+          // Activation holding pages (gated — wrapped by GatedLayout)
+          {
+            Component: GatedLayout,
+            children: [
+              { path: "auth/complete-profile", ...p(() => import("@/frontend/pages/auth/CompleteProfilePage")) },
+              { path: "auth/pending-approval", ...p(() => import("@/frontend/pages/auth/PendingApprovalPage")) },
+              { path: "auth/account-rejected", ...p(() => import("@/frontend/pages/auth/AccountRejectedPage")) },
+              { path: "auth/suspended", ...p(() => import("@/frontend/pages/auth/SuspendedAccountPage")) },
+            ],
+          },
 
           // Support
           { path: "support/help", ...p(() => import("@/frontend/pages/support/HelpCenterPage")) },
@@ -167,6 +180,8 @@ export const router = createBrowserRouter([
                 children: [
                   { path: "dashboard", ...p(() => import("@/frontend/pages/admin/AdminDashboardPage")) },
                   { path: "users", ...p(() => import("@/frontend/pages/admin/AdminUsersPage")) },
+                  { path: "channel-partners", ...p(() => import("@/frontend/pages/admin/AdminChannelPartnersPage")) },
+                  { path: "channel-partners/:id", ...p(() => import("@/frontend/pages/admin/AdminChannelPartnerDetailPage")) },
                   { path: "verifications", ...p(() => import("@/frontend/pages/admin/AdminVerificationsPage")) },
                   { path: "payments", ...p(() => import("@/frontend/pages/admin/AdminPaymentsPage")) },
                   { path: "reports", ...p(() => import("@/frontend/pages/admin/AdminReportsPage")) },
@@ -187,6 +202,8 @@ export const router = createBrowserRouter([
                   { path: "agency-approvals", ...p(() => import("@/frontend/pages/admin/AdminAgencyApprovalsPage")) },
                   { path: "wallet-management", ...p(() => import("@/frontend/pages/admin/AdminWalletManagementPage")) },
                   { path: "contracts", ...p(() => import("@/frontend/pages/admin/AdminContractsPage")) },
+                  { path: "role-activations", ...p(() => import("@/frontend/pages/admin/AdminRoleActivationPage")) },
+                  { path: "payment-proofs", ...p(() => import("@/frontend/pages/admin/AdminPaymentProofsPage")) },
                 ],
               },
 
@@ -229,6 +246,26 @@ export const router = createBrowserRouter([
               { path: "agency/caregiving-jobs", ...p(() => import("@/frontend/pages/agency/AgencyCaregivingJobsPage")) },
               { path: "agency/incidents", ...p(() => import("@/frontend/pages/agency/AgencyIncidentsPage")) },
               { path: "agency/care-scorecard", ...p(() => import("@/frontend/pages/agency/AgencyCareScorecardPage")) },
+
+              // ─── Channel Partner ───
+              {
+                path: "cp",
+                Component: CpRouteGuard,
+                children: [
+                  { index: true, element: createElement(Navigate, { to: "dashboard", replace: true }) },
+                  { path: "dashboard", ...p(() => import("@/frontend/pages/cp/ChanPDashboardPage")) },
+                  { path: "leads", ...p(() => import("@/frontend/pages/cp/ChanPLeadsPage")) },
+                  { path: "leads/:id", ...p(() => import("@/frontend/pages/cp/ChanPLeadDetailPage")) },
+                  { path: "create-lead", ...p(() => import("@/frontend/pages/cp/ChanPCreateLeadPage")) },
+                  { path: "commissions", ...p(() => import("@/frontend/pages/cp/ChanPCommissionsPage")) },
+                  { path: "rates", ...p(() => import("@/frontend/pages/cp/ChanPRatesPage")) },
+                  { path: "account", ...p(() => import("@/frontend/pages/cp/ChanPAccountPage")) },
+                  { path: "pending-approval", ...p(() => import("@/frontend/pages/cp/ChanPPendingApprovalPage")) },
+                  { path: "suspended", ...p(() => import("@/frontend/pages/cp/ChanPSuspendedPage")) },
+                  { path: "rejected", ...p(() => import("@/frontend/pages/cp/ChanPRejectedPage")) },
+                  { path: "deactivated", ...p(() => import("@/frontend/pages/cp/ChanPDeactivatedPage")) },
+                ],
+              },
 
               // ─── Patient ───
               { path: "patient/dashboard", ...p(() => import("@/frontend/pages/patient/PatientDashboardPage")) },
@@ -274,6 +311,8 @@ export const router = createBrowserRouter([
               { path: "moderator/queue-detail/:id", ...p(() => import("@/frontend/pages/moderator/ModeratorQueueDetailPage")) },
               { path: "moderator/sanctions", ...p(() => import("@/frontend/pages/moderator/ModeratorSanctionsPage")) },
               { path: "moderator/escalations", ...p(() => import("@/frontend/pages/moderator/ModeratorEscalationsPage")) },
+              { path: "moderator/activations", ...p(() => import("@/frontend/pages/moderator/ModeratorActivationsPage")) },
+              { path: "moderator/payment-proofs", ...p(() => import("@/frontend/pages/admin/AdminPaymentProofsPage")) },
 
               // ─── Shop Merchant ───
               { path: "shop/dashboard", ...p(() => import("@/frontend/pages/shop/ShopDashboardPage")) },

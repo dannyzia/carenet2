@@ -1,5 +1,5 @@
 /** Supported platform roles */
-export type Role = "caregiver" | "guardian" | "patient" | "agency" | "admin" | "moderator" | "shop";
+export type Role = "caregiver" | "guardian" | "patient" | "agency" | "admin" | "moderator" | "shop" | "channel_partner";
 
 /** Base user record shared across all roles */
 export interface User {

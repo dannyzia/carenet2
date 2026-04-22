@@ -2,7 +2,6 @@
 -- Own requests still visible via owner_id = auth.uid() in cc_select_marketplace.
 
 DROP POLICY IF EXISTS "cc_select_marketplace" ON public.care_contracts;
-
 CREATE POLICY "cc_select_marketplace" ON public.care_contracts
   AS PERMISSIVE FOR SELECT TO public
   USING (

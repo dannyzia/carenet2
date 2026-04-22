@@ -14,7 +14,9 @@ import type {
 import type { OperationalDashboardData } from "@/backend/models/operationalDashboard.model";
 import { mapAdminDashboardRaw } from "./adminOperationalMapper";
 import { loadMockBarrel } from "@/backend/api/mock/loadMockBarrel";
-import { USE_SUPABASE, sbRead, sb, sbData, dataCacheScope, useInAppMockDataset } from "./_sb";
+import { USE_SUPABASE, sbRead, sb, sbData, sbWrite, dataCacheScope, useInAppMockDataset } from "./_sb";
+import { channelPartnerNotifications } from "./channelPartnerNotifications";
+import { activationService } from "./activation.service";
 import {
   EMPTY_ADMIN_DASHBOARD,
   EMPTY_ADMIN_PAYMENTS,
@@ -378,15 +380,26 @@ export const adminService = {
     return useInAppMockDataset() ? (await loadMockBarrel()).MOCK_SYSTEM_PERFORMANCE : [];
   },
 
-  async getAuditLogs(): Promise<AuditLogsData> {
+  async getAuditLogs(actionFilter?: string): Promise<AuditLogsData> {
     if (USE_SUPABASE) {
       try {
-        return await sbRead("admin:audit-logs", async () => {
-          const { data, error } = await sb()
+        return await sbRead(`admin:audit-logs-${actionFilter || 'all'}`, async () => {
+          let query = sb()
             .from("audit_logs")
             .select("id, created_at, action, user_id, ip_address, severity")
             .order("created_at", { ascending: false })
             .limit(50);
+          
+          if (actionFilter) {
+            if (actionFilter === 'CP_*') {
+              query = query.like('action', 'CP_%');
+            } else {
+              query = query.eq('action', actionFilter);
+            }
+          }
+          
+          const { data, error } = await query;
+          
           if (error) {
             return useInAppMockDataset()
               ? (await loadMockBarrel()).MOCK_AUDIT_LOGS
@@ -419,11 +432,25 @@ export const adminService = {
       } catch (error) {
         console.warn("[Admin Service] Supabase audit logs call failed, falling back to mock data:", error);
         await delay();
-        return useInAppMockDataset() ? (await loadMockBarrel()).MOCK_AUDIT_LOGS : EMPTY_AUDIT_LOGS;
+        const mockData = useInAppMockDataset() ? (await loadMockBarrel()).MOCK_AUDIT_LOGS : EMPTY_AUDIT_LOGS;
+        if (actionFilter && actionFilter === 'CP_*') {
+          return {
+            ...mockData,
+            logs: mockData.logs.filter(log => log.action.startsWith('CP_')),
+          };
+        }
+        return mockData;
       }
     }
     await delay();
-    return useInAppMockDataset() ? (await loadMockBarrel()).MOCK_AUDIT_LOGS : EMPTY_AUDIT_LOGS;
+    const mockData = useInAppMockDataset() ? (await loadMockBarrel()).MOCK_AUDIT_LOGS : EMPTY_AUDIT_LOGS;
+    if (actionFilter && actionFilter === 'CP_*') {
+      return {
+        ...mockData,
+        logs: mockData.logs.filter(log => log.action.startsWith('CP_')),
+      };
+    }
+    return mockData;
   },
 
   async getRecentSecurityAlerts(limit = 5): Promise<SecurityAlertItem[]> {
@@ -681,5 +708,90 @@ export const adminService = {
     }
     await delay();
     return useInAppMockDataset() ? (await loadMockBarrel()).MOCK_ADMIN_SETTINGS : EMPTY_ADMIN_SETTINGS;
+  },
+
+  /**
+   * Admin: Create a Channel Partner record manually
+   * Allows admins to create CP records bypassing the user application flow
+   */
+  async adminCreateChanP(input: {
+    userId: string;
+    businessName?: string;
+    phone?: string;
+    nidNumber?: string;
+    bankAccount?: { bank: string; accountNumber: string; accountName: string; routingNumber: string };
+    notes?: string;
+    status?: 'pending_approval' | 'active';
+  }): Promise<{ success: boolean; error?: string; cpId?: string }> {
+    if (USE_SUPABASE) {
+      try {
+        const adminId = await sbData().rpc('get_current_user_id');
+
+        const { data, error } = await sbData()
+          .from('channel_partners')
+          .insert({
+            user_id: input.userId,
+            status: input.status || 'pending_approval',
+            business_name: input.businessName || null,
+            phone: input.phone || null,
+            nid_number: input.nidNumber || null,
+            bank_account: (input.bankAccount || {}) as any,
+            notes: input.notes || null,
+            approved_by: input.status === 'active' ? adminId : null,
+            approved_at: input.status === 'active' ? new Date().toISOString() : null,
+          })
+          .select('id')
+          .single();
+
+        if (error) throw error;
+        if (!data) return { success: false, error: 'Failed to create Channel Partner record' };
+
+        // Notify admins if status is pending_approval
+        if (input.status === 'pending_approval' || !input.status) {
+          try {
+            const { data: adminIds } = await sbData()
+              .from("profiles")
+              .select("id")
+              .in("role", ["admin", "moderator"]);
+
+            if (adminIds && adminIds.length > 0) {
+              const cpName = input.businessName || 'Channel Partner';
+              for (const admin of adminIds) {
+                await channelPartnerNotifications.notifyAdminCpApplicationPending(
+                  admin.id,
+                  cpName,
+                );
+              }
+            }
+          } catch (notifyError) {
+            console.error('[Admin Service] Failed to notify admins of CP creation:', notifyError);
+            // Don't fail creation if notification fails
+          }
+        }
+
+        return { success: true, cpId: data.id };
+      } catch (error) {
+        console.error('[Admin Service] Failed to create Channel Partner:', error);
+        return { success: false, error: error instanceof Error ? error.message : 'Failed to create Channel Partner' };
+      }
+    }
+
+    // Mock mode
+    await delay();
+    return { success: true, cpId: `mock-cp-${Date.now()}` };
+  },
+
+  // ─── Role Activation Delegation Methods ───
+
+  async getPendingActivations(allowedRoles?: string[]) {
+    return activationService.getPendingActivations(allowedRoles as any);
+  },
+
+  async approveActivation(profileId: string, reviewerName: string, note?: string) {
+    return activationService.approveActivation(profileId, reviewerName, note);
+  },
+
+  async rejectActivation(profileId: string, reviewerName: string, note: string) {
+    return activationService.rejectActivation(profileId, reviewerName, note);
   },
 };

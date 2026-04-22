@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { Link, useParams } from "react-router";
+import { useState, useMemo, useEffect } from "react";
+import { Link, useParams, useSearchParams } from "react-router";
 import { useTransitionNavigate } from "@/frontend/hooks/useTransitionNavigate";
 import { Heart, ArrowLeft, Eye, EyeOff, User, Mail, Lock, Phone, CheckCircle, Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -8,6 +8,7 @@ import { cn } from "@/frontend/theme/tokens";
 import { useAuth } from "@/frontend/auth/AuthContext";
 import { USE_SUPABASE, supabase } from "@/backend/services/supabase";
 import { getAuthEmailRedirectTo } from "@/frontend/auth/authEmailRedirect";
+import { getMyChanPProfile, type ChanPProfile } from "@/backend/services/channelPartnerService";
 import type { Role } from "@/frontend/auth/types";
 
 const roleConfig: Record<string, { label: string; color: string; gradient: string }> = {
@@ -16,6 +17,7 @@ const roleConfig: Record<string, { label: string; color: string; gradient: strin
   patient: { label: "Patient", color: "#8B7AE8", gradient: "linear-gradient(135deg, #B8A7FF, #8B7AE8)" },
   agency: { label: "Agency Owner", color: "#5B9FFF", gradient: "linear-gradient(135deg, #8EC5FC, #5B9FFF)" },
   shop: { label: "Shop Owner", color: "#E64A19", gradient: "linear-gradient(135deg, #FFAB91, #E64A19)" },
+  channel_partner: { label: "Channel Partner", color: "#FFA726", gradient: "linear-gradient(135deg, #FFB74D, #FFA726)" },
 };
 
 export default function RegisterPage() {
@@ -33,9 +35,36 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [resending, setResending] = useState(false);
   const [resendStatus, setResendStatus] = useState<"idle" | "sent" | "rate-limited">("idle");
+  const [searchParams] = useSearchParams();
+  const isReapplying = searchParams.get("reapply") === "true";
+  const [cpProfile, setCpProfile] = useState<ChanPProfile | null>(null);
+  const [loadingProfile, setLoadingProfile] = useState(false);
 
   const resolvedRole: Role = (role as Role) || "guardian";
   const config = roleConfig[resolvedRole] || roleConfig.guardian;
+
+  useEffect(() => {
+    async function loadExistingProfile() {
+      if (isReapplying && resolvedRole === "channel_partner") {
+        setLoadingProfile(true);
+        try {
+          const profile = await getMyChanPProfile();
+          if (profile && profile.status === "rejected") {
+            setCpProfile(profile);
+            setFormData({
+              name: profile.business_name || "",
+              phone: profile.phone || "",
+            });
+          }
+        } catch (err) {
+          console.error("Failed to load existing CP profile for reapplication:", err);
+        } finally {
+          setLoadingProfile(false);
+        }
+      }
+    }
+    loadExistingProfile();
+  }, [isReapplying, resolvedRole]);
 
   const password = formData.password || "";
   const confirmPwd = formData.confirmPassword || "";
@@ -67,6 +96,9 @@ export default function RegisterPage() {
       password: formData.password || "",
       phone: formData.phone,
       role: resolvedRole,
+      roleData: {
+        referralCode: formData.referralCode,
+      },
     });
     setLoading(false);
     if (result.success) {
@@ -113,9 +145,27 @@ export default function RegisterPage() {
         <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ background: config.gradient, boxShadow: `0px 4px 18px ${config.color}50` }}>
           <Heart className="w-7 h-7 text-white" />
         </div>
-        <h1 className="text-2xl mb-1" style={{ color: cn.text }}>Register as {config.label}</h1>
-        <p className="text-sm" style={{ color: cn.textSecondary }}>Create your CareNet account</p>
+        <h1 className="text-2xl mb-1" style={{ color: cn.text }}>
+          {isReapplying ? `Reapply as ${config.label}` : `Register as ${config.label}`}
+        </h1>
+        <p className="text-sm" style={{ color: cn.textSecondary }}>
+          {isReapplying ? "Update your application details" : "Create your CareNet account"}
+        </p>
       </div>
+
+      {isReapplying && cpProfile && (
+        <div className="w-full max-w-md mb-4 rounded-lg p-4" style={{ backgroundColor: "rgba(239, 68, 68, 0.08)", border: "1px solid rgba(239, 68, 68, 0.2)" }}>
+          <p className="text-sm font-medium mb-2" style={{ color: cn.red }}>Previous application was rejected</p>
+          {cpProfile.rejectionReason && (
+            <p className="text-xs mb-2" style={{ color: cn.textSecondary }}>
+              <span className="font-medium">Reason:</span> {cpProfile.rejectionReason}
+            </p>
+          )}
+          <p className="text-xs" style={{ color: cn.textSecondary }}>
+            Please update your information and submit a new application.
+          </p>
+        </div>
+      )}
 
       <div className="w-full max-w-md finance-card p-8">
         {step === "form" && (
@@ -140,6 +190,10 @@ export default function RegisterPage() {
                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: cn.textSecondary }} />
                 <input type="tel" placeholder="+880 1XXXXXXXXX" value={formData.phone || ""} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full pl-10 pr-4 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput, fontSize: "16px" }} />
               </div>
+            </div>
+            <div>
+              <label className="block text-sm mb-1" style={{ color: cn.text }}>{t("auth:register.referralCode", "Referral Code (optional)")}</label>
+              <input type="text" placeholder={t("auth:register.referralCodePlaceholder", "Enter referral code")} value={formData.referralCode || ""} onChange={(e) => setFormData({ ...formData, referralCode: e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput, fontSize: "16px" }} />
             </div>
             {(role === "agency" || role === "shop") && (
               <div>

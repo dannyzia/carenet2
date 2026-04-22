@@ -12,7 +12,7 @@ export function PublicLayout() {
   return (
     <div className="flex flex-col min-h-screen">
       <PublicNavBar />
-      <main className="flex-1 pb-[calc(3.5rem+env(safe-area-inset-bottom,0px))]">
+      <main className="flex-1 cn-bottom-spacer">
         <Suspense fallback={<div className="p-6 max-w-5xl mx-auto"><PageSkeleton /></div>}>
           <Outlet />
         </Suspense>

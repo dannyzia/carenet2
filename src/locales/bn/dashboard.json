@@ -278,7 +278,28 @@
     "secondaryNavAria": "আরও অ্যাডমিন এলাকা",
     "optionalInsightsTitle": "প্ল্যাটফর্ম চার্ট ও ব্যালেন্স (ঐচ্ছিক)",
     "optionalInsightsHint": "ট্রেন্ড শুধু প্রসঙ্গের জন্য। কাজের সিদ্ধান্তের জন্য উপরের সারি ব্যবহার করুন।",
-    "optionalInsightsReportsLink": "সম্পূর্ণ রিপোর্ট খুলুন"
+    "optionalInsightsReportsLink": "সম্পূর্ণ রিপোর্ট খুলুন",
+    "cpRateExpiry": {
+      "title": "Expiring Rates",
+      "viewAll": "View All",
+      "noExpiring": "No rates expiring soon",
+      "expiresToday": "Today",
+      "expiresTomorrow": "Tomorrow",
+      "daysLeft": "{{count}} days left",
+      "moreExpiring": "{{count}} more expiring"
+    },
+    "cpCommissionReports": {
+      "title": "Commission Reports",
+      "viewAll": "View All",
+      "totalCredited": "Total Credited",
+      "totalPending": "Pending",
+      "totalReversed": "Reversed",
+      "totalCommissions": "Total",
+      "monthlyTrend": "Monthly Trend",
+      "topPartners": "Top Channel Partners",
+      "credited": "Credited",
+      "pending": "Pending"
+    }
   },
   "patient": {
     "title": "আমার স্বাস্থ্য ড্যাশবোর্ড",

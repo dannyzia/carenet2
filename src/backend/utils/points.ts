@@ -78,6 +78,7 @@ export type PointTransactionType =
   | "earning"         // Caregiver/Agency earns
   | "platform_fee"    // 2.5% deduction
   | "commission"      // 25% deduction
+  | "cp_commission"   // Channel Partner commission
   | "admin_credit"    // Admin gifts points
   | "admin_debit"     // Admin withholds points
   | "bonus"           // Registration bonus, promo

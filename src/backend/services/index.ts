@@ -10,6 +10,7 @@ export { guardianService } from "./guardian.service";
 export { agencyService } from "./agency.service";
 export { patientService } from "./patient.service";
 export { notificationService } from "./notification.service";
+export { channelPartnerNotifications } from "./channelPartnerNotifications";
 export { shopService } from "./shop.service";
 export { searchService } from "./search.service";
 export type { GlobalSearchResults } from "./search.service";
@@ -21,6 +22,8 @@ export type {
   CaregivingAssignmentRow,
   CaregivingJobListRow,
 } from "./caregivingJob.service";
+export { caregiverContactsService } from "./caregiverContacts.service";
+export type { CaregiverContact } from "./caregiverContacts.service";
 export { communityService } from "./community.service";
 export { messageService } from "./message.service";
 export { adminService } from "./admin.service";

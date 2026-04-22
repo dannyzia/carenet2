@@ -698,6 +698,30 @@ export function subscribeToAllMonetization(
   };
 }
 
+/**
+ * Admin/moderator payment proofs realtime subscription
+ * Triggers on INSERT/UPDATE to payment_proofs table
+ */
+export function subscribeToAdminPaymentProofs(onChange: () => void): () => void {
+  if (!USE_SUPABASE) return () => {};
+  const sb = getSupabaseClient();
+  const schema = getRealtimeDataSchema();
+  const channelName = `admin:payment-proofs:${schema}`;
+  const channel = sb.channel(channelName)
+    .on("postgres_changes", { event: "INSERT", schema, table: "payment_proofs" },
+      () => { recordMessageReceived(channelName); onChange(); })
+    .on("postgres_changes", { event: "UPDATE", schema, table: "payment_proofs" },
+      () => { recordMessageReceived(channelName); onChange(); })
+    .subscribe();
+  trackChannelConnected();
+  _registerChannel(channelName, CHANNEL_STALE_PRESETS.admin);
+  return () => {
+    sb.removeChannel(channel);
+    trackChannelDisconnected();
+    _unregisterChannel(channelName);
+  };
+}
+
 // ─── Simulation helpers (dev/demo only) ───
 
 export function simulateWalletUpdate(walletData: Record<string, unknown>) {

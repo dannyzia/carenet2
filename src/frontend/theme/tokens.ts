@@ -11,7 +11,7 @@
  */
 
 /* ─── Role Types ─── */
-export type Role = "caregiver" | "guardian" | "admin" | "moderator" | "patient" | "agency" | "shop";
+export type Role = "caregiver" | "guardian" | "admin" | "moderator" | "patient" | "agency" | "shop" | "channel_partner";
 
 /* ─── Role Color Map (uses CSS variables for dark mode support) ─── */
 export const roleConfig: Record<Role, {
@@ -61,6 +61,12 @@ export const roleConfig: Record<Role, {
     cssVar: "cn-orange",
     gradient: "var(--cn-gradient-shop)",
     lightBg: "var(--cn-orange-bg)",
+  },
+  channel_partner: {
+    label: "Channel Partner",
+    cssVar: "cn-channel-partner",
+    gradient: "var(--cn-gradient-channel-partner)",
+    lightBg: "var(--cn-channel-partner-bg)",
   },
 };
 

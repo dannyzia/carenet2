@@ -13,11 +13,11 @@ export const MOCK_AGENCY_CONVERSATIONS: ConversationItem[] = [
 ];
 
 export const MOCK_CAREGIVER_CONVERSATIONS_UNIFIED: ConversationItem[] = [
-  { id: "cg1", name: "Mr. Rahim Ahmed", role: "patient", avatar: "RA", lastMessage: "What time will you arrive tomorrow?", lastTime: "2m ago", unread: 2, online: true },
-  { id: "cg2", name: "Mrs. Fatema Begum", role: "guardian", avatar: "FB", lastMessage: "Thank you for the update \u{1F64F}", lastTime: "1h ago", unread: 0, online: false },
-  { id: "cg3", name: "CareNet Support", role: "admin", avatar: "CN", lastMessage: "Your verification is complete!", lastTime: "3h ago", unread: 1, online: true },
-  { id: "cg4", name: "Rahman Family", role: "guardian", avatar: "RF", lastMessage: "Can you cover next Sunday?", lastTime: "Yesterday", unread: 0, online: false },
-  { id: "cg5", name: "Dr. Nasrin Akter", role: "doctor", avatar: "NA", lastMessage: "Please send the care log.", lastTime: "2d ago", unread: 0, online: false },
+  { id: "cg1", name: "Mr. Rahim Ahmed", role: "patient", avatar: "RA", lastMessage: "What time will you arrive tomorrow?", lastTime: "2m ago", unread: 2, online: true, participantId: "patient1", jobId: "job1" },
+  { id: "cg2", name: "Mrs. Fatema Begum", role: "guardian", avatar: "FB", lastMessage: "Thank you for the update \u{1F64F}", lastTime: "1h ago", unread: 0, online: false, participantId: "guardian1", jobId: "job1" },
+  { id: "cg3", name: "CareNet Support", role: "admin", avatar: "CN", lastMessage: "Your verification is complete!", lastTime: "3h ago", unread: 1, online: true, participantId: "agency2" },
+  { id: "cg4", name: "Rahman Family", role: "guardian", avatar: "RF", lastMessage: "Can you cover next Sunday?", lastTime: "Yesterday", unread: 0, online: false, participantId: "guardian3", jobId: "job2" },
+  { id: "cg5", name: "Dr. Nasrin Akter", role: "doctor", avatar: "NA", lastMessage: "Please send the care log.", lastTime: "2d ago", unread: 0, online: false, participantId: "doctor1", jobId: "job3" },
 ];
 
 export const MOCK_GUARDIAN_CONVERSATIONS_UNIFIED: ConversationItem[] = [

@@ -82,7 +82,16 @@
   --cn-orange: #E64A19;
   --cn-orange-light: #FFAB91;
   --cn-orange-bg: rgba(255, 138, 101, 0.125);
+  --cn-channel-partner: #6D28D9;
+  --cn-channel-partner-light: #C4B5FD;
+  --cn-channel-partner-bg: rgba(109, 40, 217, 0.12);
   --cn-red: #EF4444;
+
+  /* ─── Layout Dimensions ─── */
+  --cn-header-height: 3.5rem;           /* 56px - desktop header */
+  --cn-mobile-header-height: 3.5rem;    /* 56px - MobileHeader height */
+  --cn-bottom-nav-height: 3.5rem;       /* 56px - BottomNav minHeight */
+  --cn-sticky-submit-height: 5rem;      /* 80px - StickySubmit spacer */
 
   /* ─── CareNet Semantic Tokens ─── */
   --cn-text: #535353;
@@ -119,6 +128,7 @@
   --cn-gradient-patient: radial-gradient(143.86% 887.35% at -10.97% -22.81%, #81D4FA 0%, #0288D1 100%);
   --cn-gradient-agency: radial-gradient(143.86% 887.35% at -10.97% -22.81%, #80CBC4 0%, #00897B 100%);
   --cn-gradient-shop: radial-gradient(143.86% 887.35% at -10.97% -22.81%, #FFAB91 0%, #E64A19 100%);
+  --cn-gradient-channel-partner: radial-gradient(143.86% 887.35% at -10.97% -22.81%, #A78BFA 0%, #22C55E 100%);
   --cn-gradient-dark-hero: radial-gradient(143.86% 887.35% at -10.97% -22.81%, #1E293B 0%, #0F172A 100%);
 
   /* ─── Typography ─── */
@@ -184,6 +194,9 @@
   --cn-orange: #FF6E40;
   --cn-orange-light: #FFB899;
   --cn-orange-bg: rgba(255, 138, 101, 0.15);
+  --cn-channel-partner: #8B5CF6;
+  --cn-channel-partner-light: #DDD6FE;
+  --cn-channel-partner-bg: rgba(139, 92, 246, 0.16);
   --cn-red: #F87171;
 
   /* ─── CareNet Semantic Dark ─── */
@@ -212,6 +225,7 @@
   --cn-shadow-pricing-featured: 0 8px 32px rgba(38, 166, 154, 0.22);
 
   /* ─── Gradients remain same in dark (they're already vibrant) ─── */
+  --cn-gradient-channel-partner: radial-gradient(143.86% 887.35% at -10.97% -22.81%, #A78BFA 0%, #22C55E 100%);
   --cn-gradient-dark-hero: radial-gradient(143.86% 887.35% at -10.97% -22.81%, #0F172A 0%, #020617 100%);
 }
 
@@ -424,7 +438,28 @@
 
   /* Bottom-nav spacer: prevents content from hiding behind fixed BottomNav */
   .cn-bottom-spacer {
-    padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(var(--cn-bottom-nav-height) + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Enhanced spacer that accounts for StickySubmit on mobile */
+  .cn-bottom-spacer-form {
+    padding-bottom: calc(var(--cn-bottom-nav-height) + var(--cn-sticky-submit-height) + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Mobile header offset utility */
+  .cn-mobile-header-offset {
+    top: var(--cn-mobile-header-height);
+  }
+
+  /* Safe bottom padding - combines bottom nav height + safe area */
+  .cn-bottom-safe {
+    padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  @media (min-width: 768px) {
+    .cn-bottom-safe {
+      padding-bottom: 1.5rem;
+    }
   }
 
   /* Capacitor status bar spacer */

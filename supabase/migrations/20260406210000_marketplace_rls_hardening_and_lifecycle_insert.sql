@@ -60,6 +60,7 @@ DROP POLICY IF EXISTS "cc_insert_own" ON public.care_contracts;
 DROP POLICY IF EXISTS "cc_update_own" ON public.care_contracts;
 DROP POLICY IF EXISTS "cc_delete_own" ON public.care_contracts;
 
+DROP POLICY IF EXISTS "cc_select_marketplace" ON public.care_contracts;
 CREATE POLICY "cc_select_marketplace" ON public.care_contracts
   AS PERMISSIVE FOR SELECT TO public
   USING (
@@ -70,6 +71,7 @@ CREATE POLICY "cc_select_marketplace" ON public.care_contracts
     OR (type = 'offer' AND status = 'published')
   );
 
+DROP POLICY IF EXISTS "cc_insert_own" ON public.care_contracts;
 CREATE POLICY "cc_insert_own" ON public.care_contracts
   AS PERMISSIVE FOR INSERT TO public
   WITH CHECK (
@@ -83,6 +85,7 @@ CREATE POLICY "cc_insert_own" ON public.care_contracts
     )
   );
 
+DROP POLICY IF EXISTS "cc_update_own" ON public.care_contracts;
 CREATE POLICY "cc_update_own" ON public.care_contracts
   AS PERMISSIVE FOR UPDATE TO public
   USING (
@@ -96,6 +99,7 @@ CREATE POLICY "cc_update_own" ON public.care_contracts
     OR agency_id = (SELECT auth.uid())
   );
 
+DROP POLICY IF EXISTS "cc_delete_own" ON public.care_contracts;
 CREATE POLICY "cc_delete_own" ON public.care_contracts
   AS PERMISSIVE FOR DELETE TO public
   USING (

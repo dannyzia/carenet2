@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router";
 import { useTransitionNavigate } from "@/frontend/hooks/useTransitionNavigate";
 import { Heart, Shield } from "lucide-react";
@@ -8,6 +8,7 @@ import { isDemoUser } from "@/frontend/auth/mockAuth";
 import { USE_SUPABASE } from "@/backend/services/supabase";
 import { useTranslation } from "react-i18next";
 import { useDocumentTitle } from "@/frontend/hooks";
+import { isMfaRequired } from "@/frontend/auth/mfaConfig";
 
 export default function MFAVerifyPage() {
   const { t: tDocTitle } = useTranslation("common");
@@ -18,6 +19,10 @@ export default function MFAVerifyPage() {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!isMfaRequired()) navigate("/", { replace: true });
+  }, [navigate]);
 
   const isDemo = !USE_SUPABASE || (user != null && isDemoUser(user));
 

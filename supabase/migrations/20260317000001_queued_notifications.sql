@@ -21,6 +21,7 @@ CREATE INDEX IF NOT EXISTS idx_queued_pending
 ALTER TABLE queued_notifications ENABLE ROW LEVEL SECURITY;
 
 -- Service role (Edge Functions / cron) can read and update
+DROP POLICY IF EXISTS "Service role manages queued notifications" ON queued_notifications;
 CREATE POLICY "Service role manages queued notifications"
   ON queued_notifications FOR ALL
   USING (TRUE)

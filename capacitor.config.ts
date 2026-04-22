@@ -80,7 +80,7 @@ const config: CapacitorConfig = {
     allowMixedContent: true,
     // Use WebView hardware acceleration
     // true: Chrome remote debugging (chrome://inspect) + visible console; set false for hardened store builds if desired
-    webContentsDebuggingEnabled: true,
+    webContentsDebuggingEnabled: false,
     // Minimum SDK 24 — see android/variables.gradle (Cordova bridge requires API 24+)
   },
 

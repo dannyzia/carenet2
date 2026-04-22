@@ -30,6 +30,7 @@ import { RealtimeStatusIndicator } from "@/frontend/components/shared/RealtimeSt
 import { RetryOverlay } from "@/frontend/components/shared/RetryOverlay";
 import { ConnectivityDebugPanel } from "@/frontend/components/shared/ConnectivityDebugPanel";
 import { usePendingProofCount } from "@/frontend/hooks/usePendingProofCount";
+import { usePendingActivationCount } from "@/frontend/hooks/usePendingActivationCount";
 import { useTransitionNavigate } from "@/frontend/hooks/useTransitionNavigate";
 import { useUnreadCounts } from "@/frontend/hooks/useUnreadCounts";
 import { UnreadCountsContext } from "@/frontend/hooks/UnreadCountsContext";
@@ -256,6 +257,24 @@ function getRoleNavSections(t: TFunction): Record<Role, NavSection[]> {
         ],
       },
     ],
+    channel_partner: [
+      {
+        sectionKey: "main",
+        links: [
+          { i18nKey: "dashboard", path: "/cp/dashboard", icon: LayoutDashboard },
+          { i18nKey: "leads", path: "/cp/leads", icon: Users },
+          { i18nKey: "commissions", path: "/cp/commissions", icon: DollarSign },
+          { i18nKey: "rates", path: "/cp/rates", icon: BarChart2 },
+          { i18nKey: "account", path: "/cp/account", icon: User },
+        ],
+      },
+      {
+        sectionKey: "tools",
+        links: [
+          { i18nKey: "createLead", path: "/cp/create-lead", icon: Plus },
+        ],
+      },
+    ],
     admin: [
       {
         sectionKey: "main",
@@ -263,7 +282,9 @@ function getRoleNavSections(t: TFunction): Record<Role, NavSection[]> {
           { i18nKey: "dashboard", path: "/admin/dashboard", icon: LayoutDashboard },
           { i18nKey: "users", path: "/admin/users", icon: Users },
           { i18nKey: "verifications", path: "/admin/verifications", icon: CheckCircle },
+          { i18nKey: "channelPartners", path: "/admin/channel-partners", icon: Users },
           { i18nKey: "agencyApprovals", path: "/admin/agency-approvals", icon: Building2 },
+          { i18nKey: "roleActivations", path: "/admin/role-activations", icon: Shield },
           { i18nKey: "placements", path: "/admin/placement-monitoring", icon: Shield },
           { i18nKey: "reports", path: "/admin/reports", icon: BarChart2 },
         ],
@@ -306,6 +327,7 @@ function getRoleNavSections(t: TFunction): Record<Role, NavSection[]> {
           { i18nKey: "reviews", path: "/moderator/reviews", icon: Star },
           { i18nKey: "reports", path: "/moderator/reports", icon: Flag },
           { i18nKey: "content", path: "/moderator/content", icon: FileText },
+          { i18nKey: "roleActivations", path: "/moderator/activations", icon: Shield },
           { i18nKey: "billing", path: "/billing", icon: Receipt },
         ],
       },
@@ -332,6 +354,7 @@ const roleUserNames: Record<Role, string> = {
   patient: "Patient User",
   agency: "Agency Manager",
   shop: "Shop Owner",
+  channel_partner: "Channel Partner",
 };
 
 /**
@@ -354,6 +377,7 @@ export function AuthenticatedLayout() {
   const { t } = useTranslation("common");
   const { user, logout } = useAuth();
   const pendingProofCount = usePendingProofCount();
+  const pendingActivationCount = usePendingActivationCount();
 
   // A11y: move focus to main content on route change
   useFocusOnNavigate();
@@ -417,6 +441,79 @@ export function AuthenticatedLayout() {
       {/* Notification permission prompt — shows once on first login */}
       <NotificationPermissionPrompt />
 
+      {/* Header — full-width, sticky, safe-area-top */}
+      <header
+        className="sticky top-0 z-30 border-b cn-safe-top"
+        style={{ background: cn.bgHeader, boxShadow: cn.shadowHeader, borderColor: cn.borderLight }}
+      >
+        <div className="max-w-6xl mx-auto w-full h-14 px-4 sm:px-6 flex items-center gap-3">
+          {/* Search — hidden on small screens */}
+          <div role="search" className="flex-1 max-w-xs hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: cn.bgInput }}>
+            <Search className="w-4 h-4 shrink-0" style={{ color: cn.textSecondary }} aria-hidden="true" />
+            <input placeholder={t("sidebar.searchPlaceholder")} className="bg-transparent outline-none text-sm flex-1" style={{ color: cn.text }} aria-label={t("sidebar.searchPlaceholder")} />
+          </div>
+
+          <div className="flex items-center gap-2 ml-auto shrink-0">
+            <Link to="/notifications" className="relative p-2 rounded-lg hover:opacity-80 transition-all no-underline" aria-label={t("a11y.notifications", "Notifications")}>
+              <Bell className="w-5 h-5" style={{ color: cn.textSecondary }} aria-hidden="true" />
+              {unreadCounts.notifications > 0 && (
+                unreadCounts.notifications <= 9 ? (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] rounded-full flex items-center justify-center text-[10px] text-white px-1"
+                    style={{ background: cn.pink }}
+                    aria-label={t("a11y.unreadNotifications", { count: unreadCounts.notifications })}
+                  >
+                    {unreadCounts.notifications}
+                  </span>
+                ) : (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] rounded-full flex items-center justify-center text-[10px] text-white px-1"
+                    style={{ background: cn.pink }}
+                    aria-label={t("a11y.unreadNotifications", { count: unreadCounts.notifications })}
+                  >
+                    9+
+                  </span>
+                )
+              )}
+            </Link>
+            {/* Messages: BottomNav already provides tab + badge on mobile (md:hidden). */}
+            <Link
+              to={`/${currentRole}/messages`}
+              className="relative hidden p-2 rounded-lg hover:opacity-80 transition-all no-underline md:flex"
+              aria-label={t("a11y.messages", "Messages")}
+            >
+              <MessageSquare className="w-5 h-5" style={{ color: cn.textSecondary }} aria-hidden="true" />
+              {unreadCounts.messages > 0 && (
+                unreadCounts.messages <= 9 ? (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] rounded-full flex items-center justify-center text-[10px] text-white px-1"
+                    style={{ background: cn.green }}
+                    aria-label={t("a11y.unreadMessages", { count: unreadCounts.messages })}
+                  >
+                    {unreadCounts.messages}
+                  </span>
+                ) : (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] rounded-full flex items-center justify-center text-[10px] text-white px-1"
+                    style={{ background: cn.green }}
+                    aria-label={t("a11y.unreadMessages", { count: unreadCounts.messages })}
+                  >
+                    9+
+                  </span>
+                )
+              )}
+            </Link>
+            <div className="flex items-center gap-2 pl-2 cursor-pointer">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm"
+                style={{ background: rCfg.gradient }}>
+                {userName.charAt(0).toUpperCase()}
+              </div>
+              <div className="hidden md:block">
+                <p className="text-sm leading-tight" style={{ color: cn.text }}>{userName}</p>
+                <p className="text-xs leading-tight" style={{ color: cn.textSecondary }}>{t(`roles.${currentRole}`, rCfg.label)}</p>
+              </div>
+              <ChevronDown className="w-4 h-4 hidden md:block" style={{ color: cn.textSecondary }} />
+            </div>
+          </div>
+        </div>
+      </header>
+
       <div className="flex flex-1 min-h-0">
       {/* Backdrop overlay when sidebar is open on mobile */}
       {sidebarOpen && (
@@ -426,10 +523,12 @@ export function AuthenticatedLayout() {
       {/* ─── Sidebar (hidden on mobile, always visible on desktop) ─── */}
       <aside
         aria-label={t("a11y.sidebarNav", "Sidebar navigation")}
-        className={`fixed top-0 left-0 z-50 flex h-[100dvh] max-h-[100dvh] w-64 min-h-0 flex-col overflow-hidden ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:static md:h-auto md:max-h-screen md:min-h-0 md:self-stretch md:translate-x-0`}
+        className={`fixed left-0 z-50 flex w-64 min-h-0 flex-col overflow-hidden ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:static md:h-auto md:max-h-none md:min-h-0 md:self-stretch md:translate-x-0`}
         style={{
+          top: "calc(var(--cn-header-height) + env(safe-area-inset-top, 0px))",
           background: cn.bgSidebar,
           boxShadow: cn.shadowSidebar,
+          bottom: "calc(var(--cn-bottom-nav-height) + env(safe-area-inset-bottom, 0px))",
           transition: "translate 300ms ease-in-out, transform 300ms ease-in-out",
         }}
       >
@@ -508,7 +607,15 @@ export function AuthenticatedLayout() {
                           {pendingProofCount}
                         </span>
                       )}
-                      {isActive && !(link.i18nKey === "billing" && pendingProofCount > 0) && <ChevronRight className="w-4 h-4 ml-auto" />}
+                      {link.i18nKey === "roleActivations" && pendingActivationCount > 0 && (
+                        <span
+                          className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] text-white shrink-0"
+                          style={{ background: cn.pink }}
+                        >
+                          {pendingActivationCount > 9 ? "9+" : pendingActivationCount}
+                        </span>
+                      )}
+                      {isActive && !(link.i18nKey === "billing" && pendingProofCount > 0) && !(link.i18nKey === "roleActivations" && pendingActivationCount > 0) && <ChevronRight className="w-4 h-4 ml-auto" />}
                     </Link>
                   );
                 })}
@@ -677,81 +784,8 @@ export function AuthenticatedLayout() {
 
       {/* ─── Main content area ─── */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Header — same max-width / height rhythm as PublicNavBar; BottomNav opens sidebar on mobile */}
-        <header
-          className="sticky top-0 z-30 border-b"
-          style={{ background: cn.bgHeader, boxShadow: cn.shadowHeader, borderColor: cn.borderLight }}
-        >
-          <div className="max-w-6xl mx-auto w-full h-14 px-4 sm:px-6 flex items-center gap-3">
-          {/* Search — hidden on small screens */}
-          <div role="search" className="flex-1 max-w-xs hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: cn.bgInput }}>
-            <Search className="w-4 h-4 shrink-0" style={{ color: cn.textSecondary }} aria-hidden="true" />
-            <input placeholder={t("sidebar.searchPlaceholder")} className="bg-transparent outline-none text-sm flex-1" style={{ color: cn.text }} aria-label={t("sidebar.searchPlaceholder")} />
-          </div>
-
-          <div className="flex items-center gap-2 ml-auto shrink-0">
-            <Link to="/notifications" className="relative p-2 rounded-lg hover:opacity-80 transition-all no-underline" aria-label={t("a11y.notifications", "Notifications")}>
-              <Bell className="w-5 h-5" style={{ color: cn.textSecondary }} aria-hidden="true" />
-              {unreadCounts.notifications > 0 && (
-                unreadCounts.notifications <= 9 ? (
-                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] rounded-full flex items-center justify-center text-[10px] text-white px-1"
-                    style={{ background: cn.pink }}
-                    aria-label={t("a11y.unreadNotifications", { count: unreadCounts.notifications })}
-                  >
-                    {unreadCounts.notifications}
-                  </span>
-                ) : (
-                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] rounded-full flex items-center justify-center text-[10px] text-white px-1"
-                    style={{ background: cn.pink }}
-                    aria-label={t("a11y.unreadNotifications", { count: unreadCounts.notifications })}
-                  >
-                    9+
-                  </span>
-                )
-              )}
-            </Link>
-            {/* Messages: BottomNav already provides tab + badge on mobile (md:hidden). */}
-            <Link
-              to={`/${currentRole}/messages`}
-              className="relative hidden p-2 rounded-lg hover:opacity-80 transition-all no-underline md:flex"
-              aria-label={t("a11y.messages", "Messages")}
-            >
-              <MessageSquare className="w-5 h-5" style={{ color: cn.textSecondary }} aria-hidden="true" />
-              {unreadCounts.messages > 0 && (
-                unreadCounts.messages <= 9 ? (
-                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] rounded-full flex items-center justify-center text-[10px] text-white px-1"
-                    style={{ background: cn.green }}
-                    aria-label={t("a11y.unreadMessages", { count: unreadCounts.messages })}
-                  >
-                    {unreadCounts.messages}
-                  </span>
-                ) : (
-                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] rounded-full flex items-center justify-center text-[10px] text-white px-1"
-                    style={{ background: cn.green }}
-                    aria-label={t("a11y.unreadMessages", { count: unreadCounts.messages })}
-                  >
-                    9+
-                  </span>
-                )
-              )}
-            </Link>
-            <div className="flex items-center gap-2 pl-2 cursor-pointer">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm"
-                style={{ background: rCfg.gradient }}>
-                {userName.charAt(0).toUpperCase()}
-              </div>
-              <div className="hidden md:block">
-                <p className="text-sm leading-tight" style={{ color: cn.text }}>{userName}</p>
-                <p className="text-xs leading-tight" style={{ color: cn.textSecondary }}>{t(`roles.${currentRole}`, rCfg.label)}</p>
-              </div>
-              <ChevronDown className="w-4 h-4 hidden md:block" style={{ color: cn.textSecondary }} />
-            </div>
-          </div>
-          </div>
-        </header>
-
         {/* Page content rendered by router */}
-        <main className="flex-1 p-4 md:p-6 pb-24 overflow-y-auto" id="main-content" tabIndex={-1} aria-label={t("a11y.mainContent", "Main content")}>
+        <main className="flex-1 p-4 md:p-6 cn-bottom-safe overflow-y-auto" id="main-content" tabIndex={-1} aria-label={t("a11y.mainContent", "Main content")}>
           <UnreadCountsContext.Provider value={unreadCounts}>
             <Suspense fallback={<PageSkeleton variant="dashboard" />}>
               <Outlet />

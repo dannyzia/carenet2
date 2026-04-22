@@ -28,22 +28,26 @@ CREATE INDEX IF NOT EXISTS idx_notifications_unread ON notifications (receiver_i
 -- RLS: users can only read their own notifications
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users read own notifications" ON notifications;
 CREATE POLICY "Users read own notifications"
   ON notifications FOR SELECT
   USING (auth.uid() = receiver_id);
 
+DROP POLICY IF EXISTS "Users update own notifications" ON notifications;
 CREATE POLICY "Users update own notifications"
   ON notifications FOR UPDATE
   USING (auth.uid() = receiver_id)
   WITH CHECK (auth.uid() = receiver_id);
 
--- Service role (Edge Function) can insert
+DROP POLICY IF EXISTS "Service role inserts notifications" ON notifications;
 CREATE POLICY "Service role inserts notifications"
   ON notifications FOR INSERT
   WITH CHECK (TRUE);  -- Edge Function uses service_role key
 
--- Enable Realtime on notifications table
-ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- ── 2. user_preferences table ──
 CREATE TABLE IF NOT EXISTS user_preferences (
@@ -58,14 +62,17 @@ CREATE TABLE IF NOT EXISTS user_preferences (
 
 ALTER TABLE user_preferences ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users read own preferences" ON user_preferences;
 CREATE POLICY "Users read own preferences"
   ON user_preferences FOR SELECT
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users upsert own preferences" ON user_preferences;
 CREATE POLICY "Users upsert own preferences"
   ON user_preferences FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users update own preferences" ON user_preferences;
 CREATE POLICY "Users update own preferences"
   ON user_preferences FOR UPDATE
   USING (auth.uid() = user_id)
@@ -87,12 +94,13 @@ CREATE INDEX IF NOT EXISTS idx_device_tokens_user ON device_tokens (user_id) WHE
 
 ALTER TABLE device_tokens ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users manage own device tokens" ON device_tokens;
 CREATE POLICY "Users manage own device tokens"
   ON device_tokens FOR ALL
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
--- Service role can read for push delivery
+DROP POLICY IF EXISTS "Service role reads device tokens" ON device_tokens;
 CREATE POLICY "Service role reads device tokens"
   ON device_tokens FOR SELECT
   USING (TRUE);

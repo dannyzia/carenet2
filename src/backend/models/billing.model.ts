@@ -1,7 +1,7 @@
 /**
  * Billing Domain Models
  * Types for the manual payment verification flow:
- *   Guardian submits payment proof → Agency/Caregiver verifies in-app
+ *   Admin verifies via platform escrow — funds credited to provider wallet on approval
  */
 
 // ─── Payment Methods ───
@@ -39,6 +39,7 @@ export interface BillingInvoice {
   issuedDate: string;
   dueDate: string;
   placementId?: string;
+  careContractId?: string;
   lineItems: BillingLineItem[];
   paymentProofs: PaymentProof[];
 }

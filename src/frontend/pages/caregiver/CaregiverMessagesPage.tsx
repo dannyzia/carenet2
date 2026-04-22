@@ -13,7 +13,7 @@ export default function CaregiverMessagesPage() {
   const [searchParams] = useSearchParams();
   const toUserId = searchParams.get("to");
 
-  const { data: conversations, loading } = useAsyncData(
+  const { data: conversations, loading, refetch } = useAsyncData(
     () => messageService.getConversations("caregiver")
   );
 
@@ -25,6 +25,7 @@ export default function CaregiverMessagesPage() {
       accentColor={cn.pink}
       accentGradient="radial-gradient(143.86% 887.35% at -10.97% -22.81%, #FEB4C5 0%, #DB869A 100%)"
       initialConvoId={toUserId || (conversations[0]?.id ?? null)}
+      onConversationsUpdate={refetch}
     />
   );
 }

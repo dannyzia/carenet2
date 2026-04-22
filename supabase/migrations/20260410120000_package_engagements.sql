@@ -82,10 +82,12 @@ CREATE TABLE IF NOT EXISTS public.package_caregiver_engagement_events (
 CREATE INDEX IF NOT EXISTS idx_pcgee_engagement ON public.package_caregiver_engagement_events(engagement_id, created_at);
 
 -- ─── updated_at triggers ───
+DROP TRIGGER IF EXISTS package_client_engagements_updated_at ON public.package_client_engagements;
 CREATE TRIGGER package_client_engagements_updated_at
   BEFORE UPDATE ON public.package_client_engagements
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
 
+DROP TRIGGER IF EXISTS package_caregiver_engagements_updated_at ON public.package_caregiver_engagements;
 CREATE TRIGGER package_caregiver_engagements_updated_at
   BEFORE UPDATE ON public.package_caregiver_engagements
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
@@ -113,6 +115,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS trg_pce_enforce_pkg ON public.package_client_engagements;
 CREATE TRIGGER trg_pce_enforce_pkg
   BEFORE INSERT OR UPDATE OF package_contract_id, agency_user_id ON public.package_client_engagements
   FOR EACH ROW EXECUTE FUNCTION public.enforce_package_client_engagement_pkg();
@@ -139,6 +142,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS trg_pcge_enforce_pkg ON public.package_caregiver_engagements;
 CREATE TRIGGER trg_pcge_enforce_pkg
   BEFORE INSERT OR UPDATE OF package_contract_id, agency_user_id ON public.package_caregiver_engagements
   FOR EACH ROW EXECUTE FUNCTION public.enforce_package_caregiver_engagement_pkg();
@@ -179,6 +183,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS trg_pce_status ON public.package_client_engagements;
 CREATE TRIGGER trg_pce_status
   BEFORE UPDATE OF status ON public.package_client_engagements
   FOR EACH ROW EXECUTE FUNCTION public.enforce_pce_status_transition();
@@ -206,6 +211,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS trg_pcge_status ON public.package_caregiver_engagements;
 CREATE TRIGGER trg_pcge_status
   BEFORE UPDATE OF status ON public.package_caregiver_engagements
   FOR EACH ROW EXECUTE FUNCTION public.enforce_pcge_status_transition();
@@ -216,6 +222,7 @@ ALTER TABLE public.package_client_engagement_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.package_caregiver_engagements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.package_caregiver_engagement_events ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS pce_select ON public.package_client_engagements;
 CREATE POLICY pce_select ON public.package_client_engagements
   FOR SELECT TO public USING (
     is_admin()
@@ -224,6 +231,7 @@ CREATE POLICY pce_select ON public.package_client_engagements
     OR agency_user_id = (SELECT auth.uid())
   );
 
+DROP POLICY IF EXISTS pce_insert ON public.package_client_engagements;
 CREATE POLICY pce_insert ON public.package_client_engagements
   FOR INSERT TO public WITH CHECK (
     is_admin()
@@ -233,6 +241,7 @@ CREATE POLICY pce_insert ON public.package_client_engagements
     )
   );
 
+DROP POLICY IF EXISTS pce_update ON public.package_client_engagements;
 CREATE POLICY pce_update ON public.package_client_engagements
   FOR UPDATE TO public USING (
     is_admin()
@@ -245,6 +254,7 @@ CREATE POLICY pce_update ON public.package_client_engagements
     OR agency_user_id = (SELECT auth.uid())
   );
 
+DROP POLICY IF EXISTS pcee_select ON public.package_client_engagement_events;
 CREATE POLICY pcee_select ON public.package_client_engagement_events
   FOR SELECT TO public USING (
     EXISTS (
@@ -259,6 +269,7 @@ CREATE POLICY pcee_select ON public.package_client_engagement_events
     OR is_mod_or_admin()
   );
 
+DROP POLICY IF EXISTS pcee_insert ON public.package_client_engagement_events;
 CREATE POLICY pcee_insert ON public.package_client_engagement_events
   FOR INSERT TO public WITH CHECK (
     EXISTS (
@@ -273,6 +284,7 @@ CREATE POLICY pcee_insert ON public.package_client_engagement_events
     AND author_user_id = (SELECT auth.uid())
   );
 
+DROP POLICY IF EXISTS pcge_select ON public.package_caregiver_engagements;
 CREATE POLICY pcge_select ON public.package_caregiver_engagements
   FOR SELECT TO public USING (
     is_admin()
@@ -280,6 +292,7 @@ CREATE POLICY pcge_select ON public.package_caregiver_engagements
     OR agency_user_id = (SELECT auth.uid())
   );
 
+DROP POLICY IF EXISTS pcge_insert ON public.package_caregiver_engagements;
 CREATE POLICY pcge_insert ON public.package_caregiver_engagements
   FOR INSERT TO public WITH CHECK (
     is_admin()
@@ -289,6 +302,7 @@ CREATE POLICY pcge_insert ON public.package_caregiver_engagements
     )
   );
 
+DROP POLICY IF EXISTS pcge_update ON public.package_caregiver_engagements;
 CREATE POLICY pcge_update ON public.package_caregiver_engagements
   FOR UPDATE TO public USING (
     is_admin()
@@ -301,6 +315,7 @@ CREATE POLICY pcge_update ON public.package_caregiver_engagements
     OR agency_user_id = (SELECT auth.uid())
   );
 
+DROP POLICY IF EXISTS pcgee_select ON public.package_caregiver_engagement_events;
 CREATE POLICY pcgee_select ON public.package_caregiver_engagement_events
   FOR SELECT TO public USING (
     EXISTS (
@@ -315,6 +330,7 @@ CREATE POLICY pcgee_select ON public.package_caregiver_engagement_events
     OR is_mod_or_admin()
   );
 
+DROP POLICY IF EXISTS pcgee_insert ON public.package_caregiver_engagement_events;
 CREATE POLICY pcgee_insert ON public.package_caregiver_engagement_events
   FOR INSERT TO public WITH CHECK (
     EXISTS (

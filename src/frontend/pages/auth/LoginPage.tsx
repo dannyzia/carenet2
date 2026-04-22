@@ -17,6 +17,7 @@ type Step = "credentials" | "role-select";
 const roleLabels: Record<Role, string> = {
   caregiver: "Caregiver", guardian: "Guardian", patient: "Patient",
   agency: "Agency", admin: "Admin", moderator: "Moderator", shop: "Shop Owner",
+  channel_partner: "Channel Partner",
 };
 
 const roleGradients: Record<Role, string> = {
@@ -24,6 +25,7 @@ const roleGradients: Record<Role, string> = {
   patient: "linear-gradient(135deg, #81D4FA, #0288D1)", agency: "linear-gradient(135deg, #80CBC4, #00897B)",
   admin: "linear-gradient(135deg, #B8A7FF, #8B7AE8)", moderator: "linear-gradient(135deg, #FFD180, #FFB74D)",
   shop: "linear-gradient(135deg, #FFAB91, #E64A19)",
+  channel_partner: "var(--cn-gradient-channel-partner)",
 };
 
 export default function LoginPage() {

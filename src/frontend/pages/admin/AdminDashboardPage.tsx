@@ -6,6 +6,7 @@ import { adminService } from "@/backend/services";
 import { PageSkeleton } from "@/frontend/components/shared/PageSkeleton";
 import { ActionBar } from "@/frontend/components/dashboard/ActionBar";
 import { WorkQueue } from "@/frontend/components/dashboard/WorkQueue";
+import { CpRateExpiryWidget } from "@/frontend/components/admin/CpRateExpiryWidget";
 import { formatDashboardDate } from "@/frontend/utils/dashboardFormat";
 import i18n from "@/frontend/i18n";
 
@@ -71,6 +72,8 @@ export default function AdminDashboardPage() {
         columnLabels={queueColumns}
         emptyLabel={t("dashboard:admin.workQueueEmpty")}
       />
+
+      <CpRateExpiryWidget />
     </div>
   );
 }

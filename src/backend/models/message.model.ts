@@ -32,4 +32,8 @@ export interface ConversationItem {
   unread: number;
   online: boolean;
   pinned?: boolean;
+  /** Other participant's user ID (for filtering/creating conversations) */
+  participantId?: string;
+  /** Caregiving job ID if conversation is from a job (for filtering active vs inactive jobs) */
+  jobId?: string;
 }

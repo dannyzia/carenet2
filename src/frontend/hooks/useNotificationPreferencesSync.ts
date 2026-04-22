@@ -8,7 +8,7 @@
  *   4. Syncs changes back to Supabase with debounced writes to avoid hammering the DB
  *
  * Channels: care-safety, shift-reminders, messages, payments, care-updates,
- *           ratings, platform, system, booking, document, billing
+ *           ratings, platform, system, booking, document, billing, commission
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -41,6 +41,7 @@ const ALL_CHANNELS: NotificationChannel[] = [
   "booking",
   "document",
   "billing",
+  "commission",
 ];
 
 const DEFAULT_PREF: ChannelPreference = {

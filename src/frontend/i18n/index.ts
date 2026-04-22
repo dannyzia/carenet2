@@ -29,7 +29,7 @@ const localeModules = import.meta.glob("@/locales/*/*.json", { eager: true }) as
 >;
 
 /** Known namespaces */
-const NAMESPACES = ["common", "auth", "caregiver", "guardian", "features", "pricing", "dashboard", "workItem"] as const;
+const NAMESPACES = ["common", "auth", "caregiver", "guardian", "features", "pricing", "dashboard", "workItem", "cp", "chat"] as const;
 
 /**
  * Parse all discovered locale modules into i18next resources.
