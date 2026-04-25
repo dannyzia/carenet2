@@ -200,7 +200,7 @@ function RequestCard({
         <div className="flex items-start justify-between gap-3 mb-2">
           <h3 className="text-sm" style={{ color: cn.text }}>{req.meta.title}</h3>
           <span className="text-sm shrink-0" style={{ color: cn.green }}>
-            ৳{pricing.budget_min?.toLocaleString()} - ৳{pricing.budget_max?.toLocaleString()}
+            ৳{pricing.budget_min?.toLocaleString()} – ৳{pricing.budget_max?.toLocaleString()}/{pricing.preferred_model === "daily" ? "day" : "mo"}
           </span>
         </div>
 
@@ -319,7 +319,7 @@ function RequestCard({
               <div className="p-2.5 rounded-xl text-xs w-full" style={{ background: "rgba(95,184,101,0.08)" }}>
                 <span style={{ color: cn.textSecondary }}>{t("budgetRangeLabel")}</span>
                 <span className="block" style={{ color: cn.green }}>
-                  ৳{pricing.budget_min?.toLocaleString()} - ৳{pricing.budget_max?.toLocaleString()}
+                  ৳{pricing.budget_min?.toLocaleString()} – ৳{pricing.budget_max?.toLocaleString()}/{pricing.preferred_model === "daily" ? "day" : "mo"}
                 </span>
               </div>
             </div>

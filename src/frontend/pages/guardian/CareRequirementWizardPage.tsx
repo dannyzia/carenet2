@@ -134,7 +134,7 @@ export default function CareRequirementWizardPage() {
     nurseCount: 0,
 
     // Step 5 — budget & posting
-    preferredModel: "monthly" as "monthly" | "daily" | "hourly",
+    preferredModel: "monthly" as "monthly" | "daily",
     budgetMin: "",
     budgetMax: "",
     accommodationProvided: false,
@@ -344,7 +344,7 @@ export default function CareRequirementWizardPage() {
         },
         party: {
           role: "patient",
-          name: user?.name?.trim() || "",
+          name: patientName,
           contact_phone: user?.phone?.trim() || "",
         },
         care_subject: {
@@ -956,7 +956,6 @@ export default function CareRequirementWizardPage() {
                     {[
                       { value: "monthly", label: "Monthly" },
                       { value: "daily", label: "Per day" },
-                      { value: "hourly", label: "Hourly" },
                     ].map(({ value, label }) => (
                       <button key={value} type="button" onClick={() => setFormData({ ...formData, preferredModel: value as typeof formData.preferredModel })} className="flex-1 py-2.5 rounded-xl border text-xs cn-touch-target" style={{ borderColor: formData.preferredModel === value ? cn.pink : cn.border, background: formData.preferredModel === value ? cn.pinkBg : "transparent", color: formData.preferredModel === value ? cn.pink : cn.text }}>{label}</button>
                     ))}
@@ -1152,7 +1151,7 @@ export default function CareRequirementWizardPage() {
                             <button type="button" onClick={() => setCurrentStep(5)} className="text-xs" style={{ color: cn.pink }}>Edit</button>
                           </div>
                           <p className="text-sm" style={{ color: cn.text }}>
-                            ৳{formData.budgetMin || "?"} – ৳{formData.budgetMax || "?"} · {formData.preferredModel}
+                            ৳{formData.budgetMin || "?"} – ৳{formData.budgetMax || "?"}/{formData.preferredModel === "daily" ? "day" : "mo"}
                           </p>
                         </div>
 

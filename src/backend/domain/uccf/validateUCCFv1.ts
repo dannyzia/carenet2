@@ -18,6 +18,7 @@ const HOURS = new Set([8, 12, 24]);
 const SHIFT = new Set(["day", "night", "rotational"]);
 const PATTERN = new Set(["single", "double", "rotational_team"]);
 const PRICING_MODEL = new Set(["monthly", "daily", "hourly"]);
+const REQUEST_PRICING_MODEL = new Set(["monthly", "daily"]);
 const GENDER_PREF = new Set(["male", "female", "none"]);
 const MOBILITY = new Set(["independent", "assisted", "bedridden"]);
 const COGNITIVE = new Set(["normal", "impaired", "unconscious"]);
@@ -129,8 +130,8 @@ export function validateUCCFRequest(data: Partial<CareContract>): string[] {
   if (pr == null || typeof pr !== "object") {
     issues.push("pricing is required");
   } else {
-    if (!pr.preferred_model || !PRICING_MODEL.has(pr.preferred_model)) {
-      issues.push("pricing.preferred_model must be monthly | daily | hourly");
+    if (!pr.preferred_model || !REQUEST_PRICING_MODEL.has(pr.preferred_model)) {
+      issues.push("pricing.preferred_model must be monthly | daily");
     }
     if (pr.budget_min != null && (typeof pr.budget_min !== "number" || pr.budget_min < 0)) {
       issues.push("pricing.budget_min must be a non-negative number when set");

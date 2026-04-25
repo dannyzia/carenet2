@@ -69,6 +69,7 @@ function uccfRequestToRequirementInboxItem(cc: CareContract): RequirementInboxIt
     shiftPreference: cc.schedule?.shift_type || "—",
     budgetMin: pricing.budget_min ?? 0,
     budgetMax: pricing.budget_max ?? 0,
+    preferredModel: pricing.preferred_model || "monthly",
     location: loc,
     specialRequirements: cc.medical?.diagnosis || cc.exclusions?.join("; ") || "—",
     submittedDate: new Date(cc.created_at).toLocaleDateString(),

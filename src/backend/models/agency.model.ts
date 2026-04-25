@@ -132,7 +132,7 @@ export interface RequirementInboxItem {
   id: string; guardianName: string; guardianVerified: boolean; guardianPlacements: number;
   patientName: string; patientAge: number; patientCondition: string;
   careType: string; duration: string; shiftPreference: string;
-  budgetMin: number; budgetMax: number; location: string; specialRequirements: string;
+  budgetMin: number; budgetMax: number; preferredModel?: string; location: string; specialRequirements: string;
   submittedDate: string; submittedAgo: string; responseDeadline: string;
   status: "new" | "under-review" | "proposal-sent" | "accepted" | "declined";
   priority: "urgent" | "normal" | "low";

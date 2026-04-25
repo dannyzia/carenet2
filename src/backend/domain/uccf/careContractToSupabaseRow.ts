@@ -177,10 +177,10 @@ export function careContractToSupabaseRow(
     const bm = preq?.budget_min != null ? Number(preq.budget_min) : null;
     const bx = preq?.budget_max != null ? Number(preq.budget_max) : null;
     const pref =
-      preq?.preferred_model === "daily" || preq?.preferred_model === "hourly"
-        ? preq.preferred_model
-        : preq?.pricing_model === "daily" || preq?.pricing_model === "hourly"
-          ? preq.pricing_model
+      preq?.preferred_model === "daily"
+        ? "daily"
+        : preq?.pricing_model === "daily"
+          ? "daily"
           : "monthly";
     row.budget_min = bm != null && !Number.isNaN(bm) ? bm : null;
     row.budget_max = bx != null && !Number.isNaN(bx) ? bx : null;
