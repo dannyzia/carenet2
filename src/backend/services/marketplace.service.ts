@@ -852,7 +852,12 @@ export const marketplaceService = {
     return bid;
   },
 
-  /** Guardian subscribes to an agency package — creates a locked contract */
+  /**
+   * @deprecated Use `packageEngagementService.createClientInterest()` instead.
+   * This function creates a contract directly, bypassing the engagement negotiation
+   * system and omitting required `contract_party_scope` / `gac_kind` fields,
+   * which breaks caregiving-job derivation via `create_caregiving_job`.
+   */
   async subscribeToPackage(
     packageId: string,
     guardianId: string,

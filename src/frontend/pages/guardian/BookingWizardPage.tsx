@@ -9,6 +9,7 @@ import { useAsyncData, useDocumentTitle, useCareSeekerBasePath } from "@/fronten
 import { guardianService } from "@/backend/services/guardian.service";
 import { patientService } from "@/backend/services/patient.service";
 import { marketplaceService } from "@/backend/services/marketplace.service";
+import { packageEngagementService } from "@/backend/services/packageEngagement.service";
 import { PageSkeleton } from "@/frontend/components/PageSkeleton";
 import { useAriaToast } from "@/frontend/hooks/useAriaToast";
 import type { Patient, PatientProfile, UCCFPricingOffer } from "@/backend/models";
@@ -64,13 +65,11 @@ export default function BookingWizardPage() {
   const { user } = useAuth();
   const base = useCareSeekerBasePath();
   const isPatientCareSeeker = base === "/patient";
-  const subscriptionOwnerId =
-    user?.id ?? (isPatientCareSeeker ? "patient-current" : "guardian-current");
   const [searchParams] = useSearchParams();
   const packageId = searchParams.get("package");
   const [currentStep, setCurrentStep] = useState(1);
   const [completed, setCompleted] = useState(false);
-  const [subscribing, setSubscribing] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [selectedServiceKey, setSelectedServiceKey] = useState<BookingServiceTypeKey | null>(null);
   const [selectedTimeKey, setSelectedTimeKey] = useState<string | null>(null);
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
@@ -140,24 +139,51 @@ export default function BookingWizardPage() {
       ? false
       : !!selectedPatientId;
 
+  // Duplicate engagement guard: redirect if an active negotiation already exists
+  useEffect(() => {
+    if (!packageId) return;
+    let cancelled = false;
+    packageEngagementService.getClientEngagementForPackage(packageId)
+      .then((existing) => {
+        if (cancelled) return;
+        if (
+          existing &&
+          !(existing.status === "declined" ||
+            existing.status === "withdrawn" ||
+            existing.status === "expired")
+        ) {
+          toast.info(t("toastAlreadyNegotiating"));
+          navigate(`${base}/marketplace-hub?tab=negotiations`, { replace: true });
+        }
+      })
+      .catch(() => {
+        // Non-fatal — if the check fails, let the wizard proceed normally
+      });
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [packageId]);
+
   const handleConfirm = async () => {
     if (packageId) {
-      setSubscribing(true);
+      setSubmitting(true);
       try {
-        await marketplaceService.subscribeToPackage(
-          packageId,
-          subscriptionOwnerId,
-          selectedPatientId ?? undefined,
-          selectedPatient
-            ? { name: selectedPatient.name, phone: selectedPatient.phone }
-            : undefined,
-        );
+        const parts: string[] = [];
+        if (selectedServiceKey) parts.push(`Service: ${selectedServiceKey}`);
+        if (selectedTimeKey) parts.push(`Schedule: ${selectedTimeKey}`);
+        if (selectedPatient?.name) parts.push(`Patient: ${selectedPatient.name}`);
+        const message = parts.length > 0 ? parts.join(" | ") : undefined;
+        await packageEngagementService.createClientInterest(packageId, {
+          message,
+          wizard_service_key: selectedServiceKey ?? undefined,
+          wizard_time_key: selectedTimeKey ?? undefined,
+          patient_name: selectedPatient?.name ?? undefined,
+        });
         toast.success(t("toastSubscribed"));
         setCompleted(true);
       } catch {
         toast.error(t("toastSubscribeFailed"));
       } finally {
-        setSubscribing(false);
+        setSubmitting(false);
       }
     } else {
       setCompleted(true);
@@ -193,7 +219,7 @@ export default function BookingWizardPage() {
               : t("completionGenericBody")}
           </p>
           <Button
-            onClick={() => navigate(packageId ? `${base}/marketplace-hub` : `${base}/dashboard`)}
+            onClick={() => navigate(packageId ? `${base}/marketplace-hub?tab=negotiations` : `${base}/dashboard`)}
             className="w-full h-14 rounded-2xl font-bold text-lg"
             style={{ background: "var(--cn-gradient-guardian, radial-gradient(143.86% 887.35% at -10.97% -22.81%, #FEB4C5 0%, #DB869A 100%))" }}
           >
@@ -644,13 +670,13 @@ export default function BookingWizardPage() {
             <Button
               onClick={currentStep === STEP_KEYS.length ? handleConfirm : goNext}
               className="h-14 flex-[2] rounded-2xl font-bold shadow-lg"
-              disabled={subscribing || (currentStep === 3 && !canLeavePatientStep)}
+              disabled={submitting || (currentStep === 3 && !canLeavePatientStep)}
               style={{
                 background:
                   "var(--cn-gradient-guardian, radial-gradient(143.86% 887.35% at -10.97% -22.81%, #FEB4C5 0%, #DB869A 100%))",
               }}
             >
-              {subscribing
+              {submitting
                 ? t("nav.processing")
                 : currentStep === STEP_KEYS.length
                   ? packageId

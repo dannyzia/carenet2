@@ -148,8 +148,8 @@
     "shift": "শিফট",
     "sla": "সেবা স্তর চুক্তি",
     "staffing": "স্টাফিং",
-    "subscribe": "প্যাকেজে সাবস্ক্রাইব করুন",
-    "subscribeThis": "এই প্যাকেজে সাবস্ক্রাইব করুন",
+    "subscribe": "আগ্রহ প্রকাশ করুন",
+    "subscribeThis": "এই প্যাকেজে আগ্রহ প্রকাশ করুন",
     "trialAvailable": "ট্রায়াল পিরিয়ড উপলব্ধ",
     "featuredLabel": "ফিচার্ড প্যাকেজ",
     "categories": {
@@ -475,16 +475,17 @@
     "emergencyContactHint": "এই রোগীর জন্য প্রথমে যোগাযোগ করতে হবে এমন ব্যক্তি দিন; তা আপনার নিজের তথ্য থেকে আলাদা হতে পারে।"
   },
   "bookingWizard": {
-    "titlePackage": "প্যাকেজ সাবস্ক্রিপশন",
+    "titlePackage": "প্যাকেজের জন্য অনুরোধ করুন",
     "titleGeneric": "বুকিং উইজার্ড",
-    "completionSubscribed": "সাবস্ক্রাইব হয়েছে!",
+    "completionSubscribed": "আগ্রহ পাঠানো হয়েছে!",
     "completionBookingRequested": "বুকিং অনুরোধ পাঠানো হয়েছে!",
-    "completionPackageBody": "আপনি সফলভাবে \"{{title}}\"-এ সাবস্ক্রাইব করেছেন। এজেন্সি শীঘ্রই অনবোর্ডিং শুরু করবে।",
+    "completionPackageBody": "\"{{title}}\"-এ আপনার আগ্রহ জমা দেওয়া হয়েছে। এজেন্সি আপনার অনুরোধ পর্যালোচনা করে যোগাযোগ করবে।",
     "completionGenericBody": "আপনার অনুরোধ রেকর্ড করা হয়েছে। পরবর্তী পদক্ষেপের জন্য যোগাযোগ করা হবে।",
-    "backToMarketplace": "মার্কেটপ্লেসে ফিরে যান",
+    "backToMarketplace": "আলোচনা দেখুন",
     "goToDashboard": "ড্যাশবোর্ডে যান",
-    "toastSubscribed": "প্যাকেজে সফলভাবে সাবস্ক্রাইব হয়েছে!",
-    "toastSubscribeFailed": "সাবস্ক্রিপশন ব্যর্থ হয়েছে। আবার চেষ্টা করুন।",
+    "toastSubscribed": "আগ্রহ পাঠানো হয়েছে! এজেন্সিকে জানানো হয়েছে।",
+    "toastSubscribeFailed": "আগ্রহ পাঠাতে ব্যর্থ হয়েছে। আবার চেষ্টা করুন।",
+    "toastAlreadyNegotiating": "এই প্যাকেজের জন্য আপনার একটি চলমান আলোচনা ইতিমধ্যে আছে।",
     "steps": {
       "serviceDetails": "সেবার বিবরণ",
       "schedule": "সময়সূচী",
@@ -546,7 +547,7 @@
     "nav": {
       "back": "পিছনে",
       "next": "পরবর্তী ধাপ",
-      "confirmPackage": "সাবস্ক্রিপশন নিশ্চিত করুন",
+      "confirmPackage": "আগ্রহ পাঠান",
       "confirmBooking": "বুকিং নিশ্চিত করুন",
       "processing": "প্রক্রিয়াকরণ..."
     },

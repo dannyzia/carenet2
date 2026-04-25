@@ -94,36 +94,23 @@ export function setDiscoveredLanguages(codes: string[]) {
  * Get file-based languages (auto-discovered from src/locales/*).
  */
 export function getFileBasedLanguages(): LanguageMeta[] {
-  // Start with auto-discovered languages (have actual translation files)
-  const langs: LanguageMeta[] = discoveredLangCodes.map((code) => {
-    const display = LANGUAGE_DISPLAY_NAMES[code] || { name: code, nativeName: code };
-    return {
-      code,
-      name: display.name,
-      nativeName: display.nativeName,
-      addedAt: "2024-01-01",
-      namespaces: [...ALL_NAMESPACES],
-      source: "file" as const,
-    };
-  });
+  // Only show en + bn in the language switcher — these have committed, reviewed translations.
+  // Admin-uploaded custom languages are handled separately via getCustomLanguages().
+  const uiLanguageCodes = new Set(["en", "bn"]);
 
-  // Also include all languages from LANGUAGE_DISPLAY_NAMES that aren't yet discovered.
-  // These will fall back to English via i18next's fallbackLng until real translations are generated.
-  const discoveredSet = new Set(discoveredLangCodes);
-  for (const [code, display] of Object.entries(LANGUAGE_DISPLAY_NAMES)) {
-    if (!discoveredSet.has(code)) {
-      langs.push({
+  return discoveredLangCodes
+    .filter((code) => uiLanguageCodes.has(code))
+    .map((code) => {
+      const display = LANGUAGE_DISPLAY_NAMES[code] || { name: code, nativeName: code };
+      return {
         code,
         name: display.name,
         nativeName: display.nativeName,
         addedAt: "2024-01-01",
         namespaces: [...ALL_NAMESPACES],
         source: "file" as const,
-      });
-    }
-  }
-
-  return langs;
+      };
+    });
 }
 
 // ─── Admin-uploaded (custom) languages ───────────────────────────

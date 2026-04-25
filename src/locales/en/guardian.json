@@ -148,8 +148,8 @@
     "shift": "Shift",
     "sla": "Service Level Agreement",
     "staffing": "Staffing",
-    "subscribe": "Subscribe to Package",
-    "subscribeThis": "Subscribe to This Package",
+    "subscribe": "Express Interest",
+    "subscribeThis": "Express Interest in This Package",
     "trialAvailable": "Trial period available",
     "featuredLabel": "Featured Package",
     "categories": {
@@ -475,16 +475,17 @@
     "emergencyContactHint": "Use the person to reach first for this patient; they can be different from your own details."
   },
   "bookingWizard": {
-    "titlePackage": "Package Subscription",
+    "titlePackage": "Request a Package",
     "titleGeneric": "Booking Wizard",
-    "completionSubscribed": "Subscribed!",
+    "completionSubscribed": "Interest Sent!",
     "completionBookingRequested": "Booking Requested!",
-    "completionPackageBody": "You've successfully subscribed to \"{{title}}\". The agency will begin onboarding shortly.",
+    "completionPackageBody": "Your interest in \"{{title}}\" has been submitted. The agency will review your request and reach out to discuss.",
     "completionGenericBody": "Your request has been recorded. You will be contacted with next steps.",
-    "backToMarketplace": "Back to Marketplace",
+    "backToMarketplace": "View Negotiations",
     "goToDashboard": "Go to Dashboard",
-    "toastSubscribed": "Successfully subscribed to package!",
-    "toastSubscribeFailed": "Subscription failed. Please try again.",
+    "toastSubscribed": "Interest sent! The agency has been notified.",
+    "toastSubscribeFailed": "Failed to send interest. Please try again.",
+    "toastAlreadyNegotiating": "You already have an ongoing negotiation for this package.",
     "steps": {
       "serviceDetails": "Service Details",
       "schedule": "Schedule",
@@ -546,7 +547,7 @@
     "nav": {
       "back": "Back",
       "next": "Next Step",
-      "confirmPackage": "Confirm Subscription",
+      "confirmPackage": "Send Interest",
       "confirmBooking": "Confirm Booking",
       "processing": "Processing..."
     },
