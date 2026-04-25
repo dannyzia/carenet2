@@ -92,6 +92,14 @@
     "convergenceRequirementsCrossLink": "চাহিদার বোর্ড খুলুন",
     "convergencePackagesHint": "বিড করার মতো পরিবারের চাহিদা খুঁজছেন?",
     "convergenceRequirementsHint": "পরিবর্তে যত্ন প্যাকেজ তৈরি করতে চান?",
+    "summaryCards": {
+      "activeJobs": "সক্রিয় কাজ",
+      "activeJobsHint": "বর্তমানে চলমান কেয়ারগিভিং কাজ",
+      "myPackages": "আমার প্যাকেজ",
+      "guardianRequirements": "অভিভাবকের চাহিদা",
+      "jobsPostedByMe": "আমার পোস্ট করা কাজ",
+      "jobsPostedHint": "কেয়ারগিভারদের জন্য কাজের পোস্টিং (প্যাকেজ বা CJ)"
+    },
     "executive": {
       "criticalAria": "জরুরি সতর্কতা",
       "severityHigh": "জরুরি",

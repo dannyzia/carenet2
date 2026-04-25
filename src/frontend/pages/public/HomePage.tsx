@@ -56,7 +56,7 @@ export default function HomePage() {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center flex-wrap">
-                <Link to="/auth/role-selection" className="no-underline w-full sm:w-auto">
+                <Link to="/auth/demo-access" className="no-underline w-full sm:w-auto">
                   <Button
                     size="lg"
                     className="px-8 h-12 w-full sm:w-auto dark:shadow-[0px_4px_24px_rgba(2,136,209,0.28)]"

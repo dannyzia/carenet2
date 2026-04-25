@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Building2, User, HeartPulse, Wallet, ClipboardCheck, CheckCircle2, ChevronLeft, ChevronRight, Calendar, Clock, Star, MapPin, Phone, Shield, Utensils, Dumbbell, Pill, Move, Scissors, MessageSquare, Search, Package, Megaphone, Globe, ToggleLeft, ToggleRight, Timer, AlertTriangle } from "lucide-react";
+import { Building2, User, HeartPulse, Wallet, ClipboardCheck, CheckCircle2, ChevronLeft, ChevronRight, Calendar, Clock, Star, MapPin, Phone, Shield, Utensils, Dumbbell, Pill, Move, Scissors, MessageSquare, Search, Package, Megaphone, Globe, ToggleLeft, ToggleRight, Timer, AlertTriangle, Plus } from "lucide-react";
 import { useNavigate, useSearchParams, Link, useLocation } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@/frontend/theme/tokens";
@@ -67,6 +67,7 @@ export default function CareRequirementWizardPage() {
   const [selectedAgency, setSelectedAgency] = useState(preselectedAgency || "");
   const [selectedCareTypes, setSelectedCareTypes] = useState<CareCategory[]>([]);
   const [postToMarketplace, setPostToMarketplace] = useState(skipChoice);
+  const [selectedPatientId, setSelectedPatientId] = useState<string>("");
 
   useEffect(() => {
     if (preselectedAgency || skipChoice) {
@@ -131,6 +132,9 @@ export default function CareRequirementWizardPage() {
   });
   const [submitting, setSubmitting] = useState(false);
 
+  const { data: agencies, loading, error } = useAsyncData(() => guardianService.getWizardAgencies());
+  const { data: myPatients } = useAsyncData(() => guardianService.getPatients());
+
   const didPrefillContact = useRef(false);
   useEffect(() => {
     if (!user || didPrefillContact.current) return;
@@ -142,12 +146,29 @@ export default function CareRequirementWizardPage() {
     }));
   }, [user]);
 
+  useEffect(() => {
+    if (!selectedPatientId || !myPatients) return;
+    const p = myPatients.find((pt) => pt.id === selectedPatientId);
+    if (!p) return;
+    setFormData((fd) => ({
+      ...fd,
+      patientName: p.name || "",
+      patientAge: p.age ? String(p.age) : "",
+      gender: (p.gender === "Male" ? "male" : p.gender === "Female" ? "female" : p.gender === "Other" ? "other" : "") as typeof fd.gender,
+      conditions: Array.isArray(p.conditions) ? p.conditions.join(", ") : "",
+    }));
+  }, [selectedPatientId, myPatients]);
+
   const next = () => {
     if (currentStep === 2) {
-      const age = parseInt(formData.patientAge, 10);
-      if (!formData.patientName.trim() || !Number.isFinite(age) || age < 0) {
-        toast.error(t("wizard.validationPatient"));
-        return;
+      if (selectedPatientId) {
+        // valid — patient tagged
+      } else {
+        const age = parseInt(formData.patientAge, 10);
+        if (!formData.patientName.trim() || !Number.isFinite(age) || age < 0) {
+          toast.error(t("wizard.validationPatient"));
+          return;
+        }
       }
       if (!formData.contactName.trim() || !formData.contactPhone.trim()) {
         toast.error(t("wizard.validationContact"));
@@ -159,8 +180,12 @@ export default function CareRequirementWizardPage() {
       return;
     }
     setCurrentStep((s) => Math.min(s + 1, 6));
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
-  const prev = () => setCurrentStep(s => Math.max(s - 1, 1));
+  const prev = () => {
+    setCurrentStep(s => Math.max(s - 1, 1));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   /** True when Back should leave the wizard for the pre-wizard choice screen (not step 1 agency picker). */
   const backTargetsChoiceScreen =
@@ -370,8 +395,6 @@ export default function CareRequirementWizardPage() {
     }
   };
 
-  const { data: agencies, loading, error } = useAsyncData(() => guardianService.getWizardAgencies());
-
   // ─── Pre-Wizard Choice Screen ───
   if (!showWizard) {
     return (
@@ -494,18 +517,62 @@ export default function CareRequirementWizardPage() {
             {currentStep === 2 && (
               <div className="space-y-4">
                 <h2 className="text-xl" style={{ color: cn.text }}>{t("wizard.patientInfo")}</h2>
-                <div><label className="block text-sm mb-1" style={{ color: cn.text }}>{t("wizard.patientName")}</label><input type="text" value={formData.patientName} onChange={e => setFormData({ ...formData, patientName: e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }} placeholder={t("wizard.patientNamePlaceholder")} /></div>
-                <div><label className="block text-sm mb-1" style={{ color: cn.text }}>{t("wizard.age")}</label><input type="number" value={formData.patientAge} onChange={e => setFormData({ ...formData, patientAge: e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }} placeholder={t("wizard.age")} /></div>
-                <div>
-                  <label className="block text-sm mb-1" style={{ color: cn.text }}>{t("wizard.gender")}</label>
-                  <select value={formData.gender} onChange={(e) => setFormData({ ...formData, gender: e.target.value as typeof formData.gender })} className="w-full px-4 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }}>
-                    <option value="">{t("wizard.preferNotSay")}</option>
-                    <option value="male">{t("wizard.genderMale")}</option>
-                    <option value="female">{t("wizard.genderFemale")}</option>
-                    <option value="other">{t("wizard.genderOther")}</option>
-                  </select>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+
+                {myPatients && myPatients.length > 0 ? (
+                  <div>
+                    <label className="block text-sm mb-1" style={{ color: cn.text }}>{t("wizard.selectPatient")}</label>
+                    <p className="text-xs mb-2" style={{ color: cn.textSecondary }}>{t("wizard.selectPatientDesc")}</p>
+                    <div className="space-y-2">
+                      {myPatients.map((p) => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => setSelectedPatientId(p.id)}
+                          className="w-full p-3 rounded-xl border text-left transition-all cn-touch-target"
+                          style={{ borderColor: selectedPatientId === p.id ? cn.pink : cn.border, background: selectedPatientId === p.id ? cn.pinkBg : "transparent" }}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div
+                              className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs shrink-0"
+                              style={{ background: p.color || cn.green }}
+                            >
+                              {p.name?.charAt(0)?.toUpperCase() || "?"}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-medium" style={{ color: cn.text }}>{p.name}</p>
+                              <p className="text-xs" style={{ color: cn.textSecondary }}>
+                                {p.age ? `${t("wizard.age")} ${p.age}` : ""}{p.relation ? ` · ${p.relation}` : ""}{Array.isArray(p.conditions) && p.conditions.length > 0 ? ` · ${p.conditions.join(", ")}` : ""}
+                              </p>
+                            </div>
+                            {selectedPatientId === p.id && <CheckCircle2 className="w-5 h-5 shrink-0" style={{ color: cn.pink }} />}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                    {selectedPatientId && (
+                      <div className="mt-3 p-3 rounded-xl" style={{ background: cn.bgInput, border: `1px solid ${cn.borderLight}` }}>
+                        <p className="text-xs" style={{ color: cn.textSecondary }}>{t("wizard.taggedPatient")}</p>
+                        <p className="text-sm" style={{ color: cn.text }}>{formData.patientName}{formData.patientAge ? `, ${t("wizard.age")} ${formData.patientAge}` : ""}</p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="p-4 rounded-xl text-center" style={{ background: cn.bgInput, border: `1px solid ${cn.border}` }}>
+                    <User className="w-8 h-8 mx-auto mb-2" style={{ color: cn.textSecondary }} />
+                    <p className="text-sm" style={{ color: cn.text }}>{t("wizard.noPatientsCreated")}</p>
+                    <p className="text-xs mt-1" style={{ color: cn.textSecondary }}>{t("wizard.createPatientToTag")}</p>
+                    <Link
+                      to={`${base}/patient-intake`}
+                      className="inline-flex items-center gap-1.5 mt-3 px-4 py-2 rounded-xl text-sm text-white no-underline cn-touch-target"
+                      style={{ background: "var(--cn-gradient-guardian)" }}
+                    >
+                      <Plus className="w-4 h-4" />
+                      {t("wizard.addPatientFirst")}
+                    </Link>
+                  </div>
+                )}
+
+                <div className="pt-4 space-y-3" style={{ borderTop: `1px solid ${cn.borderLight}` }}>
                   <div>
                     <label className="block text-sm mb-1" style={{ color: cn.text }}>{t("wizard.mobility")}</label>
                     <select value={formData.mobility} onChange={(e) => setFormData({ ...formData, mobility: e.target.value as typeof formData.mobility })} className="w-full px-4 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }}>
@@ -514,26 +581,28 @@ export default function CareRequirementWizardPage() {
                       <option value="bedridden">{t("wizard.mobilityBedridden")}</option>
                     </select>
                   </div>
-                  <div>
-                    <label className="block text-sm mb-1" style={{ color: cn.text }}>{t("wizard.cognitive")}</label>
-                    <select value={formData.cognitive} onChange={(e) => setFormData({ ...formData, cognitive: e.target.value as typeof formData.cognitive })} className="w-full px-4 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }}>
-                      <option value="">{t("wizard.preferNotSay")}</option>
-                      <option value="normal">{t("wizard.cognitiveNormal")}</option>
-                      <option value="impaired">{t("wizard.cognitiveImpaired")}</option>
-                      <option value="unconscious">{t("wizard.cognitiveUnconscious")}</option>
-                    </select>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm mb-1" style={{ color: cn.text }}>{t("wizard.cognitive")}</label>
+                      <select value={formData.cognitive} onChange={(e) => setFormData({ ...formData, cognitive: e.target.value as typeof formData.cognitive })} className="w-full px-4 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }}>
+                        <option value="">{t("wizard.preferNotSay")}</option>
+                        <option value="normal">{t("wizard.cognitiveNormal")}</option>
+                        <option value="impaired">{t("wizard.cognitiveImpaired")}</option>
+                        <option value="unconscious">{t("wizard.cognitiveUnconscious")}</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm mb-1" style={{ color: cn.text }}>{t("wizard.riskLevel")}</label>
+                      <select value={formData.riskLevel} onChange={(e) => setFormData({ ...formData, riskLevel: e.target.value as typeof formData.riskLevel })} className="w-full px-4 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }}>
+                        <option value="">{t("wizard.preferNotSay")}</option>
+                        <option value="low">{t("wizard.riskLow")}</option>
+                        <option value="medium">{t("wizard.riskMedium")}</option>
+                        <option value="high">{t("wizard.riskHigh")}</option>
+                      </select>
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-sm mb-1" style={{ color: cn.text }}>{t("wizard.riskLevel")}</label>
-                    <select value={formData.riskLevel} onChange={(e) => setFormData({ ...formData, riskLevel: e.target.value as typeof formData.riskLevel })} className="w-full px-4 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }}>
-                      <option value="">{t("wizard.preferNotSay")}</option>
-                      <option value="low">{t("wizard.riskLow")}</option>
-                      <option value="medium">{t("wizard.riskMedium")}</option>
-                      <option value="high">{t("wizard.riskHigh")}</option>
-                    </select>
-                  </div>
+                  <div><label className="block text-sm mb-1" style={{ color: cn.text }}>{t("wizard.medicalConditions")}</label><textarea value={formData.conditions} onChange={e => setFormData({ ...formData, conditions: e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }} rows={3} placeholder={t("wizard.medicalConditionsPlaceholder")} /></div>
                 </div>
-                <div><label className="block text-sm mb-1" style={{ color: cn.text }}>{t("wizard.medicalConditions")}</label><textarea value={formData.conditions} onChange={e => setFormData({ ...formData, conditions: e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }} rows={3} placeholder={t("wizard.medicalConditionsPlaceholder")} /></div>
                 <p className="text-sm font-medium pt-2" style={{ color: cn.text }}>{t("wizard.contactForAgency")}</p>
                 <p className="text-xs" style={{ color: cn.textSecondary }}>{t("wizard.contactForAgencyDesc")}</p>
                 <div><label className="block text-sm mb-1" style={{ color: cn.text }}>{t("wizard.contactName")}</label><input type="text" value={formData.contactName} onChange={(e) => setFormData({ ...formData, contactName: e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }} autoComplete="name" /></div>

@@ -58,10 +58,6 @@ export function getRoleNavSections(t: TFunction): Record<Role, NavSection[]> {
         links: filterCareSeekerCaregiverNavLinks("guardian", [
           { i18nKey: "findCaregivers", path: "/guardian/search", icon: Users },
           { i18nKey: "compareCaregivers", path: "/guardian/caregiver-comparison", icon: Users },
-          { i18nKey: "newBooking", path: "/guardian/booking", icon: Calendar },
-          { i18nKey: "postRequirement", path: "/guardian/care-requirement-wizard", icon: FileText },
-          { i18nKey: "patientIntake", path: "/guardian/patient-intake", icon: Heart },
-          { i18nKey: "familyHub", path: "/guardian/family-hub", icon: Home },
         ]),
       },
     ],
@@ -170,6 +166,7 @@ export function getRoleNavSections(t: TFunction): Record<Role, NavSection[]> {
           { i18nKey: "clients", path: "/agency/clients", icon: Heart },
           { i18nKey: "messages", path: "/agency/messages", icon: MessageSquare },
           { i18nKey: "reports", path: "/agency/reports", icon: BarChart2 },
+          { i18nKey: "profile", path: "/agency/settings", icon: User },
         ],
       },
       {

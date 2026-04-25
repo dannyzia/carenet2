@@ -92,6 +92,14 @@
     "convergenceRequirementsCrossLink": "Open requirement board",
     "convergencePackagesHint": "Looking for family requirements to bid on?",
     "convergenceRequirementsHint": "Want to create a care package instead?",
+    "summaryCards": {
+      "activeJobs": "Active Jobs",
+      "activeJobsHint": "Caregiving jobs currently in progress",
+      "myPackages": "My Packages",
+      "guardianRequirements": "Guardian Requirements",
+      "jobsPostedByMe": "Jobs Posted by Me",
+      "jobsPostedHint": "Job postings for caregivers (Package or CJ)"
+    },
     "executive": {
       "criticalAria": "Critical alerts",
       "severityHigh": "Urgent",

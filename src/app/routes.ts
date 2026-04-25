@@ -56,6 +56,7 @@ export const router = createBrowserRouter([
           { path: "auth/register", ...p(() => import("@/frontend/pages/auth/RegisterPage")) },
           { path: "auth/register/:role", ...p(() => import("@/frontend/pages/auth/RegisterPage")) },
           { path: "auth/role-selection", ...p(() => import("@/frontend/pages/auth/RoleSelectionPage")) },
+          { path: "auth/demo-access", ...p(() => import("@/frontend/pages/auth/DemoAccessPage")) },
           { path: "auth/forgot-password", ...p(() => import("@/frontend/pages/auth/ForgotPasswordPage")) },
           { path: "auth/reset-password", ...p(() => import("@/frontend/pages/auth/ResetPasswordPage")) },
           { path: "auth/verification-result", ...p(() => import("@/frontend/pages/auth/VerificationResultPage")) },
