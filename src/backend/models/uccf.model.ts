@@ -125,6 +125,8 @@ export interface UCCFSchedule {
   hours_per_day?: HoursPerDay;
   shift_type?: ShiftType;
   staff_pattern?: StaffPattern;
+  /** Preferred shift start time as HH:MM (24-hour). Only applicable for 8h/12h shifts. */
+  shift_start_time?: string;
 }
 
 export interface UCCFServices {

@@ -139,6 +139,11 @@ export const guardianService = {
           location: d.location, phone: d.phone,
           emergencyContactName: d.emergency_contact_name || undefined,
           conditions: d.conditions || [],
+          conditionNotes: d.condition_notes || undefined,
+          mobility: d.mobility || undefined,
+          cognitive: d.cognitive || undefined,
+          careCity: d.care_city || undefined,
+          careArea: d.care_area || undefined,
           status: d.status, avatar: d.avatar, color: d.color,
         }));
       });

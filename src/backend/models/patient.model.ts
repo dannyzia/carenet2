@@ -12,6 +12,11 @@ export interface Patient {
   /** Name of emergency contact for this patient (may differ from guardian). */
   emergencyContactName?: string;
   conditions: string[];
+  conditionNotes?: string;
+  mobility?: "independent" | "assisted" | "bedridden";
+  cognitive?: "normal" | "impaired" | "dependent";
+  careCity?: string;
+  careArea?: string;
   status: "active" | "inactive" | "discharged";
   avatar?: string;
   color?: string;

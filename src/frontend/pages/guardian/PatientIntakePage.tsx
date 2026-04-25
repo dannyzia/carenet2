@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { UserPlus, Heart, Calendar, FileText, ShieldAlert, ChevronRight, Stethoscope, Activity, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { UserPlus, Heart, Calendar, FileText, ShieldAlert, ChevronRight, Stethoscope, Activity, ArrowLeft, CheckCircle2, MapPin } from "lucide-react";
 import { Button } from "@/frontend/components/ui/button";
 import { useNavigate, useSearchParams, useLocation } from "react-router";
 import { PageHero } from "@/frontend/components/PageHero";
@@ -44,6 +44,11 @@ export default function PatientIntakePage() {
     conditionNotes: "",
     emergencyName: "",
     emergencyPhone: "",
+    mobility: "" as "" | "independent" | "assisted" | "bedridden",
+    cognitive: "" as "" | "normal" | "impaired" | "dependent",
+    careCity: "Dhaka",
+    careArea: "",
+    bloodGroup: "" as "" | "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-",
   });
 
   useEffect(() => {
@@ -62,6 +67,11 @@ export default function PatientIntakePage() {
             conditionNotes: data.condition_notes || "",
             emergencyName: data.emergency_contact_name || "",
             emergencyPhone: data.phone || "",
+            mobility: data.mobility || "",
+            cognitive: data.cognitive || "",
+            careCity: data.care_city || "Dhaka",
+            careArea: data.care_area || "",
+            bloodGroup: data.blood_group || "",
           });
         }
       } catch (err) {
@@ -76,16 +86,9 @@ export default function PatientIntakePage() {
         ? prev.conditions.filter(c => c !== condition)
         : [...prev.conditions, condition];
       
-      // Auto-populate condition notes with selected conditions
-      const conditionsList = newConditions.length > 0 
-        ? `Selected conditions: ${newConditions.join(", ")}\n\n`
-        : "";
-      const existingNotes = prev.conditionNotes.replace(/^Selected conditions:.*\n\n?/i, "");
-      
       return {
         ...prev,
         conditions: newConditions,
-        conditionNotes: conditionsList + existingNotes
       };
     });
   };
@@ -110,6 +113,11 @@ export default function PatientIntakePage() {
             condition_notes: formData.conditionNotes.trim() || null,
             emergency_contact_name: formData.emergencyName.trim() || null,
             phone: formData.emergencyPhone.trim() || null,
+            mobility: formData.mobility || null,
+            cognitive: formData.cognitive || null,
+            care_city: formData.careCity.trim() || null,
+            care_area: formData.careArea.trim() || null,
+            blood_group: formData.bloodGroup || null,
           }).eq("id", editId);
           if (error) throw error;
         } else {
@@ -126,6 +134,11 @@ export default function PatientIntakePage() {
             phone: formData.emergencyPhone.trim() || null,
             location: "",
             status: "active",
+            mobility: formData.mobility || null,
+            cognitive: formData.cognitive || null,
+            care_city: formData.careCity.trim() || null,
+            care_area: formData.careArea.trim() || null,
+            blood_group: formData.bloodGroup || null,
           }).select().single();
 
           if (error) throw error;
@@ -270,7 +283,127 @@ export default function PatientIntakePage() {
                     className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-2 focus:ring-[#7CE577] outline-none transition-all min-h-[120px]" 
                     placeholder="Add details about the selected conditions, medications, special instructions..."
                   />
+                  <p className="text-xs text-gray-500">Include medication schedule or special instructions if relevant.</p>
                 </div>
+              </div>
+            </div>
+
+            <hr className="border-gray-100" />
+
+            {/* Mobility & Awareness */}
+            <div className="space-y-6">
+              <h2 className="text-xl font-bold text-gray-800 flex items-center">
+                <div className="w-10 h-10 rounded-xl bg-[#E8F9E7] flex items-center justify-center mr-4">
+                  <Activity className="w-5 h-5 text-[#5FB865]" />
+                </div>
+                Mobility & Awareness
+              </h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-bold text-gray-500 uppercase ml-1 mb-2 block">Mobility</label>
+                  <div className="flex gap-2">
+                    <button 
+                      type="button"
+                      onClick={() => setFormData({...formData, mobility: "independent"})}
+                      className={`flex-1 h-14 rounded-2xl font-bold transition-all ${formData.mobility === "independent" ? "bg-[#7CE577] text-white border-[#7CE577]" : "border border-gray-200 text-gray-600 hover:border-[#7CE577] hover:bg-[#E8F9E7]"}`}
+                    >
+                      Walks independently
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={() => setFormData({...formData, mobility: "assisted"})}
+                      className={`flex-1 h-14 rounded-2xl font-bold transition-all ${formData.mobility === "assisted" ? "bg-[#7CE577] text-white border-[#7CE577]" : "border border-gray-200 text-gray-600 hover:border-[#7CE577] hover:bg-[#E8F9E7]"}`}
+                    >
+                      Needs assistance
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={() => setFormData({...formData, mobility: "bedridden"})}
+                      className={`flex-1 h-14 rounded-2xl font-bold transition-all ${formData.mobility === "bedridden" ? "bg-[#7CE577] text-white border-[#7CE577]" : "border border-gray-200 text-gray-600 hover:border-[#7CE577] hover:bg-[#E8F9E7]"}`}
+                    >
+                      Fully bedridden
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-bold text-gray-500 uppercase ml-1 mb-2 block">Cognitive status</label>
+                  <div className="flex gap-2">
+                    <button 
+                      type="button"
+                      onClick={() => setFormData({...formData, cognitive: "normal"})}
+                      className={`flex-1 h-14 rounded-2xl font-bold transition-all ${formData.cognitive === "normal" ? "bg-[#7CE577] text-white border-[#7CE577]" : "border border-gray-200 text-gray-600 hover:border-[#7CE577] hover:bg-[#E8F9E7]"}`}
+                    >
+                      Alert & oriented
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={() => setFormData({...formData, cognitive: "impaired"})}
+                      className={`flex-1 h-14 rounded-2xl font-bold transition-all ${formData.cognitive === "impaired" ? "bg-[#7CE577] text-white border-[#7CE577]" : "border border-gray-200 text-gray-600 hover:border-[#7CE577] hover:bg-[#E8F9E7]"}`}
+                    >
+                      Memory impaired
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={() => setFormData({...formData, cognitive: "dependent"})}
+                      className={`flex-1 h-14 rounded-2xl font-bold transition-all ${formData.cognitive === "dependent" ? "bg-[#7CE577] text-white border-[#7CE577]" : "border border-gray-200 text-gray-600 hover:border-[#7CE577] hover:bg-[#E8F9E7]"}`}
+                    >
+                      Fully dependent
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Care Location */}
+            <div className="space-y-6">
+              <h2 className="text-xl font-bold text-gray-800 flex items-center">
+                <div className="w-10 h-10 rounded-xl bg-[#E8F9E7] flex items-center justify-center mr-4">
+                  <MapPin className="w-5 h-5 text-[#5FB865]" />
+                </div>
+                Care Location
+              </h2>
+              <p className="text-sm text-gray-500 -mt-2">Where will the patient receive care? This pre-fills your care requests.</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-gray-500 uppercase ml-1">City</label>
+                  <input 
+                    value={formData.careCity}
+                    onChange={e => setFormData({...formData, careCity: e.target.value})}
+                    className="w-full h-14 px-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-2 focus:ring-[#7CE577] outline-none transition-all" 
+                    placeholder="e.g. Dhaka"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-gray-500 uppercase ml-1">Area / Neighbourhood</label>
+                  <input 
+                    value={formData.careArea}
+                    onChange={e => setFormData({...formData, careArea: e.target.value})}
+                    className="w-full h-14 px-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-2 focus:ring-[#7CE577] outline-none transition-all" 
+                    placeholder="e.g. Dhanmondi, Gulshan"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Blood Group */}
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-gray-500 uppercase ml-1">Blood Group</label>
+                <select 
+                  value={formData.bloodGroup}
+                  onChange={e => setFormData({...formData, bloodGroup: e.target.value as typeof formData.bloodGroup})}
+                  className="w-full h-14 px-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-2 focus:ring-[#7CE577] outline-none transition-all appearance-none"
+                >
+                  <option value="">Select…</option>
+                  <option value="A+">A+</option>
+                  <option value="A-">A-</option>
+                  <option value="B+">B+</option>
+                  <option value="B-">B-</option>
+                  <option value="AB+">AB+</option>
+                  <option value="AB-">AB-</option>
+                  <option value="O+">O+</option>
+                  <option value="O-">O-</option>
+                </select>
               </div>
             </div>
 

@@ -25,6 +25,7 @@ import type {
   ShiftType,
   StaffPattern,
   UCCFCareNeeds,
+  UCCFCareSubject,
   UCCFEquipment,
   UCCFLogistics,
   UCCFMedical,
@@ -33,12 +34,12 @@ import type {
 import { useAuth } from "@/frontend/auth/AuthContext";
 
 const steps = [
-  { id: 1, name: "Select Agency", icon: Building2 },
-  { id: 2, name: "Patient", icon: User },
+  { id: 1, name: "Agency",    icon: Building2 },
+  { id: 2, name: "Patient",   icon: User },
   { id: 3, name: "Care Needs", icon: HeartPulse },
-  { id: 4, name: "Schedule", icon: Calendar },
-  { id: 5, name: "Budget", icon: Wallet },
-  { id: 6, name: "Review", icon: ClipboardCheck },
+  { id: 4, name: "Schedule",  icon: Calendar },
+  { id: 5, name: "Budget",    icon: Wallet },
+  { id: 6, name: "Review",    icon: ClipboardCheck },
 ];
 
 const CARE_TYPE_ICONS: Record<CareCategory, string> = {
@@ -49,6 +50,34 @@ const CARE_TYPE_ICONS: Record<CareCategory, string> = {
   baby: "\u{1F476}",
   disability: "\u267F",
 };
+
+/** Single source of truth for Step 3 service chips. Each entry maps to a UCCF bucket + optional ADL/monitoring field. */
+const UNIFIED_SERVICES = [
+  // personal_care
+  { slug: "bathing",           label: "Bathing",              group: "Daily Living" },
+  { slug: "grooming",          label: "Grooming",             group: "Daily Living" },
+  { slug: "feeding_oral",      label: "Oral feeding",         group: "Daily Living" },
+  { slug: "feeding_tube",      label: "Tube feeding",         group: "Daily Living" },
+  { slug: "toileting_assisted",label: "Toileting (assisted)", group: "Daily Living" },
+  { slug: "toileting_full",    label: "Full toileting care",  group: "Daily Living" },
+  { slug: "mobility_support",  label: "Mobility support",     group: "Daily Living" },
+  // medical_support
+  { slug: "vitals",            label: "Vitals monitoring",    group: "Medical Support" },
+  { slug: "medication",        label: "Medication management",group: "Medical Support" },
+  { slug: "wound_care",        label: "Wound dressing",       group: "Medical Support" },
+  { slug: "supervision",       label: "Continuous supervision",group: "Medical Support" },
+  { slug: "companionship",     label: "Companionship",        group: "Medical Support" },
+  // household_support
+  { slug: "meal_prep",         label: "Meal preparation",     group: "Household" },
+  { slug: "patient_laundry",   label: "Patient laundry",      group: "Household" },
+  // advanced_care
+  { slug: "NG_tube",           label: "NG tube care",         group: "Advanced Care" },
+  { slug: "suction",           label: "Suctioning",           group: "Advanced Care" },
+  { slug: "oxygen_therapy",    label: "Oxygen therapy",       group: "Advanced Care" },
+  // coordination
+  { slug: "doctor_visit",      label: "Doctor visit escort",  group: "Coordination" },
+  { slug: "hospital_support",  label: "Hospital support",     group: "Coordination" },
+] as const;
 
 export default function CareRequirementWizardPage() {
   const toast = useAriaToast();
@@ -78,100 +107,62 @@ export default function CareRequirementWizardPage() {
     }
   }, [preselectedAgency, skipChoice]);
   const [formData, setFormData] = useState({
-    contactName: "",
-    contactPhone: "",
-    patientName: "",
-    patientAge: "",
-    conditions: "",
-    gender: "" as "" | "male" | "female" | "other",
-    mobility: "assisted" as "independent" | "assisted" | "bedridden",
-    cognitive: "" as "" | "normal" | "impaired" | "unconscious",
-    riskLevel: "" as "" | "low" | "medium" | "high",
-    shiftType: "day" as ShiftType,
-    staffPattern: "single" as StaffPattern,
-    staffLevel: "L2" as StaffLevel,
-    caregiverCount: 1,
-    nurseCount: 0,
-    hoursPerDay: 8 as 8 | 12 | 24,
-    startDate: "",
-    durationType: "monthly" as "short" | "monthly" | "long_term",
+    // Step 2 — location override (pre-filled from patient record)
     city: "Dhaka",
     area: "",
-    address: "",
-    budgetMin: "",
-    budgetMax: "",
-    preferredModel: "monthly" as "monthly" | "daily" | "hourly",
-    notes: "",
-    expiryDays: "15",
-    adlBathing: false,
-    feedingOral: false,
-    feedingTube: false,
-    toiletingAssisted: false,
-    toiletingFull: false,
-    adlMobility: false,
-    monitorVitals: false,
-    monitorSupervision: false,
-    companionship: false,
-    personal_care: [] as string[],
-    medical_support: [] as string[],
-    household_support: [] as string[],
-    advanced_care: [] as string[],
-    coordination: [] as string[],
+    locationType: "" as "" | "home" | "hospital",
+
+    // Step 3 — unified service checklist (replaces ADL toggles + bucket chips)
+    services: [] as string[],          // slugs from UNIFIED_SERVICES
+    devices: [] as string[],           // UCCF_MEDICAL_DEVICES slugs
+    procedures: [] as string[],        // UCCF_MEDICAL_PROCEDURES slugs
+    medicationComplexity: "" as "" | "low" | "medium" | "high",
+    equipment: [] as string[],         // UCCF_EQUIPMENT_SLUGS
+    equipmentProvider: "" as "" | "patient" | "agency" | "mixed",
     exclusions: [] as string[],
     addOns: [] as string[],
-    equipment: [] as string[],
-    equipmentProvider: "" as "" | "patient" | "agency" | "mixed",
-    locationType: "" as "" | "home" | "hospital",
+
+    // Step 4 — schedule & staffing
+    startDate: "",
+    durationType: "monthly" as "short" | "monthly" | "long_term",
+    shiftType: "day" as ShiftType,
+    hoursPerDay: 8 as 8 | 12 | 24,
+    shiftStartTime: "",               // HH:MM, only for 8h/12h
+    staffLevel: "L2" as StaffLevel,
+    staffPattern: "single" as StaffPattern,
+    caregiverCount: 1,
+    nurseCount: 0,
+
+    // Step 5 — budget & posting
+    preferredModel: "monthly" as "monthly" | "daily" | "hourly",
+    budgetMin: "",
+    budgetMax: "",
     accommodationProvided: false,
     foodProvided: false,
     travelDistanceKm: "",
-    diagnosis: "",
-    medicationComplexity: "" as "" | "low" | "medium" | "high",
-    devices: [] as string[],
-    procedures: [] as string[],
+    expiryDays: "15",
   });
   const [submitting, setSubmitting] = useState(false);
 
   const { data: agencies, loading, error } = useAsyncData(() => guardianService.getWizardAgencies());
   const { data: myPatients } = useAsyncData(() => guardianService.getPatients());
 
-  const didPrefillContact = useRef(false);
-  useEffect(() => {
-    if (!user || didPrefillContact.current) return;
-    didPrefillContact.current = true;
-    setFormData((fd) => ({
-      ...fd,
-      contactName: fd.contactName.trim() ? fd.contactName : user.name?.trim() || "",
-      contactPhone: fd.contactPhone.trim() ? fd.contactPhone : user.phone?.trim() || "",
-    }));
-  }, [user]);
-
+  // Pre-fill city/area when patient selected
   useEffect(() => {
     if (!selectedPatientId || !myPatients) return;
-    const p = myPatients.find((pt) => pt.id === selectedPatientId);
-    if (!p) return;
-    setFormData((fd) => ({
+    const pt = myPatients.find(p => p.id === selectedPatientId);
+    if (!pt) return;
+    setFormData(fd => ({
       ...fd,
-      patientName: p.name || "",
-      patientAge: p.age ? String(p.age) : "",
-      gender: (p.gender === "Male" ? "male" : p.gender === "Female" ? "female" : p.gender === "Other" ? "other" : "") as typeof fd.gender,
-      conditions: Array.isArray(p.conditions) ? p.conditions.join(", ") : "",
+      city: (pt as any).careCity || fd.city || "Dhaka",
+      area: (pt as any).careArea || fd.area || "",
     }));
   }, [selectedPatientId, myPatients]);
 
   const next = () => {
     if (currentStep === 2) {
-      if (selectedPatientId) {
-        // valid — patient tagged
-      } else {
-        const age = parseInt(formData.patientAge, 10);
-        if (!formData.patientName.trim() || !Number.isFinite(age) || age < 0) {
-          toast.error(t("wizard.validationPatient"));
-          return;
-        }
-      }
-      if (!formData.contactName.trim() || !formData.contactPhone.trim()) {
-        toast.error(t("wizard.validationContact"));
+      if (!selectedPatientId) {
+        toast.error("Please select a patient");
         return;
       }
     }
@@ -255,50 +246,66 @@ export default function CareRequirementWizardPage() {
       }
       const uccfCats = selectedCareTypes;
       const catLabels = uccfCats.map((id) => t(`packageDetail.categories.${id}`));
-      let title = `${catLabels.join(", ")} ${t("wizard.for")} ${formData.patientName.trim() || t("wizard.patient")}`;
+      
+      // Look up selected patient
+      const pt = myPatients?.find(p => p.id === selectedPatientId);
+      const patientName = pt?.name || t("wizard.patient");
+      let title = `${catLabels.join(", ")} ${t("wizard.for")} ${patientName}`;
       if (title.trim().length < 5) {
-        title = `${t("wizard.titleFallbackPrefix")} ${formData.patientName.trim() || t("wizard.patient")} (${formData.city.trim() || "Dhaka"})`;
+        title = `${t("wizard.titleFallbackPrefix")} ${patientName} (${formData.city.trim() || "Dhaka"})`;
       }
 
+      // Build ADL, monitoring, services from unified services array
+      const sel = formData.services;
+
+      // Build ADL
       const adl: NonNullable<UCCFCareNeeds["ADL"]> = {};
-      if (formData.adlBathing) adl.bathing = true;
-      if (formData.feedingTube) adl.feeding = "tube";
-      else if (formData.feedingOral) adl.feeding = "oral";
-      if (formData.toiletingFull) adl.toileting = "full";
-      else if (formData.toiletingAssisted) adl.toileting = "assisted";
-      if (formData.adlMobility) adl.mobility_support = true;
+      if (sel.includes("bathing"))           adl.bathing = true;
+      if (sel.includes("feeding_tube"))      adl.feeding = "tube";
+      else if (sel.includes("feeding_oral")) adl.feeding = "oral";
+      if (sel.includes("toileting_full"))    adl.toileting = "full";
+      else if (sel.includes("toileting_assisted")) adl.toileting = "assisted";
+      if (sel.includes("mobility_support"))  adl.mobility_support = true;
 
+      // Build monitoring
       const monitoring: NonNullable<UCCFCareNeeds["monitoring"]> = {};
-      if (formData.monitorVitals) monitoring.vitals = true;
-      if (formData.monitorSupervision) monitoring.continuous_supervision = true;
+      if (sel.includes("vitals"))      monitoring.vitals = true;
+      if (sel.includes("supervision")) monitoring.continuous_supervision = true;
 
+      // Build care_needs
       const care_needs: UCCFCareNeeds = {};
-      if (Object.keys(adl).length) care_needs.ADL = adl;
+      if (Object.keys(adl).length)        care_needs.ADL = adl;
       if (Object.keys(monitoring).length) care_needs.monitoring = monitoring;
-      if (formData.companionship) care_needs.companionship = true;
-      const careNeedsPayload: UCCFCareNeeds = Object.keys(care_needs).length ? care_needs : {};
+      if (sel.includes("companionship"))  care_needs.companionship = true;
 
+      // Build services (bucket arrays — exclude ADL/monitoring slugs already handled above)
       const services: UCCFServices = {};
-      (Object.keys(UCCF_SERVICE_OPTIONS) as (keyof typeof UCCF_SERVICE_OPTIONS)[]).forEach((k) => {
-        const sel = formData[k];
-        if (Array.isArray(sel) && sel.length > 0) (services as Record<string, string[]>)[k] = sel;
-      });
+      const PC = ["bathing","grooming","feeding_oral","feeding_tube","toileting_assisted","toileting_full","mobility_support"];
+      const MS = ["vitals","medication","wound_care","supervision","companionship"];
+      const HS = ["meal_prep","patient_laundry"];
+      const AC = ["NG_tube","suction","oxygen_therapy"];
+      const CO = ["doctor_visit","hospital_support"];
+      const pcSlugs = sel.filter(s => PC.includes(s)).map(s => s === "feeding_oral" ? "feeding_oral" : s);
+      const msSlugs = sel.filter(s => MS.includes(s));
+      const hsSlugs = sel.filter(s => HS.includes(s));
+      const acSlugs = sel.filter(s => AC.includes(s));
+      const coSlugs = sel.filter(s => CO.includes(s));
+      if (pcSlugs.length) services.personal_care   = pcSlugs;
+      if (msSlugs.length) services.medical_support  = msSlugs;
+      if (hsSlugs.length) services.household_support = hsSlugs;
+      if (acSlugs.length) services.advanced_care    = acSlugs;
+      if (coSlugs.length) services.coordination     = coSlugs;
 
-      const medical: UCCFMedical | undefined =
-        formData.diagnosis.trim() ||
-        formData.medicationComplexity ||
-        formData.devices.length ||
-        formData.procedures.length
-          ? {
-              diagnosis: formData.diagnosis.trim() || undefined,
-              medication_complexity: formData.medicationComplexity || undefined,
-              devices: formData.devices.length ? (formData.devices as UCCFMedical["devices"]) : undefined,
-              procedures_required: formData.procedures.length
-                ? (formData.procedures as UCCFMedical["procedures_required"])
-                : undefined,
-            }
-          : undefined;
+      // Build medical
+      const medical: UCCFMedical | undefined = (formData.devices.length || formData.procedures.length || formData.medicationComplexity)
+        ? {
+            medication_complexity: formData.medicationComplexity || undefined,
+            devices: formData.devices.length ? formData.devices as UCCFMedical["devices"] : undefined,
+            procedures_required: formData.procedures.length ? formData.procedures as UCCFMedical["procedures_required"] : undefined,
+          }
+        : undefined;
 
+      // Build logistics
       const logistics: UCCFLogistics | undefined =
         formData.locationType ||
         formData.accommodationProvided ||
@@ -314,6 +321,7 @@ export default function CareRequirementWizardPage() {
             }
           : undefined;
 
+      // Build equipment
       const equipment: UCCFEquipment | undefined =
         formData.equipment.length > 0 || formData.equipmentProvider
           ? {
@@ -322,7 +330,6 @@ export default function CareRequirementWizardPage() {
             }
           : undefined;
 
-      const patientAge = parseInt(formData.patientAge, 10);
       const req = await marketplaceService.createCareRequest({
         meta: {
           type: "request",
@@ -331,27 +338,26 @@ export default function CareRequirementWizardPage() {
           location: {
             city: formData.city || "Dhaka",
             area: formData.area || undefined,
-            address_optional: formData.address || undefined,
           },
           start_date: formData.startDate || undefined,
           duration_type: formData.durationType,
         },
         party: {
           role: "patient",
-          name: formData.contactName.trim(),
-          contact_phone: formData.contactPhone.trim(),
+          name: user?.name?.trim() || "",
+          contact_phone: user?.phone?.trim() || "",
         },
         care_subject: {
-          age: patientAge,
-          gender: formData.gender || undefined,
-          condition_summary:
-            [formData.conditions.trim(), formData.notes.trim()].filter(Boolean).join("\n\n") || undefined,
-          mobility: formData.mobility,
-          cognitive: formData.cognitive || undefined,
-          risk_level: formData.riskLevel || undefined,
+          age: pt?.age ?? 0,
+          gender: pt?.gender
+            ? (pt.gender === "Male" ? "male" : pt.gender === "Female" ? "female" : "other")
+            : undefined,
+          condition_summary: pt?.conditionNotes || (pt?.conditions?.join(", ")) || undefined,
+          mobility: (pt?.mobility as UCCFCareSubject["mobility"]) || "assisted",
+          cognitive: pt?.cognitive as UCCFCareSubject["cognitive"] || undefined,
         },
         medical,
-        care_needs: careNeedsPayload,
+        care_needs: Object.keys(care_needs).length ? care_needs : undefined,
         staffing: {
           required_level: formData.staffLevel,
           caregiver_count: formData.caregiverCount,
@@ -361,6 +367,9 @@ export default function CareRequirementWizardPage() {
           hours_per_day: formData.hoursPerDay,
           shift_type: formData.shiftType,
           staff_pattern: formData.staffPattern,
+          shift_start_time: (formData.hoursPerDay < 24 && formData.shiftStartTime)
+            ? formData.shiftStartTime
+            : undefined,
         },
         services: Object.keys(services).length ? services : undefined,
         logistics,
@@ -549,12 +558,23 @@ export default function CareRequirementWizardPage() {
                         </button>
                       ))}
                     </div>
-                    {selectedPatientId && (
-                      <div className="mt-3 p-3 rounded-xl" style={{ background: cn.bgInput, border: `1px solid ${cn.borderLight}` }}>
-                        <p className="text-xs" style={{ color: cn.textSecondary }}>{t("wizard.taggedPatient")}</p>
-                        <p className="text-sm" style={{ color: cn.text }}>{formData.patientName}{formData.patientAge ? `, ${t("wizard.age")} ${formData.patientAge}` : ""}</p>
-                      </div>
-                    )}
+                    {selectedPatientId && (() => {
+                      const pt = myPatients?.find(p => p.id === selectedPatientId);
+                      if (!pt) return null;
+                      return (
+                        <div className="mt-4 p-4 rounded-xl" style={{ background: cn.bgInput, border: `1px solid ${cn.borderLight}` }}>
+                          <h3 className="text-sm font-medium mb-2" style={{ color: cn.text }}>Patient Summary</h3>
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div><span style={{ color: cn.textSecondary }}>Name:</span> <span style={{ color: cn.text }}>{pt.name}</span></div>
+                            <div><span style={{ color: cn.textSecondary }}>Age:</span> <span style={{ color: cn.text }}>{pt.age || "—"}</span></div>
+                            <div><span style={{ color: cn.textSecondary }}>Gender:</span> <span style={{ color: cn.text }}>{pt.gender || "—"}</span></div>
+                            <div><span style={{ color: cn.textSecondary }}>Mobility:</span> <span style={{ color: cn.text }}>{pt.mobility || "—"}</span></div>
+                            <div><span style={{ color: cn.textSecondary }}>Cognitive:</span> <span style={{ color: cn.text }}>{pt.cognitive || "—"}</span></div>
+                            <div className="col-span-2"><span style={{ color: cn.textSecondary }}>Conditions:</span> <span style={{ color: cn.text }}>{Array.isArray(pt.conditions) && pt.conditions.length ? pt.conditions.join(", ") : "—"}</span></div>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 ) : (
                   <div className="p-4 rounded-xl text-center" style={{ background: cn.bgInput, border: `1px solid ${cn.border}` }}>
@@ -572,41 +592,56 @@ export default function CareRequirementWizardPage() {
                   </div>
                 )}
 
-                <div className="pt-4 space-y-3" style={{ borderTop: `1px solid ${cn.borderLight}` }}>
-                  <div>
-                    <label className="block text-sm mb-1" style={{ color: cn.text }}>{t("wizard.mobility")}</label>
-                    <select value={formData.mobility} onChange={(e) => setFormData({ ...formData, mobility: e.target.value as typeof formData.mobility })} className="w-full px-4 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }}>
-                      <option value="independent">{t("wizard.mobilityIndependent")}</option>
-                      <option value="assisted">{t("wizard.mobilityAssisted")}</option>
-                      <option value="bedridden">{t("wizard.mobilityBedridden")}</option>
-                    </select>
-                  </div>
+                {/* Location section */}
+                <div className="pt-4 space-y-4" style={{ borderTop: `1px solid ${cn.borderLight}` }}>
+                  <h3 className="text-lg font-medium" style={{ color: cn.text }}>Where will care take place?</h3>
+                  <p className="text-xs" style={{ color: cn.textSecondary }}>Pre-filled from patient profile — update if different (e.g. hospital)</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-sm mb-1" style={{ color: cn.text }}>{t("wizard.cognitive")}</label>
-                      <select value={formData.cognitive} onChange={(e) => setFormData({ ...formData, cognitive: e.target.value as typeof formData.cognitive })} className="w-full px-4 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }}>
-                        <option value="">{t("wizard.preferNotSay")}</option>
-                        <option value="normal">{t("wizard.cognitiveNormal")}</option>
-                        <option value="impaired">{t("wizard.cognitiveImpaired")}</option>
-                        <option value="unconscious">{t("wizard.cognitiveUnconscious")}</option>
-                      </select>
+                      <label className="block text-sm mb-1" style={{ color: cn.text }}>City</label>
+                      <input
+                        type="text"
+                        value={formData.city}
+                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                        className="w-full px-4 py-3 rounded-xl border text-sm"
+                        style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }}
+                        placeholder="e.g. Dhaka"
+                      />
                     </div>
                     <div>
-                      <label className="block text-sm mb-1" style={{ color: cn.text }}>{t("wizard.riskLevel")}</label>
-                      <select value={formData.riskLevel} onChange={(e) => setFormData({ ...formData, riskLevel: e.target.value as typeof formData.riskLevel })} className="w-full px-4 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }}>
-                        <option value="">{t("wizard.preferNotSay")}</option>
-                        <option value="low">{t("wizard.riskLow")}</option>
-                        <option value="medium">{t("wizard.riskMedium")}</option>
-                        <option value="high">{t("wizard.riskHigh")}</option>
-                      </select>
+                      <label className="block text-sm mb-1" style={{ color: cn.text }}>Area / Neighbourhood</label>
+                      <input
+                        type="text"
+                        value={formData.area}
+                        onChange={(e) => setFormData({ ...formData, area: e.target.value })}
+                        className="w-full px-4 py-3 rounded-xl border text-sm"
+                        style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }}
+                        placeholder="e.g. Dhanmondi, Gulshan"
+                      />
                     </div>
                   </div>
-                  <div><label className="block text-sm mb-1" style={{ color: cn.text }}>{t("wizard.medicalConditions")}</label><textarea value={formData.conditions} onChange={e => setFormData({ ...formData, conditions: e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }} rows={3} placeholder={t("wizard.medicalConditionsPlaceholder")} /></div>
+                  <div>
+                    <label className="block text-sm mb-1" style={{ color: cn.text }}>Location Type</label>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, locationType: "home" })}
+                        className="flex-1 px-4 py-3 rounded-xl border text-sm cn-touch-target"
+                        style={{ borderColor: formData.locationType === "home" ? cn.pink : cn.border, background: formData.locationType === "home" ? cn.pinkBg : "transparent", color: formData.locationType === "home" ? cn.pink : cn.textSecondary }}
+                      >
+                        Home care
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, locationType: "hospital" })}
+                        className="flex-1 px-4 py-3 rounded-xl border text-sm cn-touch-target"
+                        style={{ borderColor: formData.locationType === "hospital" ? cn.pink : cn.border, background: formData.locationType === "hospital" ? cn.pinkBg : "transparent", color: formData.locationType === "hospital" ? cn.pink : cn.textSecondary }}
+                      >
+                        Hospital
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-sm font-medium pt-2" style={{ color: cn.text }}>{t("wizard.contactForAgency")}</p>
-                <p className="text-xs" style={{ color: cn.textSecondary }}>{t("wizard.contactForAgencyDesc")}</p>
-                <div><label className="block text-sm mb-1" style={{ color: cn.text }}>{t("wizard.contactName")}</label><input type="text" value={formData.contactName} onChange={(e) => setFormData({ ...formData, contactName: e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }} autoComplete="name" /></div>
-                <div><label className="block text-sm mb-1" style={{ color: cn.text }}>{t("wizard.contactPhone")}</label><input type="tel" value={formData.contactPhone} onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }} autoComplete="tel" placeholder={t("wizard.contactPhonePlaceholder")} /></div>
               </div>
             )}
 
@@ -624,239 +659,344 @@ export default function CareRequirementWizardPage() {
                     </button>
                   ))}
                 </div>
-                <div className="pt-4 space-y-3" style={{ borderTop: `1px solid ${cn.borderLight}` }}>
-                  <p className="text-sm font-medium" style={{ color: cn.text }}>{t("wizard.dailyLiving")}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {[
-                      { key: "adlBathing" as const, label: t("wizard.needBathing") },
-                      { key: "feedingOral" as const, label: t("wizard.needFeedingOral") },
-                      { key: "feedingTube" as const, label: t("wizard.needFeedingTube") },
-                      { key: "toiletingAssisted" as const, label: t("wizard.needToiletingAssisted") },
-                      { key: "toiletingFull" as const, label: t("wizard.needToiletingFull") },
-                      { key: "adlMobility" as const, label: t("wizard.needMobilitySupport") },
-                    ].map(({ key, label }) => (
-                      <button key={key} type="button" onClick={() => setFormData((fd) => ({ ...fd, [key]: !fd[key] }))} className="px-3 py-2 rounded-xl border text-xs cn-touch-target" style={{ borderColor: formData[key] ? cn.pink : cn.border, background: formData[key] ? cn.pinkBg : "transparent", color: formData[key] ? cn.pink : cn.textSecondary }}>{label}</button>
-                    ))}
-                  </div>
-                  <p className="text-sm font-medium pt-2" style={{ color: cn.text }}>{t("wizard.monitoringCompanionship")}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {[
-                      { key: "monitorVitals" as const, label: t("wizard.monitorVitals") },
-                      { key: "monitorSupervision" as const, label: t("wizard.continuousSupervision") },
-                      { key: "companionship" as const, label: t("wizard.companionship") },
-                    ].map(({ key, label }) => (
-                      <button key={key} type="button" onClick={() => setFormData((fd) => ({ ...fd, [key]: !fd[key] }))} className="px-3 py-2 rounded-xl border text-xs cn-touch-target" style={{ borderColor: formData[key] ? cn.pink : cn.border, background: formData[key] ? cn.pinkBg : "transparent", color: formData[key] ? cn.pink : cn.textSecondary }}>{label}</button>
-                    ))}
-                  </div>
-                </div>
+
+                {/* Section B: Services Needed */}
                 <div className="pt-4 space-y-4" style={{ borderTop: `1px solid ${cn.borderLight}` }}>
-                  <p className="text-sm font-medium" style={{ color: cn.text }}>{t("wizard.serviceChecklist")}</p>
-                  {(Object.keys(UCCF_SERVICE_OPTIONS) as Array<keyof typeof UCCF_SERVICE_OPTIONS>).map((bucket) => {
-                    const opts = UCCF_SERVICE_OPTIONS[bucket];
-                    const selectedList = formData[bucket] as string[];
-                    const field = bucket as keyof typeof formData;
-                    return (
-                      <div key={bucket}>
-                        <p className="text-xs mb-2" style={{ color: cn.textSecondary }}>{bucket.replace(/_/g, " ")}</p>
+                  <p className="text-sm font-medium" style={{ color: cn.text }}>Services Needed</p>
+                  {(() => {
+                    const groups = Array.from(new Set(UNIFIED_SERVICES.map(s => s.group)));
+                    return groups.map(group => (
+                      <div key={group}>
+                        <p className="text-xs mb-2" style={{ color: cn.textSecondary }}>{group}</p>
                         <div className="flex flex-wrap gap-2">
-                          {opts.map((slug) => {
-                            const selected = selectedList.includes(slug);
+                          {UNIFIED_SERVICES.filter(s => s.group === group).map(({ slug, label }) => {
+                            const selected = formData.services.includes(slug);
                             return (
-                              <button key={slug} type="button" onClick={() => toggleInField(field, slug)} className="px-3 py-1.5 rounded-lg border text-xs cn-touch-target" style={{ borderColor: selected ? cn.green : cn.border, background: selected ? cn.greenBg : "transparent", color: selected ? cn.green : cn.textSecondary }}>{slug.replace(/_/g, " ")}</button>
+                              <button
+                                key={slug}
+                                type="button"
+                                onClick={() => setFormData(fd => ({ ...fd, services: fd.services.includes(slug) ? fd.services.filter(s => s !== slug) : [...fd.services, slug] }))}
+                                className="px-3 py-2 rounded-xl border text-xs cn-touch-target"
+                                style={{ borderColor: selected ? cn.pink : cn.border, background: selected ? cn.pinkBg : "transparent", color: selected ? cn.pink : cn.textSecondary }}
+                              >
+                                {label}
+                              </button>
                             );
                           })}
                         </div>
                       </div>
-                    );
-                  })}
+                    ));
+                  })()}
                 </div>
+
+                {/* Section C: Medical Equipment */}
                 <div className="pt-4 space-y-3" style={{ borderTop: `1px solid ${cn.borderLight}` }}>
-                  <p className="text-sm font-medium" style={{ color: cn.text }}>{t("wizard.exclusionsAddOnsEquip")}</p>
-                  <p className="text-xs" style={{ color: cn.textSecondary }}>{t("wizard.exclusions")}</p>
+                  <p className="text-sm font-medium" style={{ color: cn.text }}>Equipment Needed</p>
                   <div className="flex flex-wrap gap-2">
-                    {UCCF_EXCLUSION_OPTIONS.map((slug) => {
-                      const selected = formData.exclusions.includes(slug);
-                      return (
-                        <button key={slug} type="button" onClick={() => toggleInField("exclusions", slug)} className="px-3 py-1.5 rounded-lg border text-xs cn-touch-target" style={{ borderColor: selected ? "#EF4444" : cn.border, background: selected ? "rgba(239,68,68,0.08)" : "transparent", color: selected ? "#EF4444" : cn.textSecondary }}>{slug.replace(/_/g, " ")}</button>
-                      );
-                    })}
-                  </div>
-                  <p className="text-xs" style={{ color: cn.textSecondary }}>{t("wizard.addOns")}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {UCCF_ADD_ON_OPTIONS.map((slug) => {
-                      const selected = formData.addOns.includes(slug);
-                      return (
-                        <button key={slug} type="button" onClick={() => toggleInField("addOns", slug)} className="px-3 py-1.5 rounded-lg border text-xs cn-touch-target" style={{ borderColor: selected ? cn.amber : cn.border, background: selected ? cn.amberBg : "transparent", color: selected ? cn.amber : cn.textSecondary }}>{slug.replace(/_/g, " ")}</button>
-                      );
-                    })}
-                  </div>
-                  <p className="text-xs" style={{ color: cn.textSecondary }}>{t("wizard.equipment")}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {UCCF_EQUIPMENT_SLUGS.map((slug) => {
+                    {[
+                      { slug: "hospital_bed", label: "Hospital bed" },
+                      { slug: "oxygen", label: "Oxygen concentrator" },
+                      { slug: "monitor", label: "Patient monitor" },
+                    ].map(({ slug, label }) => {
                       const selected = formData.equipment.includes(slug);
                       return (
-                        <button key={slug} type="button" onClick={() => toggleInField("equipment", slug)} className="px-3 py-1.5 rounded-lg border text-xs cn-touch-target" style={{ borderColor: selected ? cn.teal : cn.border, background: selected ? cn.tealBg : "transparent", color: selected ? cn.teal : cn.textSecondary }}>{slug.replace(/_/g, " ")}</button>
+                        <button
+                          key={slug}
+                          type="button"
+                          onClick={() => toggleInField("equipment", slug)}
+                          className="px-3 py-2 rounded-xl border text-xs cn-touch-target"
+                          style={{ borderColor: selected ? cn.teal : cn.border, background: selected ? cn.tealBg : "transparent", color: selected ? cn.teal : cn.textSecondary }}
+                        >
+                          {label}
+                        </button>
                       );
                     })}
                   </div>
+                  {formData.equipment.length > 0 && (
+                    <div>
+                      <label className="block text-xs mb-1" style={{ color: cn.textSecondary }}>Equipment Provider</label>
+                      <select value={formData.equipmentProvider} onChange={(e) => setFormData({ ...formData, equipmentProvider: e.target.value as typeof formData.equipmentProvider })} className="w-full px-3 py-2 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }}>
+                        <option value="">Select who provides...</option>
+                        <option value="patient">Patient provides</option>
+                        <option value="agency">Agency provides</option>
+                        <option value="mixed">Mix of both</option>
+                      </select>
+                    </div>
+                  )}
+                </div>
+
+                {/* Section D: Advanced Medical Needs (conditional) */}
+                {formData.services.some(s => ["vitals", "medication", "wound_care", "NG_tube", "suction", "oxygen_therapy"].includes(s)) && (
+                  <div className="pt-4 space-y-3" style={{ borderTop: `1px solid ${cn.borderLight}` }}>
+                    <details>
+                      <summary className="text-sm font-medium cursor-pointer" style={{ color: cn.text }}>Medical Details (optional)</summary>
+                      <div className="mt-3 space-y-3">
+                        <p className="text-xs" style={{ color: cn.textSecondary }}>Medication Complexity</p>
+                        <div className="flex flex-wrap gap-2">
+                          {[
+                            { value: "low", label: "Simple" },
+                            { value: "medium", label: "Moderate" },
+                            { value: "high", label: "Complex" },
+                          ].map(({ value, label }) => (
+                            <button
+                              key={value}
+                              type="button"
+                              onClick={() => setFormData({ ...formData, medicationComplexity: value as typeof formData.medicationComplexity })}
+                              className="px-3 py-2 rounded-xl border text-xs cn-touch-target"
+                              style={{ borderColor: formData.medicationComplexity === value ? cn.pink : cn.border, background: formData.medicationComplexity === value ? cn.pinkBg : "transparent", color: formData.medicationComplexity === value ? cn.pink : cn.textSecondary }}
+                            >
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                        <p className="text-xs" style={{ color: cn.textSecondary }}>Medical Devices</p>
+                        <div className="flex flex-wrap gap-2">
+                          {[
+                            { slug: "oxygen", label: "Oxygen concentrator" },
+                            { slug: "catheter", label: "Catheter" },
+                            { slug: "feeding_tube", label: "Feeding tube" },
+                            { slug: "ventilator", label: "Ventilator" },
+                          ].map(({ slug, label }) => {
+                            const selected = formData.devices.includes(slug);
+                            return (
+                              <button
+                                key={slug}
+                                type="button"
+                                onClick={() => toggleInField("devices", slug)}
+                                className="px-3 py-2 rounded-xl border text-xs cn-touch-target"
+                                style={{ borderColor: selected ? cn.teal : cn.border, background: selected ? cn.tealBg : "transparent", color: selected ? cn.teal : cn.textSecondary }}
+                              >
+                                {label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <p className="text-xs" style={{ color: cn.textSecondary }}>Medical Procedures</p>
+                        <div className="flex flex-wrap gap-2">
+                          {[
+                            { slug: "injection", label: "Injection" },
+                            { slug: "IV", label: "IV drip" },
+                            { slug: "suction", label: "Suctioning" },
+                            { slug: "wound_care", label: "Wound dressing" },
+                          ].map(({ slug, label }) => {
+                            const selected = formData.procedures.includes(slug);
+                            return (
+                              <button
+                                key={slug}
+                                type="button"
+                                onClick={() => toggleInField("procedures", slug)}
+                                className="px-3 py-2 rounded-xl border text-xs cn-touch-target"
+                                style={{ borderColor: selected ? cn.teal : cn.border, background: selected ? cn.tealBg : "transparent", color: selected ? cn.teal : cn.textSecondary }}
+                              >
+                                {label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </details>
+                  </div>
+                )}
+
+                {/* Section E: Exclusions & Add-ons */}
+                <div className="pt-4 space-y-3" style={{ borderTop: `1px solid ${cn.borderLight}` }}>
+                  <details>
+                    <summary className="text-sm font-medium cursor-pointer" style={{ color: cn.text }}>Exclusions & Add-ons</summary>
+                    <div className="mt-3 space-y-3">
+                      <p className="text-xs" style={{ color: cn.textSecondary }}>Exclusions</p>
+                      <div className="flex flex-wrap gap-2">
+                        {[
+                          { slug: "heavy_household_work", label: "Heavy housework" },
+                          { slug: "non_patient_tasks", label: "Non-patient errands" },
+                          { slug: "high_risk_procedures", label: "High-risk procedures" },
+                        ].map(({ slug, label }) => {
+                          const selected = formData.exclusions.includes(slug);
+                          return (
+                            <button
+                              key={slug}
+                              type="button"
+                              onClick={() => toggleInField("exclusions", slug)}
+                              className="px-3 py-2 rounded-xl border text-xs cn-touch-target"
+                              style={{ borderColor: selected ? "#EF4444" : cn.border, background: selected ? "rgba(239,68,68,0.08)" : "transparent", color: selected ? "#EF4444" : cn.textSecondary }}
+                            >
+                              {label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <p className="text-xs" style={{ color: cn.textSecondary }}>Add-ons</p>
+                      <div className="flex flex-wrap gap-2">
+                        {[
+                          { slug: "physiotherapy", label: "Physiotherapy" },
+                          { slug: "ambulance", label: "Ambulance service" },
+                          { slug: "diagnostics", label: "Diagnostic tests" },
+                        ].map(({ slug, label }) => {
+                          const selected = formData.addOns.includes(slug);
+                          return (
+                            <button
+                              key={slug}
+                              type="button"
+                              onClick={() => toggleInField("addOns", slug)}
+                              className="px-3 py-2 rounded-xl border text-xs cn-touch-target"
+                              style={{ borderColor: selected ? cn.amber : cn.border, background: selected ? cn.amberBg : "transparent", color: selected ? cn.amber : cn.textSecondary }}
+                            >
+                              {label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </details>
+                </div>
+              </div>
+            )}
+
+            {/* Step 4: Schedule & Staffing */}
+            {currentStep === 4 && (
+              <div className="space-y-4">
+                <h2 className="text-xl" style={{ color: cn.text }}>Schedule & Staffing</h2>
+
+                {/* Schedule panel */}
+                <div className="space-y-4" style={{ background: cn.bgInput, padding: "16px", borderRadius: "12px" }}>
+                  <h3 className="text-sm font-medium" style={{ color: cn.text }}>Schedule</h3>
                   <div>
-                    <label className="block text-xs mb-1" style={{ color: cn.textSecondary }}>{t("wizard.equipmentProvider")}</label>
-                    <select value={formData.equipmentProvider} onChange={(e) => setFormData({ ...formData, equipmentProvider: e.target.value as typeof formData.equipmentProvider })} className="w-full px-3 py-2 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }}>
-                      <option value="">{t("wizard.preferNotSay")}</option>
-                      <option value="patient">{t("wizard.providerPatient")}</option>
-                      <option value="agency">{t("wizard.providerAgency")}</option>
-                      <option value="mixed">{t("wizard.providerMixed")}</option>
+                    <label className="block text-sm mb-1" style={{ color: cn.text }}>Preferred Start Date</label>
+                    <input type="date" value={formData.startDate} onChange={e => setFormData({ ...formData, startDate: e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }} />
+                  </div>
+                  <div>
+                    <label className="block text-sm mb-1" style={{ color: cn.text }}>Care Duration</label>
+                    <div className="flex gap-2">
+                      {[
+                        { value: "short", label: "Short stay" },
+                        { value: "monthly", label: "Monthly" },
+                        { value: "long_term", label: "Long-term" },
+                      ].map(({ value, label }) => (
+                        <button key={value} type="button" onClick={() => setFormData({ ...formData, durationType: value as typeof formData.durationType })} className="flex-1 py-2.5 rounded-xl border text-xs cn-touch-target" style={{ borderColor: formData.durationType === value ? cn.pink : cn.border, background: formData.durationType === value ? cn.pinkBg : "transparent", color: formData.durationType === value ? cn.pink : cn.text }}>{label}</button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm mb-1" style={{ color: cn.text }}>Shift</label>
+                    <div className="flex gap-2">
+                      {[
+                        { value: "day", label: "Day shift" },
+                        { value: "night", label: "Night shift" },
+                        { value: "rotational", label: "Rotational" },
+                      ].map(({ value, label }) => (
+                        <button key={value} type="button" onClick={() => setFormData({ ...formData, shiftType: value as typeof formData.shiftType })} className="flex-1 py-2.5 rounded-xl border text-xs cn-touch-target" style={{ borderColor: formData.shiftType === value ? cn.pink : cn.border, background: formData.shiftType === value ? cn.pinkBg : "transparent", color: formData.shiftType === value ? cn.pink : cn.text }}>{label}</button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm mb-1" style={{ color: cn.text }}>Hours per day</label>
+                    <div className="flex gap-2">
+                      {([8, 12, 24] as const).map((h) => (
+                        <button key={h} type="button" onClick={() => setFormData({ ...formData, hoursPerDay: h })} className="flex-1 py-2.5 rounded-xl border text-xs cn-touch-target" style={{ borderColor: formData.hoursPerDay === h ? cn.pink : cn.border, background: formData.hoursPerDay === h ? cn.pinkBg : "transparent", color: formData.hoursPerDay === h ? cn.pink : cn.text }}>{h}h</button>
+                      ))}
+                    </div>
+                  </div>
+                  {formData.hoursPerDay !== 24 && (
+                    <div>
+                      <label className="block text-sm mb-1" style={{ color: cn.text }}>Shift starts at</label>
+                      <input type="time" value={formData.shiftStartTime} onChange={e => setFormData({ ...formData, shiftStartTime: e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }} placeholder="e.g. 10:00" />
+                      <p className="text-xs mt-1" style={{ color: cn.textSecondary }}>Default is 08:00 — change only if different</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Staffing panel */}
+                <div className="space-y-4" style={{ background: cn.bgInput, padding: "16px", borderRadius: "12px" }}>
+                  <h3 className="text-sm font-medium" style={{ color: cn.text }}>Staffing</h3>
+                  <div>
+                    <label className="block text-sm mb-1" style={{ color: cn.text }}>Staff Level</label>
+                    <select value={formData.staffLevel} onChange={(e) => setFormData({ ...formData, staffLevel: e.target.value as StaffLevel })} className="w-full px-4 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }}>
+                      <option value="L1">Basic Aide — hygiene & companionship</option>
+                      <option value="L2">Trained Caregiver — ADL & vitals</option>
+                      <option value="L3">Senior Caregiver — complex ADL & medication</option>
+                      <option value="L4">Nurse — clinical procedures</option>
                     </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm mb-1" style={{ color: cn.text }}>Staff Pattern</label>
+                    <div className="flex gap-2">
+                      {[
+                        { value: "single", label: "One caregiver per shift" },
+                        { value: "double", label: "Two overlapping caregivers" },
+                        { value: "rotational_team", label: "Rotating team" },
+                      ].map(({ value, label }) => (
+                        <button key={value} type="button" onClick={() => setFormData({ ...formData, staffPattern: value as typeof formData.staffPattern })} className="flex-1 py-2.5 rounded-xl border text-xs cn-touch-target" style={{ borderColor: formData.staffPattern === value ? cn.pink : cn.border, background: formData.staffPattern === value ? cn.pinkBg : "transparent", color: formData.staffPattern === value ? cn.pink : cn.text }}>{label}</button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm mb-1" style={{ color: cn.text }}>Number of caregivers</label>
+                      <input type="number" min={0} defaultValue={1} value={formData.caregiverCount} onChange={(e) => setFormData({ ...formData, caregiverCount: Math.max(0, parseInt(e.target.value, 10) || 0) })} className="w-full px-4 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }} />
+                    </div>
+                    {(formData.staffLevel === "L4" || formData.services.some(s => ["vitals", "NG_tube", "suction", "oxygen_therapy"].includes(s))) && (
+                      <div>
+                        <label className="block text-sm mb-1" style={{ color: cn.text }}>Number of nurses</label>
+                        <input type="number" min={0} defaultValue={0} value={formData.nurseCount} onChange={(e) => setFormData({ ...formData, nurseCount: Math.max(0, parseInt(e.target.value, 10) || 0) })} className="w-full px-4 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }} />
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Step 4: Schedule */}
-            {currentStep === 4 && (
+            {/* Step 5: Budget & Posting */}
+            {currentStep === 5 && (
               <div className="space-y-4">
-                <h2 className="text-xl" style={{ color: cn.text }}>{t("wizard.schedulePreferences")}</h2>
+                <h2 className="text-xl" style={{ color: cn.text }}>Budget & Posting</h2>
+
+                {/* Pricing model */}
                 <div>
-                  <label className="block text-sm mb-1" style={{ color: cn.text }}>{t("wizard.shiftType")}</label>
-                  <div className="flex gap-2 flex-wrap">
-                    {(["day", "night", "rotational"] as const).map((st) => (
-                      <button key={st} type="button" onClick={() => setFormData({ ...formData, shiftType: st })} className="flex-1 min-w-[5rem] py-2.5 rounded-xl border text-xs cn-touch-target" style={{ borderColor: formData.shiftType === st ? cn.pink : cn.border, background: formData.shiftType === st ? cn.pinkBg : "transparent", color: formData.shiftType === st ? cn.pink : cn.text }}>{t(`wizard.shiftType_${st}`)}</button>
+                  <label className="block text-sm mb-1" style={{ color: cn.text }}>Pricing model</label>
+                  <div className="flex gap-2">
+                    {[
+                      { value: "monthly", label: "Monthly" },
+                      { value: "daily", label: "Per day" },
+                      { value: "hourly", label: "Hourly" },
+                    ].map(({ value, label }) => (
+                      <button key={value} type="button" onClick={() => setFormData({ ...formData, preferredModel: value as typeof formData.preferredModel })} className="flex-1 py-2.5 rounded-xl border text-xs cn-touch-target" style={{ borderColor: formData.preferredModel === value ? cn.pink : cn.border, background: formData.preferredModel === value ? cn.pinkBg : "transparent", color: formData.preferredModel === value ? cn.pink : cn.text }}>{label}</button>
                     ))}
                   </div>
                 </div>
-                <div>
-                  <label className="block text-sm mb-1" style={{ color: cn.text }}>{t("wizard.staffPattern")}</label>
-                  <div className="flex gap-2 flex-wrap">
-                    {(["single", "double", "rotational_team"] as const).map((sp) => (
-                      <button key={sp} type="button" onClick={() => setFormData({ ...formData, staffPattern: sp })} className="flex-1 min-w-[5rem] py-2.5 rounded-xl border text-xs cn-touch-target" style={{ borderColor: formData.staffPattern === sp ? cn.pink : cn.border, background: formData.staffPattern === sp ? cn.pinkBg : "transparent", color: formData.staffPattern === sp ? cn.pink : cn.text }}>{t(`wizard.staffPattern_${sp}`)}</button>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm mb-1" style={{ color: cn.text }}>{t("wizard.staffLevel")}</label>
-                  <select value={formData.staffLevel} onChange={(e) => setFormData({ ...formData, staffLevel: e.target.value as StaffLevel })} className="w-full px-4 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }}>
-                    {(["L1", "L2", "L3", "L4"] as const).map((lv) => (
-                      <option key={lv} value={lv}>{t(`packageDetail.staffLevels.${lv}`)}</option>
-                    ))}
-                  </select>
-                </div>
+
+                {/* Budget range */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm mb-1" style={{ color: cn.text }}>{t("wizard.caregiverCount")}</label>
-                    <input type="number" min={0} value={formData.caregiverCount} onChange={(e) => setFormData({ ...formData, caregiverCount: Math.max(0, parseInt(e.target.value, 10) || 0) })} className="w-full px-4 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }} />
+                    <label className="block text-sm mb-1" style={{ color: cn.text }}>Min ৳</label>
+                    <input type="number" value={formData.budgetMin} onChange={e => setFormData({ ...formData, budgetMin: e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }} placeholder="15,000" />
                   </div>
                   <div>
-                    <label className="block text-sm mb-1" style={{ color: cn.text }}>{t("wizard.nurseCount")}</label>
-                    <input type="number" min={0} value={formData.nurseCount} onChange={(e) => setFormData({ ...formData, nurseCount: Math.max(0, parseInt(e.target.value, 10) || 0) })} className="w-full px-4 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }} />
+                    <label className="block text-sm mb-1" style={{ color: cn.text }}>Max ৳</label>
+                    <input type="number" value={formData.budgetMax} onChange={e => setFormData({ ...formData, budgetMax: e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }} placeholder="35,000" />
                   </div>
                 </div>
-                <div>
-                  <label className="block text-sm mb-1" style={{ color: cn.text }}>{t("wizard.hoursPerDay")}</label>
-                  <div className="flex gap-2">
-                    {([8, 12, 24] as const).map((h) => (
-                      <button key={h} type="button" onClick={() => setFormData({ ...formData, hoursPerDay: h })} className="flex-1 py-2.5 rounded-xl border text-xs cn-touch-target" style={{ borderColor: formData.hoursPerDay === h ? cn.pink : cn.border, background: formData.hoursPerDay === h ? cn.pinkBg : "transparent", color: formData.hoursPerDay === h ? cn.pink : cn.text }}>{h}h</button>
-                    ))}
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div><label className="block text-sm mb-1" style={{ color: cn.text }}>{t("wizard.city")}</label><input type="text" value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }} /></div>
-                  <div><label className="block text-sm mb-1" style={{ color: cn.text }}>{t("wizard.area")}</label><input type="text" value={formData.area} onChange={(e) => setFormData({ ...formData, area: e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }} placeholder={t("wizard.areaPlaceholder")} /></div>
-                  <div><label className="block text-sm mb-1" style={{ color: cn.text }}>{t("wizard.addressOptional")}</label><input type="text" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }} /></div>
-                </div>
-                <div>
-                  <label className="block text-sm mb-1" style={{ color: cn.text }}>{t("wizard.locationType")}</label>
-                  <select value={formData.locationType} onChange={(e) => setFormData({ ...formData, locationType: e.target.value as typeof formData.locationType })} className="w-full px-4 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }}>
-                    <option value="">{t("wizard.preferNotSay")}</option>
-                    <option value="home">{t("wizard.locationHome")}</option>
-                    <option value="hospital">{t("wizard.locationHospital")}</option>
-                  </select>
-                </div>
-                <div className="flex flex-wrap gap-3">
+
+                {/* Employer logistics */}
+                <div className="p-4 rounded-xl space-y-3" style={{ background: cn.bgInput, border: `1px solid ${cn.borderLight}` }}>
+                  <p className="text-sm font-medium" style={{ color: cn.text }}>Live-in / logistics</p>
                   <label className="flex items-center gap-2 text-sm cursor-pointer" style={{ color: cn.text }}>
                     <input type="checkbox" checked={formData.accommodationProvided} onChange={(e) => setFormData({ ...formData, accommodationProvided: e.target.checked })} className="rounded" />
-                    {t("wizard.accommodationProvided")}
+                    Accommodation provided
                   </label>
                   <label className="flex items-center gap-2 text-sm cursor-pointer" style={{ color: cn.text }}>
                     <input type="checkbox" checked={formData.foodProvided} onChange={(e) => setFormData({ ...formData, foodProvided: e.target.checked })} className="rounded" />
-                    {t("wizard.foodProvided")}
+                    Meals provided
                   </label>
-                </div>
-                <div><label className="block text-sm mb-1" style={{ color: cn.text }}>{t("wizard.travelDistanceKm")}</label><input type="number" min={0} value={formData.travelDistanceKm} onChange={(e) => setFormData({ ...formData, travelDistanceKm: e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }} placeholder="e.g. 10" /></div>
-                <div><label className="block text-sm mb-1" style={{ color: cn.text }}>{t("wizard.preferredStartDate")}</label><input type="date" value={formData.startDate} onChange={e => setFormData({ ...formData, startDate: e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }} /></div>
-                <div>
-                  <label className="block text-sm mb-1" style={{ color: cn.text }}>{t("wizard.durationType")}</label>
-                  <select value={formData.durationType} onChange={(e) => setFormData({ ...formData, durationType: e.target.value as typeof formData.durationType })} className="w-full px-4 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }}>
-                    <option value="short">{t("wizard.durationShort")}</option>
-                    <option value="monthly">{t("wizard.durationMonthly")}</option>
-                    <option value="long_term">{t("wizard.durationLongTerm")}</option>
-                  </select>
-                </div>
-              </div>
-            )}
-
-            {/* Step 5: Budget */}
-            {currentStep === 5 && (
-              <div className="space-y-4">
-                <h2 className="text-xl" style={{ color: cn.text }}>{t("wizard.budgetRange")}</h2>
-                <p className="text-sm" style={{ color: cn.textSecondary }}>{t("wizard.budgetDesc")}</p>
-                <div>
-                  <label className="block text-sm mb-1" style={{ color: cn.text }}>{t("wizard.preferredPricingModel")}</label>
-                  <select value={formData.preferredModel} onChange={(e) => setFormData({ ...formData, preferredModel: e.target.value as typeof formData.preferredModel })} className="w-full px-4 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }}>
-                    <option value="monthly">{t("wizard.modelMonthly")}</option>
-                    <option value="daily">{t("wizard.modelDaily")}</option>
-                    <option value="hourly">{t("wizard.modelHourly")}</option>
-                  </select>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div><label className="block text-sm mb-1" style={{ color: cn.text }}>{t("wizard.minimum")}</label><input type="number" value={formData.budgetMin} onChange={e => setFormData({ ...formData, budgetMin: e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }} placeholder="15,000" /></div>
-                  <div><label className="block text-sm mb-1" style={{ color: cn.text }}>{t("wizard.maximum")}</label><input type="number" value={formData.budgetMax} onChange={e => setFormData({ ...formData, budgetMax: e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }} placeholder="35,000" /></div>
-                </div>
-                <div className="p-4 rounded-xl space-y-3" style={{ background: cn.bgInput, border: `1px solid ${cn.borderLight}` }}>
-                  <p className="text-sm font-medium" style={{ color: cn.text }}>{t("wizard.medicalOptional")}</p>
-                  <div><label className="block text-xs mb-1" style={{ color: cn.textSecondary }}>{t("wizard.diagnosis")}</label><input type="text" value={formData.diagnosis} onChange={(e) => setFormData({ ...formData, diagnosis: e.target.value })} className="w-full px-3 py-2 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }} /></div>
-                  <div>
-                    <label className="block text-xs mb-1" style={{ color: cn.textSecondary }}>{t("wizard.medicationComplexity")}</label>
-                    <select value={formData.medicationComplexity} onChange={(e) => setFormData({ ...formData, medicationComplexity: e.target.value as typeof formData.medicationComplexity })} className="w-full px-3 py-2 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }}>
-                      <option value="">{t("wizard.preferNotSay")}</option>
-                      <option value="low">{t("wizard.medLow")}</option>
-                      <option value="medium">{t("wizard.medMedium")}</option>
-                      <option value="high">{t("wizard.medHigh")}</option>
-                    </select>
-                  </div>
-                  <p className="text-xs" style={{ color: cn.textSecondary }}>{t("wizard.devices")}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {UCCF_MEDICAL_DEVICES.map((d) => {
-                      const selected = formData.devices.includes(d);
-                      return (
-                        <button key={d} type="button" onClick={() => toggleInField("devices", d)} className="px-3 py-1.5 rounded-lg border text-xs cn-touch-target" style={{ borderColor: selected ? cn.teal : cn.border, background: selected ? cn.tealBg : "transparent", color: selected ? cn.teal : cn.textSecondary }}>{d.replace(/_/g, " ")}</button>
-                      );
-                    })}
-                  </div>
-                  <p className="text-xs" style={{ color: cn.textSecondary }}>{t("wizard.procedures")}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {UCCF_MEDICAL_PROCEDURES.map((p) => {
-                      const selected = formData.procedures.includes(p);
-                      return (
-                        <button key={p} type="button" onClick={() => toggleInField("procedures", p)} className="px-3 py-1.5 rounded-lg border text-xs cn-touch-target" style={{ borderColor: selected ? cn.teal : cn.border, background: selected ? cn.tealBg : "transparent", color: selected ? cn.teal : cn.textSecondary }}>{p.replace(/_/g, " ")}</button>
-                      );
-                    })}
-                  </div>
-                </div>
-                <div><label className="block text-sm mb-1" style={{ color: cn.text }}>{t("wizard.additionalNotes")}</label><textarea value={formData.notes} onChange={e => setFormData({ ...formData, notes: e.target.value })} className="w-full px-4 py-3 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }} rows={3} placeholder={t("wizard.additionalNotesPlaceholder")} /></div>
-
-                {/* Job Expiry Picker */}
-                <div className="p-4 rounded-xl" style={{ background: cn.bgInput, border: `1px solid ${cn.border}` }}>
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: cn.amberBg }}>
-                      <Timer className="w-5 h-5" style={{ color: cn.amber }} />
-                    </div>
+                  {(formData.accommodationProvided || formData.foodProvided) && (
                     <div>
-                      <p className="text-sm" style={{ color: cn.text }}>{t("wizard.listingExpiry")}</p>
-                      <p className="text-xs" style={{ color: cn.textSecondary }}>
-                        {t("wizard.expiryDesc")}
-                      </p>
+                      <label className="block text-xs mb-1" style={{ color: cn.textSecondary }}>Max travel distance (km)</label>
+                      <input type="number" min={0} value={formData.travelDistanceKm} onChange={(e) => setFormData({ ...formData, travelDistanceKm: e.target.value })} className="w-full px-3 py-2 rounded-xl border text-sm" style={{ borderColor: cn.border, color: cn.text, background: cn.bgInput }} placeholder="e.g. 10" />
                     </div>
-                  </div>
+                  )}
+                </div>
+
+                {/* Listing expiry */}
+                <div>
+                  <label className="block text-sm mb-1" style={{ color: cn.text }}>How long should this stay open?</label>
                   <div className="flex gap-2">
                     {[3, 7, 10, 15].map(d => (
                       <button
@@ -872,12 +1012,6 @@ export default function CareRequirementWizardPage() {
                         {d} days
                       </button>
                     ))}
-                  </div>
-                  <div className="flex items-start gap-2 mt-3">
-                    <AlertTriangle className="w-3 h-3 mt-0.5 shrink-0" style={{ color: cn.amber }} />
-                    <p className="text-[10px]" style={{ color: cn.textSecondary }}>
-                      {t("wizard.expiryNote")}
-                    </p>
                   </div>
                 </div>
 
@@ -917,31 +1051,124 @@ export default function CareRequirementWizardPage() {
             {/* Step 6: Review */}
             {currentStep === 6 && (
               <div className="space-y-4">
-                <h2 className="text-xl" style={{ color: cn.text }}>{t("wizard.reviewSubmit")}</h2>
+                <h2 className="text-xl" style={{ color: cn.text }}>Review & Submit</h2>
                 <div className="space-y-3">
-                  <div className="p-3 rounded-xl" style={{ background: cn.bgInput }}><p className="text-xs mb-1" style={{ color: cn.textSecondary }}>{t("wizard.patient")}</p><p className="text-sm" style={{ color: cn.text }}>{formData.patientName || t("wizard.notSpecified")}, {t("wizard.age")} {formData.patientAge || "N/A"}</p></div>
-                  <div className="p-3 rounded-xl" style={{ background: cn.bgInput }}><p className="text-xs mb-1" style={{ color: cn.textSecondary }}>{t("wizard.contactForAgency")}</p><p className="text-sm" style={{ color: cn.text }}>{formData.contactName || "—"} · {formData.contactPhone || "—"}</p></div>
-                  <div className="p-3 rounded-xl" style={{ background: cn.bgInput }}><p className="text-xs mb-1" style={{ color: cn.textSecondary }}>{t("wizard.careTypes")}</p><div className="flex flex-wrap gap-1">{selectedCareTypes.map((ct) => <span key={ct} className="px-2 py-0.5 rounded-full text-xs" style={{ background: cn.pinkBg, color: cn.pink }}>{t(`packageDetail.categories.${ct}`)}</span>)}</div></div>
-                  <div className="p-3 rounded-xl" style={{ background: cn.bgInput }}><p className="text-xs mb-1" style={{ color: cn.textSecondary }}>{t("wizard.schedule")}</p><p className="text-sm" style={{ color: cn.text }}>{t(`wizard.shiftType_${formData.shiftType}`)} · {t(`wizard.staffPattern_${formData.staffPattern}`)} · {formData.hoursPerDay}h/{t("wizard.dayShort")} · {t(`packageDetail.staffLevels.${formData.staffLevel}`)} · {t("wizard.cgNurseShort", { c: formData.caregiverCount, n: formData.nurseCount })} · {t("wizard.starting")} {formData.startDate || "TBD"} · {formData.durationType}</p></div>
-                  <div className="p-3 rounded-xl" style={{ background: cn.bgInput }}><p className="text-xs mb-1" style={{ color: cn.textSecondary }}>{t("wizard.budget")}</p><p className="text-sm" style={{ color: cn.text }}>৳{formData.budgetMin || "?"} – ৳{formData.budgetMax || "?"} · {formData.preferredModel}</p></div>
-                  {/* Expiry info */}
-                  <div className="p-3 rounded-xl flex items-center gap-2" style={{ background: cn.amberBg }}>
-                    <Timer className="w-4 h-4" style={{ color: cn.amber }} />
-                    <div>
-                      <p className="text-xs" style={{ color: cn.textSecondary }}>{t("wizard.listingExpiry")}</p>
-                      <p className="text-sm" style={{ color: cn.amber }}>{t("wizard.expiryDays", { count: parseInt(formData.expiryDays, 10) || 15 })}</p>
-                    </div>
-                  </div>
-                  {/* Marketplace posting indicator */}
-                  <div className="p-3 rounded-xl flex items-center gap-2" style={{ background: postToMarketplace ? cn.greenBg : cn.bgInput }}>
-                    <Globe className="w-4 h-4" style={{ color: postToMarketplace ? cn.green : cn.textSecondary }} />
-                    <div>
-                      <p className="text-xs" style={{ color: cn.textSecondary }}>{t("wizard.distribution")}</p>
-                      <p className="text-sm" style={{ color: postToMarketplace ? cn.green : cn.text }}>
-                        {postToMarketplace ? t("wizard.openMarketplace") : t("wizard.directOnly")}
-                      </p>
-                    </div>
-                  </div>
+                  {(() => {
+                    const pt = myPatients?.find(p => p.id === selectedPatientId);
+                    return (
+                      <>
+                        {/* Patient card */}
+                        <div className="p-3 rounded-xl" style={{ background: cn.bgInput }}>
+                          <div className="flex items-center justify-between mb-1">
+                            <p className="text-xs" style={{ color: cn.textSecondary }}>Patient</p>
+                            <button type="button" onClick={() => setCurrentStep(2)} className="text-xs" style={{ color: cn.pink }}>Edit</button>
+                          </div>
+                          <p className="text-sm" style={{ color: cn.text }}>{pt?.name || "—"}</p>
+                          <p className="text-xs" style={{ color: cn.textSecondary }}>
+                            Age: {pt?.age || "—"} · Conditions: {Array.isArray(pt?.conditions) && pt.conditions.length ? pt.conditions.join(", ") : "—"} · Mobility: {pt?.mobility || "—"}
+                          </p>
+                        </div>
+
+                        {/* Location card */}
+                        <div className="p-3 rounded-xl" style={{ background: cn.bgInput }}>
+                          <div className="flex items-center justify-between mb-1">
+                            <p className="text-xs" style={{ color: cn.textSecondary }}>Location</p>
+                            <button type="button" onClick={() => setCurrentStep(2)} className="text-xs" style={{ color: cn.pink }}>Edit</button>
+                          </div>
+                          <p className="text-sm" style={{ color: cn.text }}>
+                            {formData.city || "Dhaka"}{formData.area ? `, ${formData.area}` : ""} · {formData.locationType === "home" ? "Home care" : formData.locationType === "hospital" ? "Hospital" : "—"}
+                          </p>
+                        </div>
+
+                        {/* Care Types card */}
+                        <div className="p-3 rounded-xl" style={{ background: cn.bgInput }}>
+                          <div className="flex items-center justify-between mb-1">
+                            <p className="text-xs" style={{ color: cn.textSecondary }}>Care Types</p>
+                            <button type="button" onClick={() => setCurrentStep(3)} className="text-xs" style={{ color: cn.pink }}>Edit</button>
+                          </div>
+                          <div className="flex flex-wrap gap-1">
+                            {selectedCareTypes.map((ct) => (
+                              <span key={ct} className="px-2 py-0.5 rounded-full text-xs" style={{ background: cn.pinkBg, color: cn.pink }}>{t(`packageDetail.categories.${ct}`)}</span>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Services card */}
+                        <div className="p-3 rounded-xl" style={{ background: cn.bgInput }}>
+                          <div className="flex items-center justify-between mb-1">
+                            <p className="text-xs" style={{ color: cn.textSecondary }}>Services</p>
+                            <button type="button" onClick={() => setCurrentStep(3)} className="text-xs" style={{ color: cn.pink }}>Edit</button>
+                          </div>
+                          <p className="text-sm" style={{ color: cn.text }}>
+                            {formData.services.length > 0
+                              ? formData.services.map(s => UNIFIED_SERVICES.find(us => us.slug === s)?.label || s).join(", ")
+                              : "None selected"}
+                          </p>
+                        </div>
+
+                        {/* Medical card */}
+                        {(formData.devices.length > 0 || formData.procedures.length > 0) && (
+                          <div className="p-3 rounded-xl" style={{ background: cn.bgInput }}>
+                            <div className="flex items-center justify-between mb-1">
+                              <p className="text-xs" style={{ color: cn.textSecondary }}>Medical</p>
+                              <button type="button" onClick={() => setCurrentStep(3)} className="text-xs" style={{ color: cn.pink }}>Edit</button>
+                            </div>
+                            <p className="text-sm" style={{ color: cn.text }}>
+                              {formData.devices.length > 0 && `Devices: ${formData.devices.join(", ")}`}
+                              {formData.devices.length > 0 && formData.procedures.length > 0 && " · "}
+                              {formData.procedures.length > 0 && `Procedures: ${formData.procedures.join(", ")}`}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Schedule card */}
+                        <div className="p-3 rounded-xl" style={{ background: cn.bgInput }}>
+                          <div className="flex items-center justify-between mb-1">
+                            <p className="text-xs" style={{ color: cn.textSecondary }}>Schedule</p>
+                            <button type="button" onClick={() => setCurrentStep(4)} className="text-xs" style={{ color: cn.pink }}>Edit</button>
+                          </div>
+                          <p className="text-sm" style={{ color: cn.text }}>
+                            Start: {formData.startDate || "TBD"} · Duration: {formData.durationType} · Shift: {formData.shiftType} · {formData.hoursPerDay}h/day
+                            {formData.hoursPerDay !== 24 && ` · Starts at ${formData.shiftStartTime || "08:00"}`}
+                          </p>
+                        </div>
+
+                        {/* Staffing card */}
+                        <div className="p-3 rounded-xl" style={{ background: cn.bgInput }}>
+                          <div className="flex items-center justify-between mb-1">
+                            <p className="text-xs" style={{ color: cn.textSecondary }}>Staffing</p>
+                            <button type="button" onClick={() => setCurrentStep(4)} className="text-xs" style={{ color: cn.pink }}>Edit</button>
+                          </div>
+                          <p className="text-sm" style={{ color: cn.text }}>
+                            Level: {formData.staffLevel} · Pattern: {formData.staffPattern} · Caregivers: {formData.caregiverCount}
+                            {(formData.staffLevel === "L4" || formData.services.some(s => ["vitals", "NG_tube", "suction", "oxygen_therapy"].includes(s))) && ` · Nurses: ${formData.nurseCount}`}
+                          </p>
+                        </div>
+
+                        {/* Budget card */}
+                        <div className="p-3 rounded-xl" style={{ background: cn.bgInput }}>
+                          <div className="flex items-center justify-between mb-1">
+                            <p className="text-xs" style={{ color: cn.textSecondary }}>Budget</p>
+                            <button type="button" onClick={() => setCurrentStep(5)} className="text-xs" style={{ color: cn.pink }}>Edit</button>
+                          </div>
+                          <p className="text-sm" style={{ color: cn.text }}>
+                            ৳{formData.budgetMin || "?"} – ৳{formData.budgetMax || "?"} · {formData.preferredModel}
+                          </p>
+                        </div>
+
+                        {/* Listing card */}
+                        <div className="p-3 rounded-xl" style={{ background: cn.bgInput }}>
+                          <div className="flex items-center justify-between mb-1">
+                            <p className="text-xs" style={{ color: cn.textSecondary }}>Listing</p>
+                            <button type="button" onClick={() => setCurrentStep(5)} className="text-xs" style={{ color: cn.pink }}>Edit</button>
+                          </div>
+                          <p className="text-sm" style={{ color: cn.text }}>
+                            Expires in {formData.expiryDays} days · Marketplace: {postToMarketplace ? "On" : "Off"}
+                          </p>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
             )}

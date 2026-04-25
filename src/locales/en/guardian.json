@@ -416,7 +416,60 @@
     "agencyReviewBasePrice": "Base price",
     "agencyReviewSla": "Service level (SLA)",
     "agencyReviewServicesHeading": "Services by category",
-    "agencyReviewClientCondition": "Typical medical / support notes"
+    "agencyReviewClientCondition": "Typical medical / support notes",
+
+    "agencyStepPackageInfo": "Package Info",
+    "agencyStepStaffing": "Staffing",
+    "agencyStepServices": "Services",
+    "agencyStepSchedule": "Schedule",
+    "agencyStepPricing": "Pricing & SLA",
+    "agencyStepReview": "Review",
+
+    "agencyPackageInfoTitle": "Package Information",
+    "agencyPackageTitleLabel": "Package Title",
+    "agencyCareCategories": "Care categories",
+    "agencyServiceDetailsTitle": "Service scope (optional)",
+
+    "agencyGenderPref": "Caregiver gender preference",
+    "agencyGenderPrefNone": "No preference",
+    "agencyMinExperience": "Min. experience (years)",
+
+    "agencyScheduleTitle": "Schedule",
+    "hours8Label": "Day shift",
+    "hours12Label": "Extended shift",
+    "hours24Label": "24/7 care",
+
+    "agencyMedicalTitle": "Medical capability (optional)",
+    "agencyEquipmentTitle": "Equipment provided",
+
+    "agencyPricingSlaTitle": "Pricing & SLA",
+    "agencyBasePrice": "Base price (BDT)",
+    "agencyPricingModel": "Pricing model",
+    "agencySlaTitle": "Service level agreement",
+    "agencyReplacementHours": "Replacement time (hours)",
+    "agencyEmergencyMinutes": "Emergency response (minutes)",
+    "agencyAttendancePercent": "Attendance guarantee (%)",
+    "agencyReportingFreq": "Reporting frequency",
+    "agencyReportingDaily": "Daily",
+    "agencyReportingWeekly": "Weekly",
+
+    "agencyComplianceTitle": "Compliance & trust",
+    "agencyBgVerified": "Background verified",
+    "agencyMedFit": "Medical fitness certified",
+    "agencyContractRequired": "Contract required",
+    "agencyTrialAvailable": "Trial period available",
+
+    "agencyReviewMedication": "Medical capability",
+    "agencyReviewDevices": "Medical devices",
+    "agencyReviewProcedures": "Procedures",
+    "agencyReviewEquipment": "Equipment",
+    "agencyReviewExclusions": "Exclusions",
+    "agencyReviewAddOns": "Add-ons",
+    "agencyReviewCompliance": "Compliance",
+
+    "agencyPublishPackage": "Publish package",
+    "agencyPublishSuccess": "Package published to marketplace!",
+    "agencyCityRequired": "Enter the city your agency operates in."
   },
   "patientIntake": {
     "emergencyContactHint": "Use the person to reach first for this patient; they can be different from your own details."

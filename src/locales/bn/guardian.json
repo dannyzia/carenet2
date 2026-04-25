@@ -416,7 +416,60 @@
     "agencyReviewBasePrice": "মূল মূল্য",
     "agencyReviewSla": "সেবার মান (SLA)",
     "agencyReviewServicesHeading": "বিভাগ অনুযায়ী সেবা",
-    "agencyReviewClientCondition": "সাধারণ চিকিৎসা / সহায়তা নোট"
+    "agencyReviewClientCondition": "সাধারণ চিকিৎসা / সহায়তা নোট",
+
+    "agencyStepPackageInfo": "প্যাকেজ তথ্য",
+    "agencyStepStaffing": "স্টাফিং",
+    "agencyStepServices": "সেবা",
+    "agencyStepSchedule": "সময়সূচী",
+    "agencyStepPricing": "মূল্য ও SLA",
+    "agencyStepReview": "পর্যালোচনা",
+
+    "agencyPackageInfoTitle": "প্যাকেজ তথ্য",
+    "agencyPackageTitleLabel": "প্যাকেজ শিরোনাম",
+    "agencyCareCategories": "কেয়ার বিভাগ",
+    "agencyServiceDetailsTitle": "সেবার সুযোগ (ঐচ্ছিক)",
+
+    "agencyGenderPref": "পরিচর্যাকারীর লিঙ্গ পছন্দ",
+    "agencyGenderPrefNone": "কোনো পছন্দ নেই",
+    "agencyMinExperience": "সর্বনিম্ন অভিজ্ঞতা (বছর)",
+
+    "agencyScheduleTitle": "সময়সূচী",
+    "hours8Label": "দিনের শিফট",
+    "hours12Label": "বর্ধিত শিফট",
+    "hours24Label": "২৪/৭ কেয়ার",
+
+    "agencyMedicalTitle": "চিকিৎসা সক্ষমতা (ঐচ্ছিক)",
+    "agencyEquipmentTitle": "প্রদত্ত সরঞ্জাম",
+
+    "agencyPricingSlaTitle": "মূল্য ও SLA",
+    "agencyBasePrice": "মূল মূল্য (টাকা)",
+    "agencyPricingModel": "মূল্য নির্ধারণের ধরন",
+    "agencySlaTitle": "সেবার মান চুক্তি",
+    "agencyReplacementHours": "প্রতিস্থাপনের সময় (ঘণ্টা)",
+    "agencyEmergencyMinutes": "জরুরি সাড়া (মিনিট)",
+    "agencyAttendancePercent": "উপস্থিতির গ্যারান্টি (%)",
+    "agencyReportingFreq": "রিপোর্টের ফ্রিকোয়েন্সি",
+    "agencyReportingDaily": "দৈনিক",
+    "agencyReportingWeekly": "সাপ্তাহিক",
+
+    "agencyComplianceTitle": "সম্মতি ও বিশ্বাসযোগ্যতা",
+    "agencyBgVerified": "পটভূমি যাচাইকৃত",
+    "agencyMedFit": "চিকিৎসাগতভাবে উপযুক্ত",
+    "agencyContractRequired": "চুক্তি প্রয়োজন",
+    "agencyTrialAvailable": "ট্রায়াল পিরিয়ড উপলব্ধ",
+
+    "agencyReviewMedication": "চিকিৎসা সক্ষমতা",
+    "agencyReviewDevices": "চিকিৎসা ডিভাইস",
+    "agencyReviewProcedures": "পদ্ধতি",
+    "agencyReviewEquipment": "সরঞ্জাম",
+    "agencyReviewExclusions": "বাদ দেওয়া সেবা",
+    "agencyReviewAddOns": "অ্যাড-অন",
+    "agencyReviewCompliance": "সম্মতি",
+
+    "agencyPublishPackage": "প্যাকেজ প্রকাশ করুন",
+    "agencyPublishSuccess": "প্যাকেজ মার্কেটপ্লেসে প্রকাশিত হয়েছে!",
+    "agencyCityRequired": "আপনার এজেন্সি যে শহরে কাজ করে সেটি লিখুন।"
   },
   "patientIntake": {
     "emergencyContactHint": "এই রোগীর জন্য প্রথমে যোগাযোগ করতে হবে এমন ব্যক্তি দিন; তা আপনার নিজের তথ্য থেকে আলাদা হতে পারে।"
