@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { features } from "@/config/features";
 import { useAuth } from "@/frontend/auth/AuthContext";
 import { useAriaToast } from "@/frontend/hooks/useAriaToast";
+import { roleMarketplaceHubPath } from "@/backend/navigation/roleAppPaths";
 
 /** Target path when care-seeker caregiver discovery is disabled; otherwise null. */
 export function useCareSeekerIsolationTarget(): string | null {
@@ -12,7 +13,7 @@ export function useCareSeekerIsolationTarget(): string | null {
   if (features.careSeekerCaregiverContactEnabled) return null;
   const r = user?.activeRole;
   if (r !== "guardian" && r !== "patient") return null;
-  return `/${r}/marketplace-hub?tab=packages`;
+  return `${roleMarketplaceHubPath(r)}?tab=packages`;
 }
 
 /**

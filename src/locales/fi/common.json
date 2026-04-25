@@ -2,12 +2,17 @@
   "a11y": {
     "bottomNav": "Alapaviga",
     "closeMenu": "Sulje valikko",
+    "closeRoleSidebar": "Close role sidebar",
     "closeSidebar": "Sulje sivupalkki",
     "mainContent": "Pääsisältö",
     "messages": "Viestit",
     "notifications": "Ilmoitukset",
     "openMenu": "Avaa valikko",
+    "openPersonaMenu": "Open profile menu for {{role}}",
+    "personaMenuDisabled": "Profile menu (no active role)",
     "roleNav": "Roolinavigaatio",
+    "roleSidebarClosed": "Role menu closed",
+    "roleSidebarOpened": "Role menu opened",
     "sidebarNav": "Sivupalkinavigaatio",
     "skipToContent": "Hyppää pääsisältöön",
     "switchToDark": "Vaihda pimeään tilaan",
@@ -203,6 +208,7 @@
     "orders": "Tilaukset",
     "patients": "Potilaat",
     "payments": "Maksut",
+    "persona": "Profile",
     "placements": "Sijoitukset",
     "products": "Tuotteet",
     "queue": "Jono",
@@ -670,6 +676,7 @@
     "shop": "Shop Owner"
   },
   "sidebar": {
+    "account": "Account",
     "agencies": "Toimistot",
     "agencyApprovals": "Toimistojen hyväksynnät",
     "analytics": "Analytiikka",
@@ -685,11 +692,13 @@
     "clientIntake": "Asiakkaan vastaanotto",
     "clients": "Asiakkaat",
     "cmsManager": "CMS-hallinta",
+    "commissions": "Commissions",
     "compareCaregivers": "Hoitajien vertailu",
     "contactUs": "Ota yhteyttä",
     "content": "Sisältö",
     "contracts": "Sopimukset",
     "contractsOverview": "Sopimusten yleiskatsaus",
+    "createLead": "Create Lead",
     "dailyEarnings": "Päivittäiset ansiot",
     "dashboard": "Hallintapaneeli",
     "dataPrivacy": "Tietosuoja",
@@ -708,6 +717,7 @@
     "inventory": "Varasto",
     "jobManagement": "Työnhallinta",
     "languages": "Kielet",
+    "leads": "Leads",
     "marketplace": "Markkinapaikka",
     "carePackageCatalog": "Care packages",
     "caregivingJobs": "Caregiving jobs",
@@ -722,6 +732,7 @@
     "myJobs": "Omat työpaikkani",
     "myPatients": "Omat potilaani",
     "newBooking": "Uusi varaus",
+    "noNavItems": "No items available",
     "notifications": "Ilmoitukset",
     "onboarding": "Aloittaminen",
     "orders": "Tilaukset",
@@ -743,6 +754,7 @@
     "products": "Tuotteet",
     "profile": "Profiili",
     "promoManagement": "Mainonnan hallinta",
+    "rates": "Rates",
     "references": "Viitteet",
     "roleActivations": "Role Activations",
     "refundRequest": "Hyvityspyyntö",
@@ -1232,6 +1244,44 @@
       "noHistory": "No audit history available"
     }
   },
+  "home": {
+    "hero": {
+      "brand": "CareNet",
+      "tagline": "Laadukas hoito, yhdistynyt",
+      "subtitle": "Bangladeshin luotettu alusta perheiden yhdistämiseen tarkastetuille hoitajille ja ammattitoimistoille",
+      "experienceApp": "Experience the App",
+      "signInRegister": "Sign in / Register",
+      "jobPortal": "Työportaali",
+      "careShop": "Hoivakauppa",
+      "register": "Rekisteröidy"
+    },
+    "contact": {
+      "emailLabel": "Sähköposti",
+      "emailNow": "Lähetä sähköpostia nyt",
+      "hotline": "Autohuolto",
+      "sendSms": "Lähetä tekstiviesti",
+      "title": "Tarvitsetko apua?"
+    },
+    "features": {
+      "agency": {
+        "description": "Toimiluvan saaneet, korkean suorituskyvyn toimistot luotettavuuden ja vaatimustenmukaisuuden osoitettujen normien kanssa.",
+        "title": "Valvotun toimistoverkko"
+      },
+      "platform": {
+        "description": "Tutustu, varaa, hallitse, kommunikoi, maksa ja seuraa — kaikki yhdestä tehokkaasta hallintapaneelista.",
+        "title": "Yhtenäinen integroitu alusta"
+      },
+      "sectionTitle": "Miksi CareNet?",
+      "tracking": {
+        "description": "Täydellinen näkyvyys hoitajien aikatauluihin ja palvelun tuottamiseen — avoimuutta ja vastuullisuutta.",
+        "title": "Reaaliaikainen hoitoseuranta"
+      },
+      "verified": {
+        "description": "Taustatarkastetut, sertifioituneet ja luotetut ammattilaiset — seulottu poliisien tarkastuksella, terveystarkastuksilla ja psykologisella arvioinnilla.",
+        "title": "Tarkastetut hoitajat"
+      }
+    }
+  },
   "dailySchedule": {
     "addPhoto": "Add photo",
     "addTaskDescription": "Create a task or calendar event for the selected day.",
@@ -1356,44 +1406,6 @@
     "selectPrompt": "Pick a role to explore the app:",
     "subtitle": "Try dashboards and flows with sample data — no real account required.",
     "title": "Experience the App"
-  },
-  "home": {
-    "contact": {
-      "emailLabel": "Sähköposti",
-      "emailNow": "Lähetä sähköpostia nyt",
-      "hotline": "Autohuolto",
-      "sendSms": "Lähetä tekstiviesti",
-      "title": "Tarvitsetko apua?"
-    },
-    "features": {
-      "agency": {
-        "description": "Toimiluvan saaneet, korkean suorituskyvyn toimistot luotettavuuden ja vaatimustenmukaisuuden osoitettujen normien kanssa.",
-        "title": "Valvotun toimistoverkko"
-      },
-      "platform": {
-        "description": "Tutustu, varaa, hallitse, kommunikoi, maksa ja seuraa — kaikki yhdestä tehokkaasta hallintapaneelista.",
-        "title": "Yhtenäinen integroitu alusta"
-      },
-      "sectionTitle": "Miksi CareNet?",
-      "tracking": {
-        "description": "Täydellinen näkyvyys hoitajien aikatauluihin ja palvelun tuottamiseen — avoimuutta ja vastuullisuutta.",
-        "title": "Reaaliaikainen hoitoseuranta"
-      },
-      "verified": {
-        "description": "Taustatarkastetut, sertifioituneet ja luotetut ammattilaiset — seulottu poliisien tarkastuksella, terveystarkastuksilla ja psykologisella arvioinnilla.",
-        "title": "Tarkastetut hoitajat"
-      }
-    },
-    "hero": {
-      "brand": "CareNet",
-      "careShop": "Hoivakauppa",
-      "experienceApp": "Experience the App",
-      "jobPortal": "Työportaali",
-      "register": "Rekisteröidy",
-      "signInRegister": "Sign in / Register",
-      "subtitle": "Bangladeshin luotettu alusta perheiden yhdistämiseen tarkastetuille hoitajille ja ammattitoimistoille",
-      "tagline": "Laadukas hoito, yhdistynyt"
-    }
   },
   "section15": {
     "agencyScorecardSubtitle": "Agency lens on placement quality (?patientId= for a specific client).",

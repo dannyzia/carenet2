@@ -10,13 +10,12 @@ import { LanguageSwitcher } from "@/frontend/components/shared/LanguageSwitcher"
 import { useUnreadCounts } from "@/frontend/hooks/useUnreadCounts";
 import type { Role } from "@/frontend/theme/tokens";
 import { AUTH_PUBLIC_SIGNUP_PATH } from "@/frontend/constants/authPublicPaths";
+import { roleFromPath } from "@/backend/navigation/pathToRole";
 
 const ROLE_SEGMENTS: Role[] = ["caregiver", "guardian", "admin", "moderator", "patient", "agency", "shop"];
 
 function roleForUnreadCounts(pathname: string): Role {
-  const seg = pathname.split("/")[1];
-  if (seg && ROLE_SEGMENTS.includes(seg as Role)) return seg as Role;
-  return "guardian";
+  return roleFromPath(pathname) ?? "guardian";
 }
 
 /** Desktop center nav — essential links only */

@@ -523,12 +523,10 @@ export default function ConnectivityDemoPage() {
 
   const handleGoOffline = useCallback(() => {
     _forceOnline(false);
-    window.dispatchEvent(new Event("offline"));
   }, []);
 
   const handleGoOnline = useCallback(() => {
     _forceOnline(true);
-    window.dispatchEvent(new Event("online"));
   }, []);
 
   const handleSimulateLieFi = useCallback(() => {

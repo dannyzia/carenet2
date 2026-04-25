@@ -229,7 +229,7 @@ export const marketplaceService = {
    * Filters out taken/expired requests. Enforces expiry on access.
    */
   async getCareRequests(filters?: MarketplaceFilters): Promise<CareContract[]> {
-    if (USE_SUPABASE) {
+    if (USE_SUPABASE && !useInAppMockDataset()) {
       return sbRead(`marketplace:care-requests:${dataCacheScope()}`, async () => {
         let q = sbData().from("care_contracts").select("*").in("status", ["published", "bidding", "matched"]).eq("type", "request");
         if (filters?.categories?.length) {
@@ -275,7 +275,7 @@ export const marketplaceService = {
   },
 
   async getCareRequestById(id: string): Promise<CareContract | null> {
-    if (USE_SUPABASE) {
+    if (USE_SUPABASE && !useInAppMockDataset()) {
       return sbRead(`marketplace:care-request:${dataCacheScope()}:${id}`, async () => {
         const { data, error } = await sbData().from("care_contracts").select("*").eq("id", id).single();
         if (error) {
@@ -296,7 +296,7 @@ export const marketplaceService = {
    */
   /** Pass `userId` only for tests; with Supabase the signed-in user is always used (RLS + real UUID). */
   async getMyRequests(userId?: string): Promise<CareContract[]> {
-    if (USE_SUPABASE) {
+    if (USE_SUPABASE && !useInAppMockDataset()) {
       const uid = userId && !userId.endsWith("-current") ? userId : await currentUserId();
       return sbRead(`marketplace:my-requests:${dataCacheScope()}:${uid}`, async () => {
         const { data, error } = await sbData().from("care_contracts").select("*").eq("owner_id", uid).eq("type", "request").order("created_at", { ascending: false });
@@ -1125,7 +1125,7 @@ export const marketplaceService = {
 
   /** Agency board: open guardian requirements agencies can bid on. */
   async countOpenBoardRequirements(): Promise<number> {
-    if (!USE_SUPABASE) {
+    if (!USE_SUPABASE || useInAppMockDataset()) {
       await ensureMkMock();
       return (await this.getCareRequests()).length;
     }

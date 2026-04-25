@@ -1,0 +1,228 @@
+- generic [ref=e2]:
+  - link "Skip to main content" [ref=e3] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e155]:
+    - link "Skip to main content" [ref=e156] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=e157]:
+      - generic [ref=e158]:
+        - search [ref=e159]:
+          - img [ref=e160]
+          - textbox "Search..." [ref=e163]
+        - generic [ref=e164]:
+          - link "Notifications" [ref=e165] [cursor=pointer]:
+            - /url: /notifications
+            - img [ref=e166]
+          - link "Messages" [ref=e169] [cursor=pointer]:
+            - /url: /caregiver/messages
+            - img [ref=e170]
+          - generic [ref=e172] [cursor=pointer]:
+            - generic [ref=e173]: M
+            - generic [ref=e174]:
+              - paragraph [ref=e175]: Mock_Karim Uddin
+              - paragraph [ref=e176]: Caregiver
+            - img [ref=e177]
+    - generic [ref=e179]:
+      - complementary "Sidebar navigation" [ref=e180]:
+        - link "CareNet" [ref=e182] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e183]: CareNet
+        - generic [ref=e184]: Caregiver Portal
+        - generic [ref=e185]:
+          - navigation "Role navigation" [ref=e186]:
+            - generic [ref=e187]:
+              - paragraph [ref=e188]: Main
+              - generic [ref=e189]:
+                - link "Dashboard" [ref=e190] [cursor=pointer]:
+                  - /url: /caregiver/dashboard
+                  - img [ref=e191]
+                  - generic [ref=e196]: Dashboard
+                  - img [ref=e197]
+                - link "My Patients" [ref=e199] [cursor=pointer]:
+                  - /url: /caregiver/assigned-patients
+                  - img [ref=e200]
+                  - generic [ref=e202]: My Patients
+                - link "My Jobs" [ref=e203] [cursor=pointer]:
+                  - /url: /caregiver/jobs
+                  - img [ref=e204]
+                  - generic [ref=e207]: My Jobs
+                - link "Care Marketplace" [ref=e208] [cursor=pointer]:
+                  - /url: /caregiver/marketplace-hub
+                  - img [ref=e209]
+                  - generic [ref=e212]: Care Marketplace
+                - link "Care Log" [ref=e213] [cursor=pointer]:
+                  - /url: /caregiver/care-log
+                  - img [ref=e214]
+                  - generic [ref=e217]: Care Log
+                - link "Care Notes" [ref=e218] [cursor=pointer]:
+                  - /url: /caregiver/care-notes
+                  - img [ref=e219]
+                  - generic [ref=e222]: Care Notes
+                - link "Schedule" [ref=e223] [cursor=pointer]:
+                  - /url: /caregiver/schedule
+                  - img [ref=e224]
+                  - generic [ref=e226]: Schedule
+                - link "Messages" [ref=e227] [cursor=pointer]:
+                  - /url: /caregiver/messages
+                  - img [ref=e228]
+                  - generic [ref=e230]: Messages
+                - link "Earnings" [ref=e231] [cursor=pointer]:
+                  - /url: /caregiver/earnings
+                  - img [ref=e232]
+                  - generic [ref=e234]: Earnings
+                - link "Reviews" [ref=e235] [cursor=pointer]:
+                  - /url: /caregiver/reviews
+                  - img [ref=e236]
+                  - generic [ref=e238]: Reviews
+                - link "Documents" [ref=e239] [cursor=pointer]:
+                  - /url: /caregiver/documents
+                  - img [ref=e240]
+                  - generic [ref=e243]: Documents
+                - link "Profile" [ref=e244] [cursor=pointer]:
+                  - /url: /caregiver/profile
+                  - img [ref=e245]
+                  - generic [ref=e248]: Profile
+            - button "Patient Care" [ref=e251]:
+              - generic [ref=e252]: Patient Care
+              - img [ref=e253]
+            - button "Finance" [ref=e257]:
+              - generic [ref=e258]: Finance
+              - img [ref=e259]
+            - button "Growth" [ref=e263]:
+              - generic [ref=e264]: Growth
+              - img [ref=e265]
+          - generic [ref=e267]:
+            - button "Browse" [ref=e269]:
+              - generic [ref=e270]: Browse
+              - img [ref=e271]
+            - button "Support & Info" [ref=e274]:
+              - generic [ref=e275]: Support & Info
+              - img [ref=e276]
+          - generic [ref=e278]:
+            - generic [ref=e279]:
+              - generic "Establishing channel..." [ref=e281]: Connecting
+              - generic [ref=e283]:
+                - generic [ref=e284]:
+                  - combobox "Interface language" [ref=e285] [cursor=pointer]:
+                    - option "አማርኛ"
+                    - option "العربية"
+                    - option "বাংলা"
+                    - option "Dansk"
+                    - option "Deutsch"
+                    - option "Ελληνικά"
+                    - option "English" [selected]
+                    - option "Español"
+                    - option "فارسی"
+                    - option "Suomi"
+                    - option "Français"
+                    - option "ગુજરાતી"
+                    - option "עברית"
+                    - option "हिन्दी"
+                    - option "Indonesia"
+                    - option "Italiano"
+                    - option "日本語"
+                    - option "ಕನ್ನಡ"
+                    - option "한국어"
+                    - option "മലയാളം"
+                    - option "मराठी"
+                    - option "Melayu"
+                    - option "မြန်မာ"
+                    - option "नेपाली"
+                    - option "Nederlands"
+                    - option "Norsk"
+                    - option "ਪੰਜਾਬੀ"
+                    - option "Polski"
+                    - option "Português"
+                    - option "Русский"
+                    - option "සිංහල"
+                    - option "Svenska"
+                    - option "Kiswahili"
+                    - option "தமிழ்"
+                    - option "తెలుగు"
+                    - option "ไทย"
+                    - option "Türkçe"
+                    - option "اردو"
+                    - option "Tiếng Việt"
+                    - option "繁體中文"
+                    - option "中文"
+                    - option "isiZulu"
+                  - img
+                - button "Switch to dark mode" [ref=e286]:
+                  - img [ref=e287]
+              - link "Settings" [ref=e289] [cursor=pointer]:
+                - /url: /settings
+                - img [ref=e290]
+                - generic [ref=e293]: Settings
+            - button "Log Out" [ref=e295]:
+              - img [ref=e296]
+              - generic [ref=e299]: Log Out
+      - main "Main content" [ref=e301]:
+        - generic [ref=e302]:
+          - generic [ref=e304]:
+            - heading "Good morning, Karim Uddin!" [level=1] [ref=e305]
+            - paragraph [ref=e306]: Here's your caregiving activity today — Friday, April 24, 2026
+          - region "Primary caregiver actions" [ref=e307]:
+            - link "Find jobs" [ref=e308] [cursor=pointer]:
+              - /url: /caregiver/jobs
+            - link "My schedule" [ref=e309] [cursor=pointer]:
+              - /url: /caregiver/schedule
+            - link "Messages" [ref=e310] [cursor=pointer]:
+              - /url: /caregiver/messages
+          - generic [ref=e311]:
+            - heading "Today's shifts" [level=2] [ref=e313]
+            - generic [ref=e314]:
+              - generic [ref=e315]: Type
+              - generic [ref=e316]: Priority
+              - generic [ref=e317]: Entity
+              - generic [ref=e318]: Reason
+              - generic [ref=e319]: Time
+              - generic [ref=e320]: Actions
+            - list [ref=e321]:
+              - listitem [ref=e322]:
+                - generic [ref=e323]:
+                  - generic [ref=e324]: Shift
+                  - generic [ref=e326]: Medium
+                  - generic "Mr. Rahim Ahmed" [ref=e327]
+                  - generic [ref=e328]: Morning routine
+                  - generic [ref=e329]: 9:00 AM
+                  - link "Open shift" [ref=e331] [cursor=pointer]:
+                    - /url: /caregiver/shift/shift-demo-1
+              - listitem [ref=e332]:
+                - generic [ref=e333]:
+                  - generic [ref=e334]: Shift
+                  - generic [ref=e336]: Medium
+                  - generic "New Client" [ref=e337]
+                  - generic [ref=e338]: Initial consultation
+                  - generic [ref=e339]: 2:00 PM
+                  - link "Open shift" [ref=e341] [cursor=pointer]:
+                    - /url: /caregiver/shift/shift-demo-2
+              - listitem [ref=e342]:
+                - generic [ref=e343]:
+                  - generic [ref=e344]: Shift
+                  - generic [ref=e346]: Medium
+                  - generic "Mrs. Hossain" [ref=e347]
+                  - generic [ref=e348]: Evening care
+                  - generic [ref=e349]: 5:00 PM
+                  - link "Open shift" [ref=e351] [cursor=pointer]:
+                    - /url: /caregiver/shift/shift-demo-3
+    - navigation [ref=e352]:
+      - generic [ref=e353]:
+        - link "Home" [ref=e354] [cursor=pointer]:
+          - /url: /caregiver/dashboard
+          - img [ref=e357]
+          - generic [ref=e360]: Home
+        - button "Back" [ref=e361]:
+          - img [ref=e362]
+          - generic [ref=e364]: Back
+        - link "Search" [ref=e365] [cursor=pointer]:
+          - /url: /global-search
+          - img [ref=e367]
+          - generic [ref=e370]: Search
+        - link "Messages" [ref=e371] [cursor=pointer]:
+          - /url: /caregiver/messages
+          - img [ref=e373]
+          - generic [ref=e375]: Messages
+        - button "Menu" [ref=e376]:
+          - img [ref=e377]
+          - generic [ref=e378]: Menu
+  - region "Notifications alt+T"

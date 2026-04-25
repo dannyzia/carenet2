@@ -2,12 +2,17 @@
   "a11y": {
     "bottomNav": "Onderste navigatie",
     "closeMenu": "Sluit menu",
+    "closeRoleSidebar": "Close role sidebar",
     "closeSidebar": "Sluit zijbalk",
     "mainContent": "Hoofdinhoud",
     "messages": "Berichten",
     "notifications": "Meldingen",
     "openMenu": "Open menu",
+    "openPersonaMenu": "Open profile menu for {{role}}",
+    "personaMenuDisabled": "Profile menu (no active role)",
     "roleNav": "Rolnavigatie",
+    "roleSidebarClosed": "Role menu closed",
+    "roleSidebarOpened": "Role menu opened",
     "sidebarNav": "Zijbalknavigatie",
     "skipToContent": "Ga naar hoofdinhoud",
     "switchToDark": "Schakel over naar donkere modus",
@@ -203,6 +208,7 @@
     "orders": "Bestellingen",
     "patients": "Patienten",
     "payments": "Betalingen",
+    "persona": "Profile",
     "placements": "Plaatsingen",
     "products": "Producten",
     "queue": "Wachtrij",
@@ -670,6 +676,7 @@
     "shop": "Shop Owner"
   },
   "sidebar": {
+    "account": "Account",
     "agencies": "Agenturen",
     "agencyApprovals": "Agentuurgoedkeuringen",
     "analytics": "Analyse",
@@ -685,11 +692,13 @@
     "clientIntake": "Cliënt opname",
     "clients": "Cliënten",
     "cmsManager": "CMS-beheerder",
+    "commissions": "Commissions",
     "compareCaregivers": "Zorgverleners vergelijken",
     "contactUs": "Neem contact met ons op",
     "content": "Content",
     "contracts": "Contracten",
     "contractsOverview": "Contractoverzicht",
+    "createLead": "Create Lead",
     "dailyEarnings": "Daginkomsten",
     "dashboard": "Dashboard",
     "dataPrivacy": "Data privacy",
@@ -708,6 +717,7 @@
     "inventory": "Voorraad",
     "jobManagement": "Banenbeheer",
     "languages": "Talen",
+    "leads": "Leads",
     "marketplace": "Marktplaats",
     "carePackageCatalog": "Care packages",
     "caregivingJobs": "Caregiving jobs",
@@ -722,6 +732,7 @@
     "myJobs": "Mijn banen",
     "myPatients": "Mijn patienten",
     "newBooking": "Nieuwe boeking",
+    "noNavItems": "No items available",
     "notifications": "Meldingen",
     "onboarding": "Onboarding",
     "orders": "Bestellingen",
@@ -743,6 +754,7 @@
     "products": "Producten",
     "profile": "Profiel",
     "promoManagement": "Promotiebeheer",
+    "rates": "Rates",
     "references": "Referenties",
     "roleActivations": "Role Activations",
     "refundRequest": "Restitutieverzoek",
@@ -1232,6 +1244,44 @@
       "noHistory": "No audit history available"
     }
   },
+  "home": {
+    "hero": {
+      "brand": "CareNet",
+      "tagline": "Kwaliteit zorg, verbonden",
+      "subtitle": "Bangladesh' vertrouwde platform voor het verbinden van families met geverifieerde zorgverleners en professionele agenturen",
+      "experienceApp": "Experience the App",
+      "signInRegister": "Sign in / Register",
+      "jobPortal": "Banenportaal",
+      "careShop": "Zorgwinkel",
+      "register": "Registreren"
+    },
+    "contact": {
+      "emailLabel": "E-mail",
+      "emailNow": "E-mail nu",
+      "hotline": "Hulplijn",
+      "sendSms": "SMS verzenden",
+      "title": "Hulp nodig?"
+    },
+    "features": {
+      "agency": {
+        "description": "Gecertificeerde, hoogwaardige agenturen met bewezen betrouwbaarheid en conformiteitstandaarden.",
+        "title": "Getoetst agentuurnetwerk"
+      },
+      "platform": {
+        "description": "Ontdekken, boeken, beheren, communiceren, betalen en volgen — alles vanuit één krachtige dashboard.",
+        "title": "Eén geïntegreerd platform"
+      },
+      "sectionTitle": "Waarom CareNet?",
+      "tracking": {
+        "description": "Volledige zichtbaarheid op zorgverlenerschema's en zorglevering — transparantie en verantwoordelijkheid brengen.",
+        "title": "Realtime zorgvolging"
+      },
+      "verified": {
+        "description": "Gecontroleerd, gecertificeerd en vertrouwde professionals — gecontroleerd via politiekeuring, gezondheidscontroles en psychologische evaluatie.",
+        "title": "Geverifieerde zorgverleners"
+      }
+    }
+  },
   "dailySchedule": {
     "addPhoto": "Add photo",
     "addTaskDescription": "Create a task or calendar event for the selected day.",
@@ -1356,44 +1406,6 @@
     "selectPrompt": "Pick a role to explore the app:",
     "subtitle": "Try dashboards and flows with sample data — no real account required.",
     "title": "Experience the App"
-  },
-  "home": {
-    "contact": {
-      "emailLabel": "E-mail",
-      "emailNow": "E-mail nu",
-      "hotline": "Hulplijn",
-      "sendSms": "SMS verzenden",
-      "title": "Hulp nodig?"
-    },
-    "features": {
-      "agency": {
-        "description": "Gecertificeerde, hoogwaardige agenturen met bewezen betrouwbaarheid en conformiteitstandaarden.",
-        "title": "Getoetst agentuurnetwerk"
-      },
-      "platform": {
-        "description": "Ontdekken, boeken, beheren, communiceren, betalen en volgen — alles vanuit één krachtige dashboard.",
-        "title": "Eén geïntegreerd platform"
-      },
-      "sectionTitle": "Waarom CareNet?",
-      "tracking": {
-        "description": "Volledige zichtbaarheid op zorgverlenerschema's en zorglevering — transparantie en verantwoordelijkheid brengen.",
-        "title": "Realtime zorgvolging"
-      },
-      "verified": {
-        "description": "Gecontroleerd, gecertificeerd en vertrouwde professionals — gecontroleerd via politiekeuring, gezondheidscontroles en psychologische evaluatie.",
-        "title": "Geverifieerde zorgverleners"
-      }
-    },
-    "hero": {
-      "brand": "CareNet",
-      "careShop": "Zorgwinkel",
-      "experienceApp": "Experience the App",
-      "jobPortal": "Banenportaal",
-      "register": "Registreren",
-      "signInRegister": "Sign in / Register",
-      "subtitle": "Bangladesh' vertrouwde platform voor het verbinden van families met geverifieerde zorgverleners en professionele agenturen",
-      "tagline": "Kwaliteit zorg, verbonden"
-    }
   },
   "section15": {
     "agencyScorecardSubtitle": "Agency lens on placement quality (?patientId= for a specific client).",

@@ -57,8 +57,7 @@ const config: CapacitorConfig = {
 
     // ─── Keyboard ───
     Keyboard: {
-      resize: "body",
-      resizeOnFullScreen: true,
+      resize: "native",
     },
 
     // ─── Splash Screen ───

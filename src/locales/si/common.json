@@ -2,12 +2,17 @@
   "a11y": {
     "bottomNav": "නියත මෙනුව",
     "closeMenu": "මෙනුව වසන්න",
+    "closeRoleSidebar": "Close role sidebar",
     "closeSidebar": "පැතිදාමය වසන්න",
     "mainContent": "ප්‍රධාන අන්තර්ගතය",
     "messages": "පණිවුඩ",
     "notifications": "දැනුම්දීම්",
     "openMenu": "මෙනුව විවෘත කරන්න",
+    "openPersonaMenu": "Open profile menu for {{role}}",
+    "personaMenuDisabled": "Profile menu (no active role)",
     "roleNav": "භූමිකා මෙනුව",
+    "roleSidebarClosed": "Role menu closed",
+    "roleSidebarOpened": "Role menu opened",
     "sidebarNav": "පැතිදාම මෙනුව",
     "skipToContent": "ප්‍රධාන අන්තර්ගතයට මඟහරුණන්න",
     "switchToDark": "අඳුරු ආකාරයට ස්විච් කරන්න",
@@ -203,6 +208,7 @@
     "orders": "ඇණවුම්",
     "patients": "රෝගීන්",
     "payments": "ගෙවීම්",
+    "persona": "Profile",
     "placements": "පැවරුම්",
     "products": "උත්පාදන",
     "queue": "පෙළ",
@@ -720,6 +726,7 @@
     "shop": "Shop Owner"
   },
   "sidebar": {
+    "account": "Account",
     "agencies": "ආයතන",
     "agencyApprovals": "ආයතන අනුමතිකරණ",
     "analytics": "විශ්ලේෂණ",
@@ -735,11 +742,13 @@
     "clientIntake": "මෙහෙකරු ලබාදීම",
     "clients": "මෙහෙකරුවන්",
     "cmsManager": "CMS කළමනාකරු",
+    "commissions": "Commissions",
     "compareCaregivers": "පැවරුම්කරුවන් පැහැදිලි කරන්න",
     "contactUs": "අප හා සම්බන්ද වන්න",
     "content": "අන්තර්ගතය",
     "contracts": "ගිවිසුම්",
     "contractsOverview": "ගිවිසුම් අවලෝකනය",
+    "createLead": "Create Lead",
     "dailyEarnings": "දිනපතා ආදායම්",
     "dashboard": "පාලක විතානය",
     "dataPrivacy": "දත්ත පෞද්ගලිකත්ව",
@@ -758,6 +767,7 @@
     "inventory": "භාණ්ඩාගාර",
     "jobManagement": "රැකියා කළමනාකරණය",
     "languages": "භාෂා",
+    "leads": "Leads",
     "marketplace": "වෙළඳ පාර්ශ්ව",
     "carePackageCatalog": "Care packages",
     "caregivingJobs": "Caregiving jobs",
@@ -772,6 +782,7 @@
     "myJobs": "මගේ රැකියා",
     "myPatients": "මගේ රෝගීන්",
     "newBooking": "නව පොදු කිරීම",
+    "noNavItems": "No items available",
     "notifications": "දැනුම්දීම්",
     "onboarding": "ලියාපදිංචි කිරීම",
     "orders": "ඇණවුම්",
@@ -793,6 +804,7 @@
     "products": "උත්පාදන",
     "profile": "ප්‍රෝෆයිලය",
     "promoManagement": "ප්‍රචාරණ කළමනාකරණය",
+    "rates": "Rates",
     "references": "අනුවර්තන",
     "roleActivations": "Role Activations",
     "refundRequest": "ආපසු ගෙවීමේ ඉල්ලීම",
@@ -1282,6 +1294,44 @@
       "noHistory": "No audit history available"
     }
   },
+  "home": {
+    "hero": {
+      "brand": "CareNet",
+      "tagline": "ගුණාත්මක පැවරුම්, සම්බන්ධ",
+      "subtitle": "බංග්ලාදේශයේ විශ්වාසවන්ත පැවරුම්කරුවන් සහ වෘත්තීන් සමඟ පවුල් සම්බන්ධ කිරීමේ ප්ලැට්ෆෝමය",
+      "experienceApp": "Experience the App",
+      "signInRegister": "Sign in / Register",
+      "jobPortal": "රැකියා පෝර්ටලය",
+      "careShop": "පැවරුම් කළම",
+      "register": "ලියාපදිංචි වන්න"
+    },
+    "contact": {
+      "emailLabel": "විද්‍යුත්-තැපෑල",
+      "emailNow": "දැන් විද්‍යුත්-තැපෑල",
+      "hotline": "උදව් ලබාගැනීමේ හොට්ලයින්",
+      "sendSms": "එස්එම්එස් යවන්න",
+      "title": "උදව් අවශ්‍යද?"
+    },
+    "features": {
+      "agency": {
+        "description": "ලයිසින්ස් ලත්, ඉහළ ක්‍රියාකාරීත්වයක් දක්වන ආයතන, සාක්ෂිකරණය සහ අනුගමනාත්මක ප්‍රමිතීන් සමඟ.",
+        "title": "විධානමත ආයතන ජාලය"
+      },
+      "platform": {
+        "description": "ආරක්ෂාකාරයන් සොයාගැනීම, පොදු කිරීම, කළමනාකරණය, සන්නිවේදනය, ගෙවීම, සහ අධීක්ෂණය — සියල්ල එක් බලසම්පන්න පාලක විතානයෙන්.",
+        "title": "තනි ඒකාබද්ධ ප්ලැට්ෆෝමය"
+      },
+      "sectionTitle": "මගේ CareNet මගේ?",
+      "tracking": {
+        "description": "පැවරුම්කරුවන්ගේ කාලසටහන් සහ සේවා ලබාදීමේ සම්පූර්ණ දෘෂ්ටිය — පාරදර්ශකතාව සහ කැපවීම ගෙන ඒම.",
+        "title": "කාලසම්බන්ධ පැවරුම් අධීක්ෂණය"
+      },
+      "verified": {
+        "description": "පසුබිම් පරීක්ෂාවෙන් ගත්, සහතික කර ඇති, සහ විශ්වාස කළ හැකි වෘත්තීන් — පොලිස් සහතික කිරීම, සෞඛ්‍ය විභාග, සහ මනෝවෛද්‍ය මුල්‍යාංග මගින් පරීක්ෂා කර ඇත.",
+        "title": "සහතික කළ පැවරුම්කරුවන්"
+      }
+    }
+  },
   "dailySchedule": {
     "addPhoto": "Add photo",
     "addTaskDescription": "Create a task or calendar event for the selected day.",
@@ -1406,44 +1456,6 @@
     "selectPrompt": "Pick a role to explore the app:",
     "subtitle": "Try dashboards and flows with sample data — no real account required.",
     "title": "Experience the App"
-  },
-  "home": {
-    "contact": {
-      "emailLabel": "විද්‍යුත්-තැපෑල",
-      "emailNow": "දැන් විද්‍යුත්-තැපෑල",
-      "hotline": "උදව් ලබාගැනීමේ හොට්ලයින්",
-      "sendSms": "එස්එම්එස් යවන්න",
-      "title": "උදව් අවශ්‍යද?"
-    },
-    "features": {
-      "agency": {
-        "description": "ලයිසින්ස් ලත්, ඉහළ ක්‍රියාකාරීත්වයක් දක්වන ආයතන, සාක්ෂිකරණය සහ අනුගමනාත්මක ප්‍රමිතීන් සමඟ.",
-        "title": "විධානමත ආයතන ජාලය"
-      },
-      "platform": {
-        "description": "ආරක්ෂාකාරයන් සොයාගැනීම, පොදු කිරීම, කළමනාකරණය, සන්නිවේදනය, ගෙවීම, සහ අධීක්ෂණය — සියල්ල එක් බලසම්පන්න පාලක විතානයෙන්.",
-        "title": "තනි ඒකාබද්ධ ප්ලැට්ෆෝමය"
-      },
-      "sectionTitle": "මගේ CareNet මගේ?",
-      "tracking": {
-        "description": "පැවරුම්කරුවන්ගේ කාලසටහන් සහ සේවා ලබාදීමේ සම්පූර්ණ දෘෂ්ටිය — පාරදර්ශකතාව සහ කැපවීම ගෙන ඒම.",
-        "title": "කාලසම්බන්ධ පැවරුම් අධීක්ෂණය"
-      },
-      "verified": {
-        "description": "පසුබිම් පරීක්ෂාවෙන් ගත්, සහතික කර ඇති, සහ විශ්වාස කළ හැකි වෘත්තීන් — පොලිස් සහතික කිරීම, සෞඛ්‍ය විභාග, සහ මනෝවෛද්‍ය මුල්‍යාංග මගින් පරීක්ෂා කර ඇත.",
-        "title": "සහතික කළ පැවරුම්කරුවන්"
-      }
-    },
-    "hero": {
-      "brand": "CareNet",
-      "careShop": "පැවරුම් කළම",
-      "experienceApp": "Experience the App",
-      "jobPortal": "රැකියා පෝර්ටලය",
-      "register": "ලියාපදිංචි වන්න",
-      "signInRegister": "Sign in / Register",
-      "subtitle": "බංග්ලාදේශයේ විශ්වාසවන්ත පැවරුම්කරුවන් සහ වෘත්තීන් සමඟ පවුල් සම්බන්ධ කිරීමේ ප්ලැට්ෆෝමය",
-      "tagline": "ගුණාත්මක පැවරුම්, සම්බන්ධ"
-    }
   },
   "section15": {
     "agencyScorecardSubtitle": "Agency lens on placement quality (?patientId= for a specific client).",

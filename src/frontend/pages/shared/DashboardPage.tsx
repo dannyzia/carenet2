@@ -4,6 +4,7 @@ import { useAuth } from "@/frontend/auth/AuthContext";
 import { cn } from "@/frontend/theme/tokens";
 import { useTranslation } from "react-i18next";
 import { useDocumentTitle } from "@/frontend/hooks";
+import { roleDashboardPath } from "@/backend/navigation/roleAppPaths";
 
 /**
  * DashboardPage — Role-aware redirect.
@@ -30,8 +31,7 @@ export default function DashboardPage() {
     }
 
     // Redirect to role-specific dashboard
-    const roleDashboard = `/${user.activeRole}/dashboard`;
-    navigate(roleDashboard, { replace: true });
+    navigate(roleDashboardPath(user.activeRole), { replace: true });
   }, [isAuthenticated, user, isLoading, navigate]);
 
   // Show spinner while redirecting

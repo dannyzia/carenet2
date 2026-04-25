@@ -2,12 +2,17 @@
   "a11y": {
     "bottomNav": "نیچے کی نیویگیشن",
     "closeMenu": "مینو بند کریں",
+    "closeRoleSidebar": "Close role sidebar",
     "closeSidebar": "سائیڈ بار بند کریں",
     "mainContent": "بنیادی مواد",
     "messages": "پیغامات",
     "notifications": "اطلاعات",
     "openMenu": "مینو کھولیں",
+    "openPersonaMenu": "Open profile menu for {{role}}",
+    "personaMenuDisabled": "Profile menu (no active role)",
     "roleNav": "کردار کی نیویگیشن",
+    "roleSidebarClosed": "Role menu closed",
+    "roleSidebarOpened": "Role menu opened",
     "sidebarNav": "سائیڈ بار نیویگیشن",
     "skipToContent": "بنیادی مواد پر جائیں",
     "switchToDark": "تاریک موڈ میں بدلیں",
@@ -203,6 +208,7 @@
     "orders": "آرڈر",
     "patients": "مریض",
     "payments": "ادائیگی",
+    "persona": "Profile",
     "placements": "تفویض",
     "products": "مصنوعات",
     "queue": "قطار",
@@ -670,6 +676,7 @@
     "shop": "دکان کا مالک"
   },
   "sidebar": {
+    "account": "Account",
     "agencies": "ایجنسیاں",
     "agencyApprovals": "ایجنسی منظوریاں",
     "analytics": "تجزیات",
@@ -685,11 +692,13 @@
     "clientIntake": "مصروف کی انٹیک",
     "clients": "مصروف",
     "cmsManager": "CMS مینیجر",
+    "commissions": "Commissions",
     "compareCaregivers": "دیکھ بھال کنندوں کی موازنہ",
     "contactUs": "ہم سے رابطہ کریں",
     "content": "مواد",
     "contracts": "معاہدے",
     "contractsOverview": "معاہدوں کا جائزہ",
+    "createLead": "Create Lead",
     "dailyEarnings": "روزانہ آمدنی",
     "dashboard": "ڈیش بورڈ",
     "dataPrivacy": "ڈیٹا پرائیویسی",
@@ -708,6 +717,7 @@
     "inventory": "انورنٹری",
     "jobManagement": "ملازمت مینجمنٹ",
     "languages": "زبانیں",
+    "leads": "Leads",
     "marketplace": "مارکیٹ",
     "carePackageCatalog": "Care packages",
     "caregivingJobs": "Caregiving jobs",
@@ -722,6 +732,7 @@
     "myJobs": "میری ملازمتیں",
     "myPatients": "میرے مریض",
     "newBooking": "نیا بکنگ",
+    "noNavItems": "No items available",
     "notifications": "اطلاعات",
     "onboarding": "آون بورڈنگ",
     "orders": "آرڈر",
@@ -743,6 +754,7 @@
     "products": "مصنوعات",
     "profile": "پروفائل",
     "promoManagement": "پروموشن مینجمنٹ",
+    "rates": "Rates",
     "references": "حوالہ",
     "roleActivations": "Role Activations",
     "refundRequest": "واپسی کی درخواست",
@@ -1232,6 +1244,44 @@
       "noHistory": "No audit history available"
     }
   },
+  "home": {
+    "hero": {
+      "brand": "CareNet",
+      "tagline": "کوالٹی دیکھ بھال، جڑے ہوئے",
+      "subtitle": "بنگلہ دیش کا اعتمادی پلیٹ فارم خاندانوں کو تصدیق شدہ دیکھ بھال کنندوں اور پیشہ ور ایجنسیوں سے جوڑنے کے لیے",
+      "experienceApp": "Experience the App",
+      "signInRegister": "Sign in / Register",
+      "jobPortal": "ملازمت کا دروازہ",
+      "careShop": "دیکھ بھال کی دکان",
+      "register": "رجسٹر کریں"
+    },
+    "contact": {
+      "emailLabel": "ای میل",
+      "emailNow": "فوراً ای میل کریں",
+      "hotline": "ہاٹ لائن",
+      "sendSms": "SMS بھیجیں",
+      "title": "مدد چاہیے؟"
+    },
+    "features": {
+      "agency": {
+        "description": "لائسنس یافتہ، اعلی کارکردگی ایجنسیاں جن کے پاس ثبوت شدہ قابلیت اور تعمیل معیارات ہیں۔",
+        "title": "جانچے گئے ایجنسی نیٹ ورک"
+      },
+      "platform": {
+        "description": "دریافت کریں، بک کریں، انتظام کریں، رابطہ کریں، ادائیگی کریں، اور ٹریک کریں — سب کچھ ایک طاقتور ڈیش بورڈ سے",
+        "title": "ایک مربوط پلیٹ فارم"
+      },
+      "sectionTitle": "CareNet کیوں؟",
+      "tracking": {
+        "description": "دیکھ بھال کنندوں کے شیڈول اور خدمت کی فراہمی میں مکمل شفافیت — شفافیت اور ذمہ داری لانا",
+        "title": "ریئل ٹائم دیکھ بھال کی نگرانی"
+      },
+      "verified": {
+        "description": "پس منظر کی جانچ، سرٹیفائیڈ، اور اعتمادی پیشہ وران — پولیس تصدیق، صحت کی جانچ، اور نفسیاتی جائزہ کے ذریعے چھنٹے گئے",
+        "title": "تصدیق شدہ دیکھ بھال کنندے"
+      }
+    }
+  },
   "dailySchedule": {
     "addPhoto": "Add photo",
     "addTaskDescription": "Create a task or calendar event for the selected day.",
@@ -1356,44 +1406,6 @@
     "selectPrompt": "Pick a role to explore the app:",
     "subtitle": "Try dashboards and flows with sample data — no real account required.",
     "title": "Experience the App"
-  },
-  "home": {
-    "contact": {
-      "emailLabel": "ای میل",
-      "emailNow": "فوراً ای میل کریں",
-      "hotline": "ہاٹ لائن",
-      "sendSms": "SMS بھیجیں",
-      "title": "مدد چاہیے؟"
-    },
-    "features": {
-      "agency": {
-        "description": "لائسنس یافتہ، اعلی کارکردگی ایجنسیاں جن کے پاس ثبوت شدہ قابلیت اور تعمیل معیارات ہیں۔",
-        "title": "جانچے گئے ایجنسی نیٹ ورک"
-      },
-      "platform": {
-        "description": "دریافت کریں، بک کریں، انتظام کریں، رابطہ کریں، ادائیگی کریں، اور ٹریک کریں — سب کچھ ایک طاقتور ڈیش بورڈ سے",
-        "title": "ایک مربوط پلیٹ فارم"
-      },
-      "sectionTitle": "CareNet کیوں؟",
-      "tracking": {
-        "description": "دیکھ بھال کنندوں کے شیڈول اور خدمت کی فراہمی میں مکمل شفافیت — شفافیت اور ذمہ داری لانا",
-        "title": "ریئل ٹائم دیکھ بھال کی نگرانی"
-      },
-      "verified": {
-        "description": "پس منظر کی جانچ، سرٹیفائیڈ، اور اعتمادی پیشہ وران — پولیس تصدیق، صحت کی جانچ، اور نفسیاتی جائزہ کے ذریعے چھنٹے گئے",
-        "title": "تصدیق شدہ دیکھ بھال کنندے"
-      }
-    },
-    "hero": {
-      "brand": "CareNet",
-      "careShop": "دیکھ بھال کی دکان",
-      "experienceApp": "Experience the App",
-      "jobPortal": "ملازمت کا دروازہ",
-      "register": "رجسٹر کریں",
-      "signInRegister": "Sign in / Register",
-      "subtitle": "بنگلہ دیش کا اعتمادی پلیٹ فارم خاندانوں کو تصدیق شدہ دیکھ بھال کنندوں اور پیشہ ور ایجنسیوں سے جوڑنے کے لیے",
-      "tagline": "کوالٹی دیکھ بھال، جڑے ہوئے"
-    }
   },
   "section15": {
     "agencyScorecardSubtitle": "Agency lens on placement quality (?patientId= for a specific client).",

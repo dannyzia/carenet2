@@ -10,6 +10,7 @@ import type {
 } from "@/backend/models";
 import type { OperationalDashboardData } from "@/backend/models/operationalDashboard.model";
 import { mapShopOperationalDashboard } from "./shopOperationalMapper";
+import { withDashboardFallback, EMPTY_OPERATIONAL_DASHBOARD } from "./dashboardFallback";
 import { loadMockBarrel } from "@/backend/api/mock/loadMockBarrel";
 import { USE_SUPABASE, sbRead, sb, currentUserId, useInAppMockDataset } from "./_sb";
 import { EMPTY_SHOP_DASHBOARD_STATS } from "./liveEmptyDefaults";
@@ -413,10 +414,19 @@ export const shopService = {
   },
 
   async getOperationalDashboard(): Promise<OperationalDashboardData> {
-    const [orders, stats] = await Promise.all([
-      shopService.getShopDashboardOrders(),
-      shopService.getDashboardStats(),
-    ]);
-    return mapShopOperationalDashboard({ orders, stats });
+    return withDashboardFallback(
+      async () => {
+        const [orders, stats] = await Promise.all([
+          shopService.getShopDashboardOrders(),
+          shopService.getDashboardStats(),
+        ]);
+        return mapShopOperationalDashboard({ orders, stats });
+      },
+      EMPTY_OPERATIONAL_DASHBOARD,
+      (m) => mapShopOperationalDashboard({
+        orders: m.MOCK_SHOP_DASHBOARD_ORDERS,
+        stats: m.MOCK_SHOP_DASHBOARD_STATS,
+      }),
+    );
   },
 };

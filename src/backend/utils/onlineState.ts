@@ -25,6 +25,7 @@ let _online = typeof navigator !== "undefined" ? navigator.onLine : true;
 let _connectionType = "unknown";
 const _listeners = new Set<StatusListener>();
 let _capacitorCleanup: (() => void) | null = null;
+let _forceMode = false; // When true, ignore probe/browser events and keep forced state
 
 // ─── Data Saver change event ───
 type DataSaverListener = (enabled: boolean) => void;
@@ -41,11 +42,25 @@ function _emitDataSaverChange(enabled: boolean) {
 }
 
 function _set(online: boolean) {
-  if (online === _online) return;
   _online = online;
   _listeners.forEach((fn) => {
     try { fn(online); } catch (e) { console.error("[OnlineState] listener error:", e); }
   });
+}
+
+// ─── Test / Hot-Reload Helpers ───
+
+export function _forceOnline(online: boolean) {
+  _forceMode = true;
+  _set(online);
+}
+
+export function _destroy() {
+  stopConnectivityProbe();
+  _capacitorCleanup?.();
+  _listeners.clear();
+  _dataSaverListeners.clear();
+  _forceMode = false;
 }
 
 function _setConnectionType(type: string) {
@@ -140,12 +155,12 @@ async function _probeOnce() {
   if (reachable) {
     _consecutiveFailures = 0;
     _currentProbeInterval = _probeConfig.intervalMs;
-    if (!_online) {
+    if (!_online && !_forceMode) {
       _set(true);
     }
   } else {
     _consecutiveFailures++;
-    if (_consecutiveFailures >= _probeConfig.failThreshold && _online) {
+    if (_consecutiveFailures >= _probeConfig.failThreshold && _online && !_forceMode) {
       console.warn(
         `[OnlineState] Lie-fi detected: ${_consecutiveFailures} consecutive probe failures. Flipping to offline.`
       );
@@ -317,9 +332,11 @@ function _initBrowserEvents() {
   if (typeof window === "undefined") return;
   window.addEventListener("online", () => {
     _consecutiveFailures = 0;
-    _set(true);
+    if (!_forceMode) _set(true);
   });
-  window.addEventListener("offline", () => _set(false));
+  window.addEventListener("offline", () => {
+    if (!_forceMode) _set(false);
+  });
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -402,17 +419,4 @@ export function waitForOnline(signal?: AbortSignal): Promise<void> {
       signal?.removeEventListener("abort", onAbort);
     }
   });
-}
-
-// ─── Test / Hot-Reload Helpers ───
-
-export function _forceOnline(online: boolean) {
-  _set(online);
-}
-
-export function _destroy() {
-  stopConnectivityProbe();
-  _capacitorCleanup?.();
-  _listeners.clear();
-  _dataSaverListeners.clear();
 }

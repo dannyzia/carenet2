@@ -2,12 +2,17 @@
   "a11y": {
     "bottomNav": "Navegação inferior",
     "closeMenu": "Fechar menu",
+    "closeRoleSidebar": "Close role sidebar",
     "closeSidebar": "Fechar barra lateral",
     "mainContent": "Conteúdo principal",
     "messages": "Mensagens",
     "notifications": "Notificações",
     "openMenu": "Abrir menu",
+    "openPersonaMenu": "Open profile menu for {{role}}",
+    "personaMenuDisabled": "Profile menu (no active role)",
     "roleNav": "Navegação por função",
+    "roleSidebarClosed": "Role menu closed",
+    "roleSidebarOpened": "Role menu opened",
     "sidebarNav": "Navegação da barra lateral",
     "skipToContent": "Ir para o conteúdo principal",
     "switchToDark": "Alternar para modo escuro",
@@ -203,6 +208,7 @@
     "orders": "Pedidos",
     "patients": "Pacientes",
     "payments": "Pagamentos",
+    "persona": "Profile",
     "placements": "Alocações",
     "products": "Produtos",
     "queue": "Fila",
@@ -670,6 +676,7 @@
     "shop": "Shop Owner"
   },
   "sidebar": {
+    "account": "Account",
     "agencies": "Agências",
     "agencyApprovals": "Aprovações de agências",
     "analytics": "Análises",
@@ -685,11 +692,13 @@
     "clientIntake": "Entrada do cliente",
     "clients": "Clientes",
     "cmsManager": "Gerenciador CMS",
+    "commissions": "Commissions",
     "compareCaregivers": "Comparar cuidadores",
     "contactUs": "Fale conosco",
     "content": "Conteúdo",
     "contracts": "Contratos",
     "contractsOverview": "Visão geral de contratos",
+    "createLead": "Create Lead",
     "dailyEarnings": "Ganhos diários",
     "dashboard": "Painel",
     "dataPrivacy": "Privacidade de dados",
@@ -708,6 +717,7 @@
     "inventory": "Inventário",
     "jobManagement": "Gerenciamento de empregos",
     "languages": "Idiomas",
+    "leads": "Leads",
     "marketplace": "Marketplace",
     "carePackageCatalog": "Care packages",
     "caregivingJobs": "Caregiving jobs",
@@ -722,6 +732,7 @@
     "myJobs": "Meus empregos",
     "myPatients": "Meus pacientes",
     "newBooking": "Nova reserva",
+    "noNavItems": "No items available",
     "notifications": "Notificações",
     "onboarding": "Integração",
     "orders": "Pedidos",
@@ -743,6 +754,7 @@
     "products": "Produtos",
     "profile": "Perfil",
     "promoManagement": "Gerenciamento de promoções",
+    "rates": "Rates",
     "references": "Referências",
     "roleActivations": "Role Activations",
     "refundRequest": "Solicitação de reembolso",
@@ -1232,6 +1244,44 @@
       "noHistory": "No audit history available"
     }
   },
+  "home": {
+    "hero": {
+      "brand": "CareNet",
+      "tagline": "Cuidado de qualidade, conectado",
+      "subtitle": "Plataforma confiável do Bangladesh para conectar famílias com cuidadores verificados e agências profissionais",
+      "experienceApp": "Experience the App",
+      "signInRegister": "Sign in / Register",
+      "jobPortal": "Portal de empregos",
+      "careShop": "Loja de cuidados",
+      "register": "Registrar"
+    },
+    "contact": {
+      "emailLabel": "Email",
+      "emailNow": "Enviar email agora",
+      "hotline": "Linha direta",
+      "sendSms": "Enviar SMS",
+      "title": "Precisa de ajuda?"
+    },
+    "features": {
+      "agency": {
+        "description": "Agências licenciadas, de alto desempenho, com confiabilidade e padrões de conformidade comprovados.",
+        "title": "Rede de agências verificadas"
+      },
+      "platform": {
+        "description": "Descobrir, reservar, gerenciar, comunicar, pagar e acompanhar — tudo de um painel poderoso.",
+        "title": "Plataforma integrada única"
+      },
+      "sectionTitle": "Por que CareNet?",
+      "tracking": {
+        "description": "Visibilidade completa sobre horários de cuidadores e entrega de serviços — trazendo transparência e responsabilidade.",
+        "title": "Rastreamento de cuidados em tempo real"
+      },
+      "verified": {
+        "description": "Profissionais verificados, certificados e confiáveis — selecionados através de verificação policial, exames de saúde e avaliação psicológica.",
+        "title": "Cuidadores verificados"
+      }
+    }
+  },
   "dailySchedule": {
     "addPhoto": "Add photo",
     "addTaskDescription": "Create a task or calendar event for the selected day.",
@@ -1356,44 +1406,6 @@
     "selectPrompt": "Pick a role to explore the app:",
     "subtitle": "Try dashboards and flows with sample data — no real account required.",
     "title": "Experience the App"
-  },
-  "home": {
-    "contact": {
-      "emailLabel": "Email",
-      "emailNow": "Enviar email agora",
-      "hotline": "Linha direta",
-      "sendSms": "Enviar SMS",
-      "title": "Precisa de ajuda?"
-    },
-    "features": {
-      "agency": {
-        "description": "Agências licenciadas, de alto desempenho, com confiabilidade e padrões de conformidade comprovados.",
-        "title": "Rede de agências verificadas"
-      },
-      "platform": {
-        "description": "Descobrir, reservar, gerenciar, comunicar, pagar e acompanhar — tudo de um painel poderoso.",
-        "title": "Plataforma integrada única"
-      },
-      "sectionTitle": "Por que CareNet?",
-      "tracking": {
-        "description": "Visibilidade completa sobre horários de cuidadores e entrega de serviços — trazendo transparência e responsabilidade.",
-        "title": "Rastreamento de cuidados em tempo real"
-      },
-      "verified": {
-        "description": "Profissionais verificados, certificados e confiáveis — selecionados através de verificação policial, exames de saúde e avaliação psicológica.",
-        "title": "Cuidadores verificados"
-      }
-    },
-    "hero": {
-      "brand": "CareNet",
-      "careShop": "Loja de cuidados",
-      "experienceApp": "Experience the App",
-      "jobPortal": "Portal de empregos",
-      "register": "Registrar",
-      "signInRegister": "Sign in / Register",
-      "subtitle": "Plataforma confiável do Bangladesh para conectar famílias com cuidadores verificados e agências profissionais",
-      "tagline": "Cuidado de qualidade, conectado"
-    }
   },
   "section15": {
     "agencyScorecardSubtitle": "Agency lens on placement quality (?patientId= for a specific client).",

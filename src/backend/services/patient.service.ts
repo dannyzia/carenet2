@@ -12,6 +12,7 @@ import type {
 } from "@/backend/models";
 import type { OperationalDashboardData } from "@/backend/models/operationalDashboard.model";
 import { mapPatientOperationalDashboard } from "./patientOperationalMapper";
+import { withDashboardFallback, EMPTY_OPERATIONAL_DASHBOARD } from "./dashboardFallback";
 import { USE_SUPABASE, sbRead, sbWrite, sb, sbData, currentUserId, useInAppMockDataset } from "./_sb";
 import { demoOfflineDelayAndPick } from "./demoOfflineMock";
 
@@ -416,12 +417,22 @@ export const patientService = {
   },
 
   async getOperationalDashboard(): Promise<OperationalDashboardData> {
-    const [vitals, medications, appointments] = await Promise.all([
-      patientService.getDashboardVitals(),
-      patientService.getDashboardMedications(),
-      patientService.getAppointments(),
-    ]);
-    return mapPatientOperationalDashboard({ vitals, medications, appointments });
+    return withDashboardFallback(
+      async () => {
+        const [vitals, medications, appointments] = await Promise.all([
+          patientService.getDashboardVitals(),
+          patientService.getDashboardMedications(),
+          patientService.getAppointments(),
+        ]);
+        return mapPatientOperationalDashboard({ vitals, medications, appointments });
+      },
+      EMPTY_OPERATIONAL_DASHBOARD,
+      (m) => mapPatientOperationalDashboard({
+        vitals: m.MOCK_PATIENT_DASHBOARD_VITALS,
+        medications: m.MOCK_PATIENT_DASHBOARD_MEDICATIONS,
+        appointments: m.MOCK_PATIENT_APPOINTMENTS,
+      }),
+    );
   },
 };
 

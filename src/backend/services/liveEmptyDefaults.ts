@@ -14,6 +14,7 @@ import type {
   UserInspectorData,
   VerificationCaseData,
   ModeratorDashboardStats,
+  OperationalDashboardData,
 } from "@/backend/models";
 import type {
   StorefrontData,
@@ -196,4 +197,10 @@ export const EMPTY_SHOP_DASHBOARD_STATS: ShopDashboardStats = {
   ordersChangePositive: true,
   customersChangeLabel: "—",
   customersChangePositive: true,
+};
+
+export const EMPTY_OPERATIONAL_DASHBOARD: OperationalDashboardData = {
+  actions: [],
+  queue: [],
+  kpis: [],
 };

@@ -54,7 +54,15 @@ export async function getDeviceToken(): Promise<string | null> {
   return new Promise((resolve) => {
     PushNotifications.addListener("registration", (token: any) => resolve(token.value));
     PushNotifications.addListener("registrationError", () => resolve(null));
-    PushNotifications.register();
+    try {
+      const reg = PushNotifications.register();
+      // register() returns a Promise — catch native-side Firebase errors gracefully
+      if (reg && typeof (reg as Promise<any>).catch === "function") {
+        (reg as Promise<any>).catch(() => resolve(null));
+      }
+    } catch {
+      resolve(null);
+    }
   });
 }
 

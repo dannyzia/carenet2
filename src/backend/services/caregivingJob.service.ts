@@ -2,7 +2,7 @@
  * Caregiving jobs (GAC + CAC) — RPC wrappers aligned with Supabase convergence migration.
  */
 import { assertCompatiblePair, type ConvergenceScopeRow } from "@/backend/domain/caregivingJob/assertCompatible";
-import { USE_SUPABASE, sbData, sbWrite, sbRead, currentUserId } from "./_sb";
+import { USE_SUPABASE, sbData, sbWrite, sbRead, currentUserId, useInAppMockDataset } from "./_sb";
 import { agentDebugLog } from "@/debug/agentDebugLog";
 import { isMissingRestRelation } from "@/backend/utils/supabasePostgrestErrors";
 
@@ -46,7 +46,7 @@ async function fetchScopeRow(contractId: string): Promise<ConvergenceScopeRow> {
 
 export const caregivingJobService = {
   async listAgencyGacContracts(): Promise<AgencyConvergenceContractRow[]> {
-    if (!USE_SUPABASE) return [];
+    if (!USE_SUPABASE || useInAppMockDataset()) return [];
     const userId = await currentUserId();
     return sbRead(`cj:gac:${userId}`, async () => {
       const { data, error } = await sbData()
@@ -69,7 +69,7 @@ export const caregivingJobService = {
   },
 
   async listAgencyCacContracts(): Promise<AgencyConvergenceContractRow[]> {
-    if (!USE_SUPABASE) return [];
+    if (!USE_SUPABASE || useInAppMockDataset()) return [];
     const userId = await currentUserId();
     return sbRead(`cj:cac:${userId}`, async () => {
       const { data, error } = await sbData()
@@ -92,7 +92,7 @@ export const caregivingJobService = {
   },
 
   async listJobsWithAssignments(): Promise<CaregivingJobListRow[]> {
-    if (!USE_SUPABASE) return [];
+    if (!USE_SUPABASE || useInAppMockDataset()) return [];
     const userId = await currentUserId();
     return sbRead(`cj:jobs:${userId}`, async () => {
       const { data, error } = await sbData()

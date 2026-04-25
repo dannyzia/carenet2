@@ -10,6 +10,7 @@ import { useDocumentTitle } from "@/frontend/hooks";
 import { QRCodeSVG } from "qrcode.react";
 import { USE_SUPABASE } from "@/backend/services/supabase";
 import { isMfaRequired } from "@/frontend/auth/mfaConfig";
+import { roleDashboardPath } from "@/backend/navigation/roleAppPaths";
 
 const DEMO_SECRET = "JBSWY3DPEHPK3PXP";
 
@@ -268,7 +269,7 @@ export default function MFASetupPage() {
               </div>
               <h2 className="text-xl mb-2" style={{ color: cn.text }}>Authenticator Enabled!</h2>
               <p className="text-sm mb-6" style={{ color: cn.textSecondary }}>Your account is now protected with two-factor authentication via Google Authenticator.</p>
-              <button onClick={() => navigate(`/${activeRole}/dashboard`, { replace: true })} className="w-full py-3 rounded-xl text-white font-medium" style={{ background: "radial-gradient(118.75% 157.07% at 34.74% -18.75%, #DB869A 0%, #8082ED 100%)" }}>
+              <button onClick={() => navigate(roleDashboardPath(activeRole), { replace: true })} className="w-full py-3 rounded-xl text-white font-medium" style={{ background: "radial-gradient(118.75% 157.07% at 34.74% -18.75%, #DB869A 0%, #8082ED 100%)" }}>
                 Continue to Dashboard
               </button>
             </div>
@@ -277,7 +278,7 @@ export default function MFASetupPage() {
 
         {step !== "done" && (
           <p className="mt-6 text-center text-sm" style={{ color: cn.textSecondary }}>
-            <Link to={`/${activeRole}/dashboard`} className="hover:underline" style={{ color: cn.pink }}>Skip for now</Link>
+            <Link to={roleDashboardPath(activeRole)} className="hover:underline" style={{ color: cn.pink }}>Skip for now</Link>
           </p>
         )}
       </div>

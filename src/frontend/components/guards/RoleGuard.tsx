@@ -1,6 +1,7 @@
 import { Navigate, Outlet } from "react-router";
 import { useAuth } from "@/frontend/auth/AuthContext";
 import type { Role } from "@/frontend/auth/types";
+import { roleDashboardPath } from "@/backend/navigation/roleAppPaths";
 
 interface RoleGuardProps {
   /** Allowed roles for this route branch */
@@ -26,7 +27,7 @@ export function RoleGuard({ allowedRoles }: RoleGuardProps) {
     user.roles.some((r) => allowedRoles.includes(r));
 
   if (!hasAccess) {
-    return <Navigate to={`/${user.activeRole}/dashboard`} replace />;
+    return <Navigate to={roleDashboardPath(user.activeRole)} replace />;
   }
 
   return <Outlet />;

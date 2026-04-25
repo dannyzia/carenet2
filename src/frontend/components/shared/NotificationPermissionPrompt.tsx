@@ -90,8 +90,8 @@ export function NotificationPermissionPrompt({ forceShow = false }: Notification
 
       {/* Prompt card */}
       <div
-        className="relative z-10 w-full sm:max-w-sm bg-white rounded-t-3xl sm:rounded-3xl p-6 pb-8"
-        style={{ boxShadow: "0 -10px 40px rgba(0,0,0,0.15)" }}
+        className="relative z-10 w-full sm:max-w-sm rounded-t-3xl sm:rounded-3xl p-6 pb-8"
+        style={{ background: cn.bgCard, boxShadow: "0 -10px 40px rgba(0,0,0,0.15)" }}
       >
         {/* Close */}
         <button

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Navigate, Outlet, useLocation } from "react-router";
 import { useAuth } from "@/frontend/auth/AuthContext";
 import { getMyChanPProfile, type ChanPProfile } from "@/backend/services/channelPartnerService";
+import { roleDashboardPath } from "@/backend/navigation/roleAppPaths";
 
 export function CpRouteGuard() {
   const { user, isLoading } = useAuth();
@@ -71,7 +72,7 @@ export function CpRouteGuard() {
   }
 
   if (user.activeRole !== "channel_partner") {
-    return <Navigate to={`/${user.activeRole}/dashboard`} replace />;
+    return <Navigate to={roleDashboardPath(user.activeRole)} replace />;
   }
 
   if (profileError) {

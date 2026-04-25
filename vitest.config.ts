@@ -67,7 +67,7 @@ export default defineConfig(({ mode }) => {
       // Component tests can override with `// @vitest-environment jsdom` per-file.
       environment: "node",
 
-      setupFiles: ["./src/test/setup-indexeddb.ts"],
+      setupFiles: ["./src/test/setup-indexeddb.ts", "@testing-library/jest-dom/vitest"],
 
       // Test file discovery
       include: ["src/**/__tests__/**/*.test.ts", "src/**/__tests__/**/*.test.tsx"],

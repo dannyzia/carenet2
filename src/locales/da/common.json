@@ -2,12 +2,17 @@
   "a11y": {
     "bottomNav": "Bundternavigation",
     "closeMenu": "Luk menu",
+    "closeRoleSidebar": "Close role sidebar",
     "closeSidebar": "Luk sidebjælke",
     "mainContent": "Hovedindhold",
     "messages": "Beskeder",
     "notifications": "Notifikationer",
     "openMenu": "Åbn menu",
+    "openPersonaMenu": "Open profile menu for {{role}}",
+    "personaMenuDisabled": "Profile menu (no active role)",
     "roleNav": "Rolle-navigation",
+    "roleSidebarClosed": "Role menu closed",
+    "roleSidebarOpened": "Role menu opened",
     "sidebarNav": "Sidebjælke-navigation",
     "skipToContent": "Spring til hovedindhold",
     "switchToDark": "Skift til mørkt tema",
@@ -203,6 +208,7 @@
     "orders": "Ordrer",
     "patients": "Patienter",
     "payments": "Betalinger",
+    "persona": "Profile",
     "placements": "Placeringer",
     "products": "Produkter",
     "queue": "Kø",
@@ -670,6 +676,7 @@
     "shop": "Shop Owner"
   },
   "sidebar": {
+    "account": "Account",
     "agencies": "Agencier",
     "agencyApprovals": "Agency Godkendelser",
     "analytics": "Analyser",
@@ -685,11 +692,13 @@
     "clientIntake": "Klientindtagelse",
     "clients": "Kunder",
     "cmsManager": "CMS Manager",
+    "commissions": "Commissions",
     "compareCaregivers": "Sammenlign omsorgspersoner",
     "contactUs": "Kontakt os",
     "content": "Indhold",
     "contracts": "Kontrakter",
     "contractsOverview": "Kontraktoversigt",
+    "createLead": "Create Lead",
     "dailyEarnings": "Daglig indtægt",
     "dashboard": "Dashboard",
     "dataPrivacy": "Dataprivathed",
@@ -708,6 +717,7 @@
     "inventory": "Lager",
     "jobManagement": "Jobhåndtering",
     "languages": "Sprog",
+    "leads": "Leads",
     "marketplace": "Markedsplads",
     "carePackageCatalog": "Care packages",
     "caregivingJobs": "Caregiving jobs",
@@ -722,6 +732,7 @@
     "myJobs": "Mine jobs",
     "myPatients": "Mine patienter",
     "newBooking": "Ny booking",
+    "noNavItems": "No items available",
     "notifications": "Notifikationer",
     "onboarding": "Onboarding",
     "orders": "Ordrer",
@@ -743,6 +754,7 @@
     "products": "Produkter",
     "profile": "Profil",
     "promoManagement": "Promohåndtering",
+    "rates": "Rates",
     "references": "Referencer",
     "roleActivations": "Role Activations",
     "refundRequest": "Refusionsanmodning",
@@ -1232,6 +1244,44 @@
       "noHistory": "No audit history available"
     }
   },
+  "home": {
+    "hero": {
+      "brand": "CareNet",
+      "tagline": "Kvalitet omsorg, forbundne",
+      "subtitle": "Bangladeshs betroede platform til at forbinde familier med verificerede omsorgspersoner og professionelle agencier",
+      "experienceApp": "Experience the App",
+      "signInRegister": "Sign in / Register",
+      "jobPortal": "Job Portal",
+      "careShop": "Care Shop",
+      "register": "Registrer"
+    },
+    "contact": {
+      "emailLabel": "E-mail",
+      "emailNow": "Send e-mail nu",
+      "hotline": "Hotline",
+      "sendSms": "Send SMS",
+      "title": "Har du brug for hjælp?"
+    },
+    "features": {
+      "agency": {
+        "description": "Licensierede, højttilfredse agencier med bevist pålidelighed og overholdelsesstandarder.",
+        "title": "Vetted Agency Network"
+      },
+      "platform": {
+        "description": "Opdag, book, håndter, kommuniker, betal og spor — alt fra ét kraftfuldt dashboard.",
+        "title": "Single Integrated Platform"
+      },
+      "sectionTitle": "Hvorfor CareNet?",
+      "tracking": {
+        "description": "Fuld synlighed i omsorgspersoners tidsplaner og servicelevering — bringer gennemsigtighed og ansvarlighed.",
+        "title": "Real-Time Care Tracking"
+      },
+      "verified": {
+        "description": "Baggrundskontrollerede, certificerede og betroede professionelle — screenet gennem politi-verifikation, sundhedskontrol og psykologisk evaluering.",
+        "title": "Verified Caregivers"
+      }
+    }
+  },
   "dailySchedule": {
     "addPhoto": "Add photo",
     "addTaskDescription": "Create a task or calendar event for the selected day.",
@@ -1356,44 +1406,6 @@
     "selectPrompt": "Pick a role to explore the app:",
     "subtitle": "Try dashboards and flows with sample data — no real account required.",
     "title": "Experience the App"
-  },
-  "home": {
-    "contact": {
-      "emailLabel": "E-mail",
-      "emailNow": "Send e-mail nu",
-      "hotline": "Hotline",
-      "sendSms": "Send SMS",
-      "title": "Har du brug for hjælp?"
-    },
-    "features": {
-      "agency": {
-        "description": "Licensierede, højttilfredse agencier med bevist pålidelighed og overholdelsesstandarder.",
-        "title": "Vetted Agency Network"
-      },
-      "platform": {
-        "description": "Opdag, book, håndter, kommuniker, betal og spor — alt fra ét kraftfuldt dashboard.",
-        "title": "Single Integrated Platform"
-      },
-      "sectionTitle": "Hvorfor CareNet?",
-      "tracking": {
-        "description": "Fuld synlighed i omsorgspersoners tidsplaner og servicelevering — bringer gennemsigtighed og ansvarlighed.",
-        "title": "Real-Time Care Tracking"
-      },
-      "verified": {
-        "description": "Baggrundskontrollerede, certificerede og betroede professionelle — screenet gennem politi-verifikation, sundhedskontrol og psykologisk evaluering.",
-        "title": "Verified Caregivers"
-      }
-    },
-    "hero": {
-      "brand": "CareNet",
-      "careShop": "Care Shop",
-      "experienceApp": "Experience the App",
-      "jobPortal": "Job Portal",
-      "register": "Registrer",
-      "signInRegister": "Sign in / Register",
-      "subtitle": "Bangladeshs betroede platform til at forbinde familier med verificerede omsorgspersoner og professionelle agencier",
-      "tagline": "Kvalitet omsorg, forbundne"
-    }
   },
   "section15": {
     "agencyScorecardSubtitle": "Agency lens on placement quality (?patientId= for a specific client).",

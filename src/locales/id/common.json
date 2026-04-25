@@ -2,12 +2,17 @@
   "a11y": {
     "bottomNav": "Navigasi bawah",
     "closeMenu": "Tutup menu",
+    "closeRoleSidebar": "Close role sidebar",
     "closeSidebar": "Tutup sidebar",
     "mainContent": "Konten utama",
     "messages": "Pesan",
     "notifications": "Notifikasi",
     "openMenu": "Buka menu",
+    "openPersonaMenu": "Open profile menu for {{role}}",
+    "personaMenuDisabled": "Profile menu (no active role)",
     "roleNav": "Navigasi peran",
+    "roleSidebarClosed": "Role menu closed",
+    "roleSidebarOpened": "Role menu opened",
     "sidebarNav": "Navigasi sidebar",
     "skipToContent": "Lewati ke konten utama",
     "switchToDark": "Beralih ke mode gelap",
@@ -203,6 +208,7 @@
     "orders": "Pesanan",
     "patients": "Pasien",
     "payments": "Pembayaran",
+    "persona": "Profile",
     "placements": "Penempatan",
     "products": "Produk",
     "queue": "Antrian",
@@ -670,6 +676,7 @@
     "shop": "Shop Owner"
   },
   "sidebar": {
+    "account": "Account",
     "agencies": "Agen",
     "agencyApprovals": "Persetujuan Agen",
     "analytics": "Analitik",
@@ -685,11 +692,13 @@
     "clientIntake": "Penerimaan Klien",
     "clients": "Klien",
     "cmsManager": "Manajer CMS",
+    "commissions": "Commissions",
     "compareCaregivers": "Bandingkan Pemberi Perawatan",
     "contactUs": "Hubungi Kami",
     "content": "Konten",
     "contracts": "Kontrak",
     "contractsOverview": "Ikhtisar Kontrak",
+    "createLead": "Create Lead",
     "dailyEarnings": "Penghasilan Harian",
     "dashboard": "Dasbor",
     "dataPrivacy": "Privasi Data",
@@ -708,6 +717,7 @@
     "inventory": "Inventaris",
     "jobManagement": "Manajemen Pekerjaan",
     "languages": "Bahasa",
+    "leads": "Leads",
     "marketplace": "Marketplace",
     "carePackageCatalog": "Care packages",
     "caregivingJobs": "Caregiving jobs",
@@ -722,6 +732,7 @@
     "myJobs": "Pekerjaan Saya",
     "myPatients": "Pasien Saya",
     "newBooking": "Pemesanan Baru",
+    "noNavItems": "No items available",
     "notifications": "Notifikasi",
     "onboarding": "Onboarding",
     "orders": "Pesanan",
@@ -743,6 +754,7 @@
     "products": "Produk",
     "profile": "Profil",
     "promoManagement": "Manajemen Promo",
+    "rates": "Rates",
     "references": "Referensi",
     "roleActivations": "Role Activations",
     "refundRequest": "Permintaan Pengembalian",
@@ -1232,6 +1244,44 @@
       "noHistory": "No audit history available"
     }
   },
+  "home": {
+    "hero": {
+      "brand": "CareNet",
+      "tagline": "Perawatan berkualitas, terhubung",
+      "subtitle": "Platform tepercaya Bangladesh untuk menghubungkan keluarga dengan pemberi perawatan terverifikasi dan agen profesional",
+      "experienceApp": "Experience the App",
+      "signInRegister": "Sign in / Register",
+      "jobPortal": "Job Portal",
+      "careShop": "Care Shop",
+      "register": "Daftar"
+    },
+    "contact": {
+      "emailLabel": "Email",
+      "emailNow": "Email Sekarang",
+      "hotline": "Hotline",
+      "sendSms": "Kirim SMS",
+      "title": "Butuh Bantuan?"
+    },
+    "features": {
+      "agency": {
+        "description": "Agen berlisensi, berkinerja tinggi dengan standar keandalan dan kepatuhan terbukti.",
+        "title": "Jaringan Agen Terkurasi"
+      },
+      "platform": {
+        "description": "Temukan, pesan, kelola, berkomunikasi, bayar, dan lacak—semuanya dari satu dasbor yang kuat.",
+        "title": "Platform Terintegrasi Tunggal"
+      },
+      "sectionTitle": "Mengapa CareNet?",
+      "tracking": {
+        "description": "Visibilitas penuh ke jadwal pemberi perawatan dan penyampaian layanan—membawa transparansi dan akuntabilitas.",
+        "title": "Pelacakan Perawatan Real-Time"
+      },
+      "verified": {
+        "description": "Profesional terverifikasi, bersertifikat, dan terpercaya—disaring melalui verifikasi polisi, pemeriksaan kesehatan, dan evaluasi psikologis.",
+        "title": "Pemberi Perawatan Terverifikasi"
+      }
+    }
+  },
   "dailySchedule": {
     "addPhoto": "Add photo",
     "addTaskDescription": "Create a task or calendar event for the selected day.",
@@ -1356,44 +1406,6 @@
     "selectPrompt": "Pick a role to explore the app:",
     "subtitle": "Try dashboards and flows with sample data — no real account required.",
     "title": "Experience the App"
-  },
-  "home": {
-    "contact": {
-      "emailLabel": "Email",
-      "emailNow": "Email Sekarang",
-      "hotline": "Hotline",
-      "sendSms": "Kirim SMS",
-      "title": "Butuh Bantuan?"
-    },
-    "features": {
-      "agency": {
-        "description": "Agen berlisensi, berkinerja tinggi dengan standar keandalan dan kepatuhan terbukti.",
-        "title": "Jaringan Agen Terkurasi"
-      },
-      "platform": {
-        "description": "Temukan, pesan, kelola, berkomunikasi, bayar, dan lacak—semuanya dari satu dasbor yang kuat.",
-        "title": "Platform Terintegrasi Tunggal"
-      },
-      "sectionTitle": "Mengapa CareNet?",
-      "tracking": {
-        "description": "Visibilitas penuh ke jadwal pemberi perawatan dan penyampaian layanan—membawa transparansi dan akuntabilitas.",
-        "title": "Pelacakan Perawatan Real-Time"
-      },
-      "verified": {
-        "description": "Profesional terverifikasi, bersertifikat, dan terpercaya—disaring melalui verifikasi polisi, pemeriksaan kesehatan, dan evaluasi psikologis.",
-        "title": "Pemberi Perawatan Terverifikasi"
-      }
-    },
-    "hero": {
-      "brand": "CareNet",
-      "careShop": "Care Shop",
-      "experienceApp": "Experience the App",
-      "jobPortal": "Job Portal",
-      "register": "Daftar",
-      "signInRegister": "Sign in / Register",
-      "subtitle": "Platform tepercaya Bangladesh untuk menghubungkan keluarga dengan pemberi perawatan terverifikasi dan agen profesional",
-      "tagline": "Perawatan berkualitas, terhubung"
-    }
   },
   "section15": {
     "agencyScorecardSubtitle": "Agency lens on placement quality (?patientId= for a specific client).",

@@ -2,12 +2,17 @@
   "a11y": {
     "bottomNav": "దిగువ నావిగేషన్",
     "closeMenu": "మెనును మూసివేయి",
+    "closeRoleSidebar": "Close role sidebar",
     "closeSidebar": "సైడ్‌బార్‌ను మూసివేయి",
     "mainContent": "ప్రధాన కంటెంట్",
     "messages": "సందేశాలు",
     "notifications": "సూచనలు",
     "openMenu": "మెనును తెరువు",
+    "openPersonaMenu": "Open profile menu for {{role}}",
+    "personaMenuDisabled": "Profile menu (no active role)",
     "roleNav": "పాత్ర నావిగేషన్",
+    "roleSidebarClosed": "Role menu closed",
+    "roleSidebarOpened": "Role menu opened",
     "sidebarNav": "సైడ్‌బార్ నావిగేషన్",
     "skipToContent": "ప్రధాన కంటెంట్‌కి దాటవేయి",
     "switchToDark": "డార్క్ మోడ్‌కు మార్చు",
@@ -203,6 +208,7 @@
     "orders": "ఆర్డర్‌లు",
     "patients": "పేషెంట్‌లు",
     "payments": "చెల్లింపులు",
+    "persona": "Profile",
     "placements": "ప్లేస్‌మెంట్‌లు",
     "products": "ప్రోడక్ట్‌లు",
     "queue": "క్యూ",
@@ -670,6 +676,7 @@
     "shop": "Shop Owner"
   },
   "sidebar": {
+    "account": "Account",
     "agencies": "ఏజెన్సీలు",
     "agencyApprovals": "ఏజెన్సీ ఆప్రూవల్‌లు",
     "analytics": "ఆనలిటిక్స్",
@@ -685,11 +692,13 @@
     "clientIntake": "క్లయింట్ ఇంటేక్",
     "clients": "క్లయింట్‌లు",
     "cmsManager": "CMS మేనేజర్",
+    "commissions": "Commissions",
     "compareCaregivers": "కేర్‌గివర్‌లను పోలిచి చూడండి",
     "contactUs": "మమ్మల్ని సంప్రదించండి",
     "content": "కంటెంట్",
     "contracts": "కాంట్రాక్ట్‌లు",
     "contractsOverview": "కాంట్రాక్ట్‌ల సారాంశం",
+    "createLead": "Create Lead",
     "dailyEarnings": "డైలీ ఆదాయాలు",
     "dashboard": "డాష్‌బోర్డ్",
     "dataPrivacy": "డేటా ప్రైవసీ",
@@ -708,6 +717,7 @@
     "inventory": "ఇన్వెంటరీ",
     "jobManagement": "జాబ్ నిర్వహణ",
     "languages": "భాషలు",
+    "leads": "Leads",
     "marketplace": "మార్కెట్‌ప్లేస్",
     "carePackageCatalog": "Care packages",
     "caregivingJobs": "Caregiving jobs",
@@ -722,6 +732,7 @@
     "myJobs": "నా జాబ్‌లు",
     "myPatients": "నా పేషెంట్‌లు",
     "newBooking": "కొత్త బుకింగ్",
+    "noNavItems": "No items available",
     "notifications": "సూచనలు",
     "onboarding": "ఆన్‌బోర్డింగ్",
     "orders": "ఆర్డర్‌లు",
@@ -743,6 +754,7 @@
     "products": "ప్రోడక్ట్‌లు",
     "profile": "ప్రొఫైల్",
     "promoManagement": "ప్రమో నిర్వహణ",
+    "rates": "Rates",
     "references": "రిఫరెన్స్‌లు",
     "roleActivations": "Role Activations",
     "refundRequest": "రిఫండ్ అభ్యర్థన",
@@ -1232,6 +1244,44 @@
       "noHistory": "No audit history available"
     }
   },
+  "home": {
+    "hero": {
+      "brand": "CareNet",
+      "tagline": "క్వాలిటీ కేర్, కనెక్ట్ చేసినది",
+      "subtitle": "బెంగుళూర్‌లో ట్రస్టెడ్ కేర్‌గివర్‌లు మరియు ప్రొఫెషనల్ ఏజెన్సీలతో కుటుంబాలను కనెక్ట్ చేసే విశ్వసనీయమైన ప్లాట్‌ఫారమ్",
+      "experienceApp": "Experience the App",
+      "signInRegister": "Sign in / Register",
+      "jobPortal": "జాబ్ పోర్టల్",
+      "careShop": "కేర్ షాప్",
+      "register": "నమోదు చేయి"
+    },
+    "contact": {
+      "emailLabel": "ఇమెయిల్",
+      "emailNow": "ఇప్పుడే ఇమెయిల్ పంపి",
+      "hotline": "హాట్‌లైన్",
+      "sendSms": "ఎస్‌ఎమ్‌ఎస్ పంపు",
+      "title": "సహాయం కావాలా?"
+    },
+    "features": {
+      "agency": {
+        "description": "ప్రూఫ్ ఆఫ్ రిలయబిలిటీ మరియు కామ్ప్లయన్స్ స్టాండర్డ్‌లతో లైసెన్స్‌తో అధిక కార్యదక్షత కలిగిన ఏజెన్సీలు.",
+        "title": "వెట్‌డ్ ఏజెన్సీ నెట్‌వర్క్"
+      },
+      "platform": {
+        "description": "ఒకే శక్తివంతమైన డాష్‌బోర్డ్‌ నుండి కనుగొని, బుక్ చేసి, నిర్వహించి, కమ్యూనికేట్ చేసి, చెల్లించి, ట్రాక్ చేయండి — అన్నీ ఒక్కచోట.",
+        "title": "సింగిల్ ఇంటిగ్రేటెడ్ ప్లాట్‌ఫారమ్"
+      },
+      "sectionTitle": "ఎందుకు CareNet?",
+      "tracking": {
+        "description": "కేర్‌గివర్ షెడ్యూల్‌లు మరియు సర్వీస్ డెలివరీకి పూర్తి విజిబిలిటీ — ట్రాన్స్‌పారెన్సీ మరియు అకౌంటబిలిటీని తీసుకురావడం.",
+        "title": "రియల్‌టైమ్ కేర్ ట్రాకింగ్"
+      },
+      "verified": {
+        "description": "బ్యాక్‌గ్రౌండ్ తనిఖీ, సర్టిఫైడ్ మరియు ట్రస్టెడ్ ప్రొఫెషనల్‌లు — పోలీస్ వెరిఫికేషన్, హెల్త్ చెక్‌లు మరియు సైకాలజికల్ ఇవాల్యుయేషన్ ద్వారా స్క్రీన్ చేయబడ్డారు.",
+        "title": "వెరిఫైడ్ కేర్‌గివర్‌లు"
+      }
+    }
+  },
   "dailySchedule": {
     "addPhoto": "Add photo",
     "addTaskDescription": "Create a task or calendar event for the selected day.",
@@ -1356,44 +1406,6 @@
     "selectPrompt": "Pick a role to explore the app:",
     "subtitle": "Try dashboards and flows with sample data — no real account required.",
     "title": "Experience the App"
-  },
-  "home": {
-    "contact": {
-      "emailLabel": "ఇమెయిల్",
-      "emailNow": "ఇప్పుడే ఇమెయిల్ పంపి",
-      "hotline": "హాట్‌లైన్",
-      "sendSms": "ఎస్‌ఎమ్‌ఎస్ పంపు",
-      "title": "సహాయం కావాలా?"
-    },
-    "features": {
-      "agency": {
-        "description": "ప్రూఫ్ ఆఫ్ రిలయబిలిటీ మరియు కామ్ప్లయన్స్ స్టాండర్డ్‌లతో లైసెన్స్‌తో అధిక కార్యదక్షత కలిగిన ఏజెన్సీలు.",
-        "title": "వెట్‌డ్ ఏజెన్సీ నెట్‌వర్క్"
-      },
-      "platform": {
-        "description": "ఒకే శక్తివంతమైన డాష్‌బోర్డ్‌ నుండి కనుగొని, బుక్ చేసి, నిర్వహించి, కమ్యూనికేట్ చేసి, చెల్లించి, ట్రాక్ చేయండి — అన్నీ ఒక్కచోట.",
-        "title": "సింగిల్ ఇంటిగ్రేటెడ్ ప్లాట్‌ఫారమ్"
-      },
-      "sectionTitle": "ఎందుకు CareNet?",
-      "tracking": {
-        "description": "కేర్‌గివర్ షెడ్యూల్‌లు మరియు సర్వీస్ డెలివరీకి పూర్తి విజిబిలిటీ — ట్రాన్స్‌పారెన్సీ మరియు అకౌంటబిలిటీని తీసుకురావడం.",
-        "title": "రియల్‌టైమ్ కేర్ ట్రాకింగ్"
-      },
-      "verified": {
-        "description": "బ్యాక్‌గ్రౌండ్ తనిఖీ, సర్టిఫైడ్ మరియు ట్రస్టెడ్ ప్రొఫెషనల్‌లు — పోలీస్ వెరిఫికేషన్, హెల్త్ చెక్‌లు మరియు సైకాలజికల్ ఇవాల్యుయేషన్ ద్వారా స్క్రీన్ చేయబడ్డారు.",
-        "title": "వెరిఫైడ్ కేర్‌గివర్‌లు"
-      }
-    },
-    "hero": {
-      "brand": "CareNet",
-      "careShop": "కేర్ షాప్",
-      "experienceApp": "Experience the App",
-      "jobPortal": "జాబ్ పోర్టల్",
-      "register": "నమోదు చేయి",
-      "signInRegister": "Sign in / Register",
-      "subtitle": "బెంగుళూర్‌లో ట్రస్టెడ్ కేర్‌గివర్‌లు మరియు ప్రొఫెషనల్ ఏజెన్సీలతో కుటుంబాలను కనెక్ట్ చేసే విశ్వసనీయమైన ప్లాట్‌ఫారమ్",
-      "tagline": "క్వాలిటీ కేర్, కనెక్ట్ చేసినది"
-    }
   },
   "section15": {
     "agencyScorecardSubtitle": "Agency lens on placement quality (?patientId= for a specific client).",

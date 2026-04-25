@@ -2,12 +2,17 @@
   "a11y": {
     "bottomNav": "નીચેનું નેવિગેશન",
     "closeMenu": "મેનુ બંધ કરો",
+    "closeRoleSidebar": "Close role sidebar",
     "closeSidebar": "બાજુનું પટ્ટી બંધ કરો",
     "mainContent": "મુખ્ય સામગ્રી",
     "messages": "સંદેશાઓ",
     "notifications": "સૂચનાઓ",
     "openMenu": "મેનુ ખોલો",
+    "openPersonaMenu": "Open profile menu for {{role}}",
+    "personaMenuDisabled": "Profile menu (no active role)",
     "roleNav": "ભૂમિકા નેવિગેશન",
+    "roleSidebarClosed": "Role menu closed",
+    "roleSidebarOpened": "Role menu opened",
     "sidebarNav": "બાજુનું નેવિગેશન",
     "skipToContent": "મુખ્ય સામગ્રી પર જાઓ",
     "switchToDark": "ડાર્ક મોડમાં સ્વિચ કરો",
@@ -203,6 +208,7 @@
     "orders": "ઓર્ડર",
     "patients": "દર્દીઓ",
     "payments": "પેમેન્ટ",
+    "persona": "Profile",
     "placements": "પ્લેસમેન્ટ",
     "products": "પ્રોડક્ટ",
     "queue": "ક્વી",
@@ -670,6 +676,7 @@
     "shop": "Shop Owner"
   },
   "sidebar": {
+    "account": "Account",
     "agencies": "એજન્સીઓ",
     "agencyApprovals": "એજન્સી મંજૂરીઓ",
     "analytics": "એનાલિટિક્સ",
@@ -685,11 +692,13 @@
     "clientIntake": "ગ્રાહક પ્રવેશ",
     "clients": "ગ્રાહકો",
     "cmsManager": "CMS વ્યવસ્થાપક",
+    "commissions": "Commissions",
     "compareCaregivers": "કેરગિવર્સની તુલના",
     "contactUs": "અમારો સંપર્ક કરો",
     "content": "સામગ્રી",
     "contracts": "કરારો",
     "contractsOverview": "કરારોનો આવાહન",
+    "createLead": "Create Lead",
     "dailyEarnings": "દૈનિક આવક",
     "dashboard": "ડેશબોર્ડ",
     "dataPrivacy": "ડેટા ગોપનીયતા",
@@ -708,6 +717,7 @@
     "inventory": "ઈન્વેન્ટરી",
     "jobManagement": "નોકરી વ્યવસ્થાપન",
     "languages": "ભાષાઓ",
+    "leads": "Leads",
     "marketplace": "માર્કેટપ્લેસ",
     "carePackageCatalog": "Care packages",
     "caregivingJobs": "Caregiving jobs",
@@ -722,6 +732,7 @@
     "myJobs": "મારી નોકરીઓ",
     "myPatients": "મારા દર્દીઓ",
     "newBooking": "નવી બુકિંગ",
+    "noNavItems": "No items available",
     "notifications": "સૂચનાઓ",
     "onboarding": "ઓનબોર્ડિંગ",
     "orders": "ઓર્ડર",
@@ -743,6 +754,7 @@
     "products": "પ્રોડક્ટ",
     "profile": "પ્રોફાઇલ",
     "promoManagement": "પ્રમોશન વ્યવસ્થાપન",
+    "rates": "Rates",
     "references": "સંદર્ભ",
     "roleActivations": "Role Activations",
     "refundRequest": "પરત ચુકવણી વિનંતી",
@@ -1232,6 +1244,44 @@
       "noHistory": "No audit history available"
     }
   },
+  "home": {
+    "hero": {
+      "brand": "CareNet",
+      "tagline": "ગુણવત્તાયુક્ત કેર, જોડાયેલ",
+      "subtitle": "બાંગ્લાદેશનું વેરિફાઇડ કેરગિવર્સ અને વ્યવસાયિક એજન્સીઓ સાથે જોડાવવા માટેનું વિશ્વસનીય પ્લેટફોર્મ",
+      "experienceApp": "Experience the App",
+      "signInRegister": "Sign in / Register",
+      "jobPortal": "નોકરી પોર્ટલ",
+      "careShop": "કેર શોપ",
+      "register": "રજીસ્ટર"
+    },
+    "contact": {
+      "emailLabel": "ઇમેલ",
+      "emailNow": "હમણાં ઇમેલ કરો",
+      "hotline": "હોટલાઇન",
+      "sendSms": "એસએમએસ મોકલો",
+      "title": "મદદ જોઈ રહ્યા છો?"
+    },
+    "features": {
+      "agency": {
+        "description": "સાબિત વિશ્વસનીયતા અને અનુસરણ ધોરણો સાથે લાઇસેન્સ પ્રાપ્ત, ઉચ્ચ કાર્યક્ષમતા ધરાવતી એજન્સીઓ.",
+        "title": "ચકાસેલ એજન્સી નેટવર્ક"
+      },
+      "platform": {
+        "description": "શોધો, બુક કરો, વ્યવસ્થાપન કરો, સંવાદ કરો, ચુકવો અને ટ્રેક કરો — એક શક્તિશાળી ડેશબોર્ડમાંથી બધું જ કરો.",
+        "title": "એકલ એકીકૃત પ્લેટફોર્મ"
+      },
+      "sectionTitle": "શા માટે CareNet?",
+      "tracking": {
+        "description": "કેરગિવર સમયપત્રક અને સેવા પૂર્ણ પાડવાની સંપૂર્ણ દેખાશો — પારદર્શકતા અને જવાબદારી લાવવી.",
+        "title": "રિયલ-ટાઇમ કેર ટ્રેકિંગ"
+      },
+      "verified": {
+        "description": "પૃષ્ઠભૂમિ તપાસ કરેલ, સર્ટિફાઇડ અને વિશ્વસનીય વ્યવસાયિકો — પોલીસ તપાસ, આરોગ્ય તપાસ અને માનસિક મૂલ્યાંકન દ્વારા ચકાસેલ.",
+        "title": "ચકાસેલ કેરગિવર્સ"
+      }
+    }
+  },
   "dailySchedule": {
     "addPhoto": "Add photo",
     "addTaskDescription": "Create a task or calendar event for the selected day.",
@@ -1356,44 +1406,6 @@
     "selectPrompt": "Pick a role to explore the app:",
     "subtitle": "Try dashboards and flows with sample data — no real account required.",
     "title": "Experience the App"
-  },
-  "home": {
-    "contact": {
-      "emailLabel": "ઇમેલ",
-      "emailNow": "હમણાં ઇમેલ કરો",
-      "hotline": "હોટલાઇન",
-      "sendSms": "એસએમએસ મોકલો",
-      "title": "મદદ જોઈ રહ્યા છો?"
-    },
-    "features": {
-      "agency": {
-        "description": "સાબિત વિશ્વસનીયતા અને અનુસરણ ધોરણો સાથે લાઇસેન્સ પ્રાપ્ત, ઉચ્ચ કાર્યક્ષમતા ધરાવતી એજન્સીઓ.",
-        "title": "ચકાસેલ એજન્સી નેટવર્ક"
-      },
-      "platform": {
-        "description": "શોધો, બુક કરો, વ્યવસ્થાપન કરો, સંવાદ કરો, ચુકવો અને ટ્રેક કરો — એક શક્તિશાળી ડેશબોર્ડમાંથી બધું જ કરો.",
-        "title": "એકલ એકીકૃત પ્લેટફોર્મ"
-      },
-      "sectionTitle": "શા માટે CareNet?",
-      "tracking": {
-        "description": "કેરગિવર સમયપત્રક અને સેવા પૂર્ણ પાડવાની સંપૂર્ણ દેખાશો — પારદર્શકતા અને જવાબદારી લાવવી.",
-        "title": "રિયલ-ટાઇમ કેર ટ્રેકિંગ"
-      },
-      "verified": {
-        "description": "પૃષ્ઠભૂમિ તપાસ કરેલ, સર્ટિફાઇડ અને વિશ્વસનીય વ્યવસાયિકો — પોલીસ તપાસ, આરોગ્ય તપાસ અને માનસિક મૂલ્યાંકન દ્વારા ચકાસેલ.",
-        "title": "ચકાસેલ કેરગિવર્સ"
-      }
-    },
-    "hero": {
-      "brand": "CareNet",
-      "careShop": "કેર શોપ",
-      "experienceApp": "Experience the App",
-      "jobPortal": "નોકરી પોર્ટલ",
-      "register": "રજીસ્ટર",
-      "signInRegister": "Sign in / Register",
-      "subtitle": "બાંગ્લાદેશનું વેરિફાઇડ કેરગિવર્સ અને વ્યવસાયિક એજન્સીઓ સાથે જોડાવવા માટેનું વિશ્વસનીય પ્લેટફોર્મ",
-      "tagline": "ગુણવત્તાયુક્ત કેર, જોડાયેલ"
-    }
   },
   "section15": {
     "agencyScorecardSubtitle": "Agency lens on placement quality (?patientId= for a specific client).",

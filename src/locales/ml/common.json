@@ -2,12 +2,17 @@
   "a11y": {
     "bottomNav": "താഴെയുള്ള നാവിഗേഷൻ",
     "closeMenu": "മെനു അടയ്ക്കുക",
+    "closeRoleSidebar": "Close role sidebar",
     "closeSidebar": "സൈഡ്ബാർ അടയ്ക്കുക",
     "mainContent": "പ്രധാന ഉള്ളടക്കം",
     "messages": "സന്ദേശങ്ങൾ",
     "notifications": "അറിയിപ്പുകൾ",
     "openMenu": "മെനു തുറക്കുക",
+    "openPersonaMenu": "Open profile menu for {{role}}",
+    "personaMenuDisabled": "Profile menu (no active role)",
     "roleNav": "ആധാരിത നാവിഗേഷൻ",
+    "roleSidebarClosed": "Role menu closed",
+    "roleSidebarOpened": "Role menu opened",
     "sidebarNav": "സൈഡ്ബാർ നാവിഗേഷൻ",
     "skipToContent": "പ്രധാന ഉള്ളടക്കത്തിലേക്ക് കുതിക്കുക",
     "switchToDark": "ഇരുണ്ട മോഡിലേക്ക് മാറുക",
@@ -203,6 +208,7 @@
     "orders": "ഓർഡറുകൾ",
     "patients": "രോഗികൾ",
     "payments": "പേയ്മെന്റുകൾ",
+    "persona": "Profile",
     "placements": "പ്ലേസ്മെന്റുകൾ",
     "products": "പ്രൊഡക്ടുകൾ",
     "queue": "ക്യൂ",
@@ -720,6 +726,7 @@
     "shop": "Shop Owner"
   },
   "sidebar": {
+    "account": "Account",
     "agencies": "ഏജൻസികൾ",
     "agencyApprovals": "ഏജൻസി അപ്രൂവലുകൾ",
     "analytics": "എനലിറ്റിക്സ്",
@@ -735,11 +742,13 @@
     "clientIntake": "ക്ലയന്റ് ഇൻടേക്ക്",
     "clients": "ക്ലയന്റുകൾ",
     "cmsManager": "CMS മാനേജർ",
+    "commissions": "Commissions",
     "compareCaregivers": "കെയർഗിവർസ് താരതമ്യം",
     "contactUs": "നമ്മുമായി ബന്ധപ്പെടുക",
     "content": "ഉള്ളടക്കം",
     "contracts": "കരാറുകൾ",
     "contractsOverview": "കരാറിന്റെ നിരീക്ഷണം",
+    "createLead": "Create Lead",
     "dailyEarnings": "ദിവസവാർഷിക തുക",
     "dashboard": "ഡാഷ്ബോർഡ്",
     "dataPrivacy": "ഡാറ്റ പ്രൈവസി",
@@ -758,6 +767,7 @@
     "inventory": "സ്റ്റോറിൽ",
     "jobManagement": "ജോബ് മാനേജ്മെന്റ്",
     "languages": "ഭാഷകൾ",
+    "leads": "Leads",
     "marketplace": "മാർക്കറ്റ്പ്ലേസ്",
     "carePackageCatalog": "Care packages",
     "caregivingJobs": "Caregiving jobs",
@@ -772,6 +782,7 @@
     "myJobs": "എന്റെ ജോബ്സ്",
     "myPatients": "എന്റെ രോഗികൾ",
     "newBooking": "പുതിയ ബുക്കിംഗ്",
+    "noNavItems": "No items available",
     "notifications": "അറിയിപ്പുകൾ",
     "onboarding": "ഓൺബോർഡിംഗ്",
     "orders": "ഓർഡറുകൾ",
@@ -793,6 +804,7 @@
     "products": "പ്രൊഡക്ടുകൾ",
     "profile": "പ്രൊഫൈൽ",
     "promoManagement": "പ്രോമോ മാനേജ്മെന്റ്",
+    "rates": "Rates",
     "references": "റഫറൻസുകൾ",
     "roleActivations": "Role Activations",
     "refundRequest": "റീഫണ്ട് അഭ്യർത്ഥന",
@@ -1282,6 +1294,44 @@
       "noHistory": "No audit history available"
     }
   },
+  "home": {
+    "hero": {
+      "brand": "CareNet",
+      "tagline": "നിലവാരമുള്ള കെയർ, കണക്റ്റഡ്",
+      "subtitle": "ബംഗ്ലാദേശിന്റെ വിശ്വാസയോഗ്യമായ പ്ലാറ്റ്ഫോം കുടുംബങ്ങളെ വെറിഫൈഡ് കെയർഗിവർസുമായും പ്രൊഫഷണൽ ഏജൻസികളുമായും ബന്ധിപ്പിക്കുന്നതിന്",
+      "experienceApp": "Experience the App",
+      "signInRegister": "Sign in / Register",
+      "jobPortal": "ജോബ് പോർട്ടൽ",
+      "careShop": "കെയർ ഷോപ്പ്",
+      "register": "രജിസ്ടർ ചെയ്യുക"
+    },
+    "contact": {
+      "emailLabel": "ഇമെയിൽ",
+      "emailNow": "ഇപ്പോൾ ഇമെയിൽ അയയ്ക്കുക",
+      "hotline": "ഹോട്ട്‌ലൈൻ",
+      "sendSms": "എസ്.എം.എസ് അയയ്ക്കുക",
+      "title": "സഹായം ആവശ്യമുണ്ടോ?"
+    },
+    "features": {
+      "agency": {
+        "description": "അനുമതിപത്രമുള്ള, ഉയർന്ന പ്രകടനം കാഴ്ചവച്ച ഏജൻസികൾ, തെളിഞ്ഞ വിശ്വാസയോഗ്യതയും അനുബന്ധ നിലവാരങ്ങളും ഉള്ളവ.",
+        "title": "വെറിഫൈഡ് ഏജൻസി നെറ്റ്‌വർക്ക്"
+      },
+      "platform": {
+        "description": "കണ്ടുപിടിക്കുക, ബുക്ക് ചെയ്യുക, മാനേജ് ചെയ്യുക, ആശയവിനിമയം നടത്തുക, പേയ്മെന്റ് ചെയ്യുക, ട്രാക്ക് ചെയ്യുക — എല്ലാം ഒരു ശക്തമായ ഡാഷ്ബോർഡിൽ നിന്ന്.",
+        "title": "ഏകീകൃത പ്ലാറ്റ്ഫോം"
+      },
+      "sectionTitle": "എന്തുകൊണ്ട് CareNet?",
+      "tracking": {
+        "description": "കെയർഗിവർ ഷെഡ്യൂളുകളുടെയും സേവന വിതരണത്തിന്റെയും പൂർണ്ണ ദൃശ്യാഭ്യാസം — സുതാര്യതയും ഉത്തരവാദിത്തവും കൊണ്ടുവരുന്നു.",
+        "title": "റിയല് ടൈം കെയർ ട്രാക്കിംഗ്"
+      },
+      "verified": {
+        "description": "പശ്ചാത്തല പരിശോധന, സർട്ടിഫിക്കേഷൻ, വിശ്വാസയോഗ്യത — പോലീസ് വെറിഫിക്കേഷൻ, ആരോഗ്യ പരിശോധന, മനഃശാസ്ത്രപരമായ വിലയിരുത്തലുകൾ വഴി സ്ക്രീനിംഗ് ചെയ്ത പ്രൊഫഷണലുകൾ.",
+        "title": "വെറിഫൈഡ് കെയർഗിവർസ്"
+      }
+    }
+  },
   "dailySchedule": {
     "addPhoto": "Add photo",
     "addTaskDescription": "Create a task or calendar event for the selected day.",
@@ -1406,44 +1456,6 @@
     "selectPrompt": "Pick a role to explore the app:",
     "subtitle": "Try dashboards and flows with sample data — no real account required.",
     "title": "Experience the App"
-  },
-  "home": {
-    "contact": {
-      "emailLabel": "ഇമെയിൽ",
-      "emailNow": "ഇപ്പോൾ ഇമെയിൽ അയയ്ക്കുക",
-      "hotline": "ഹോട്ട്‌ലൈൻ",
-      "sendSms": "എസ്.എം.എസ് അയയ്ക്കുക",
-      "title": "സഹായം ആവശ്യമുണ്ടോ?"
-    },
-    "features": {
-      "agency": {
-        "description": "അനുമതിപത്രമുള്ള, ഉയർന്ന പ്രകടനം കാഴ്ചവച്ച ഏജൻസികൾ, തെളിഞ്ഞ വിശ്വാസയോഗ്യതയും അനുബന്ധ നിലവാരങ്ങളും ഉള്ളവ.",
-        "title": "വെറിഫൈഡ് ഏജൻസി നെറ്റ്‌വർക്ക്"
-      },
-      "platform": {
-        "description": "കണ്ടുപിടിക്കുക, ബുക്ക് ചെയ്യുക, മാനേജ് ചെയ്യുക, ആശയവിനിമയം നടത്തുക, പേയ്മെന്റ് ചെയ്യുക, ട്രാക്ക് ചെയ്യുക — എല്ലാം ഒരു ശക്തമായ ഡാഷ്ബോർഡിൽ നിന്ന്.",
-        "title": "ഏകീകൃത പ്ലാറ്റ്ഫോം"
-      },
-      "sectionTitle": "എന്തുകൊണ്ട് CareNet?",
-      "tracking": {
-        "description": "കെയർഗിവർ ഷെഡ്യൂളുകളുടെയും സേവന വിതരണത്തിന്റെയും പൂർണ്ണ ദൃശ്യാഭ്യാസം — സുതാര്യതയും ഉത്തരവാദിത്തവും കൊണ്ടുവരുന്നു.",
-        "title": "റിയല് ടൈം കെയർ ട്രാക്കിംഗ്"
-      },
-      "verified": {
-        "description": "പശ്ചാത്തല പരിശോധന, സർട്ടിഫിക്കേഷൻ, വിശ്വാസയോഗ്യത — പോലീസ് വെറിഫിക്കേഷൻ, ആരോഗ്യ പരിശോധന, മനഃശാസ്ത്രപരമായ വിലയിരുത്തലുകൾ വഴി സ്ക്രീനിംഗ് ചെയ്ത പ്രൊഫഷണലുകൾ.",
-        "title": "വെറിഫൈഡ് കെയർഗിവർസ്"
-      }
-    },
-    "hero": {
-      "brand": "CareNet",
-      "careShop": "കെയർ ഷോപ്പ്",
-      "experienceApp": "Experience the App",
-      "jobPortal": "ജോബ് പോർട്ടൽ",
-      "register": "രജിസ്ടർ ചെയ്യുക",
-      "signInRegister": "Sign in / Register",
-      "subtitle": "ബംഗ്ലാദേശിന്റെ വിശ്വാസയോഗ്യമായ പ്ലാറ്റ്ഫോം കുടുംബങ്ങളെ വെറിഫൈഡ് കെയർഗിവർസുമായും പ്രൊഫഷണൽ ഏജൻസികളുമായും ബന്ധിപ്പിക്കുന്നതിന്",
-      "tagline": "നിലവാരമുള്ള കെയർ, കണക്റ്റഡ്"
-    }
   },
   "section15": {
     "agencyScorecardSubtitle": "Agency lens on placement quality (?patientId= for a specific client).",

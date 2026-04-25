@@ -2,12 +2,17 @@
   "a11y": {
     "bottomNav": "底部导航",
     "closeMenu": "关闭菜单",
+    "closeRoleSidebar": "Close role sidebar",
     "closeSidebar": "关闭侧边栏",
     "mainContent": "主内容",
     "messages": "消息",
     "notifications": "通知",
     "openMenu": "打开菜单",
+    "openPersonaMenu": "Open profile menu for {{role}}",
+    "personaMenuDisabled": "Profile menu (no active role)",
     "roleNav": "角色导航",
+    "roleSidebarClosed": "Role menu closed",
+    "roleSidebarOpened": "Role menu opened",
     "sidebarNav": "侧边栏导航",
     "skipToContent": "跳至主内容",
     "switchToDark": "切换到深色模式",
@@ -203,6 +208,7 @@
     "orders": "订单",
     "patients": "患者",
     "payments": "付款",
+    "persona": "Profile",
     "placements": "安置",
     "products": "产品",
     "queue": "队列",
@@ -670,6 +676,7 @@
     "shop": "Shop Owner"
   },
   "sidebar": {
+    "account": "Account",
     "agencies": "机构",
     "agencyApprovals": "机构审批",
     "analytics": "分析",
@@ -685,11 +692,13 @@
     "clientIntake": "客户录入",
     "clients": "客户",
     "cmsManager": "CMS管理器",
+    "commissions": "Commissions",
     "compareCaregivers": "护理人员对比",
     "contactUs": "联系我们",
     "content": "内容",
     "contracts": "合同",
     "contractsOverview": "合同概览",
+    "createLead": "Create Lead",
     "dailyEarnings": "日收入",
     "dashboard": "仪表板",
     "dataPrivacy": "数据隐私",
@@ -708,6 +717,7 @@
     "inventory": "库存",
     "jobManagement": "工作管理",
     "languages": "语言",
+    "leads": "Leads",
     "marketplace": "市场",
     "carePackageCatalog": "Care packages",
     "caregivingJobs": "Caregiving jobs",
@@ -722,6 +732,7 @@
     "myJobs": "我的工作",
     "myPatients": "我的患者",
     "newBooking": "新预订",
+    "noNavItems": "No items available",
     "notifications": "通知",
     "onboarding": "入驻",
     "orders": "订单",
@@ -743,6 +754,7 @@
     "products": "产品",
     "profile": "个人资料",
     "promoManagement": "促销管理",
+    "rates": "Rates",
     "references": "参考",
     "roleActivations": "Role Activations",
     "refundRequest": "退款请求",
@@ -1232,6 +1244,44 @@
       "noHistory": "No audit history available"
     }
   },
+  "home": {
+    "hero": {
+      "brand": "CareNet",
+      "tagline": "优质护理，互联",
+      "subtitle": "孟加拉国值得信赖的平台，连接家庭与验证护理人员和专业机构",
+      "experienceApp": "Experience the App",
+      "signInRegister": "Sign in / Register",
+      "jobPortal": "工作门户",
+      "careShop": "护理商店",
+      "register": "注册"
+    },
+    "contact": {
+      "emailLabel": "电子邮件",
+      "emailNow": "立即发送电子邮件",
+      "hotline": "热线",
+      "sendSms": "发送短信",
+      "title": "需要帮助？"
+    },
+    "features": {
+      "agency": {
+        "description": "具有可靠性和合规性标准的持牌、高绩效机构。",
+        "title": "审核机构网络"
+      },
+      "platform": {
+        "description": "一站式强大仪表板，涵盖发现、预订、管理、沟通、付款和跟踪。",
+        "title": "单一集成平台"
+      },
+      "sectionTitle": "为什么选择CareNet？",
+      "tracking": {
+        "description": "全面了解护理人员日程和服务交付情况——带来透明度和责任感。",
+        "title": "实时护理跟踪"
+      },
+      "verified": {
+        "description": "背景审查、认证和值得信赖的专业人员——通过警方审查、健康检查和心理评估筛选。",
+        "title": "验证护理人员"
+      }
+    }
+  },
   "dailySchedule": {
     "addPhoto": "Add photo",
     "addTaskDescription": "Create a task or calendar event for the selected day.",
@@ -1356,44 +1406,6 @@
     "selectPrompt": "Pick a role to explore the app:",
     "subtitle": "Try dashboards and flows with sample data — no real account required.",
     "title": "Experience the App"
-  },
-  "home": {
-    "contact": {
-      "emailLabel": "电子邮件",
-      "emailNow": "立即发送电子邮件",
-      "hotline": "热线",
-      "sendSms": "发送短信",
-      "title": "需要帮助？"
-    },
-    "features": {
-      "agency": {
-        "description": "具有可靠性和合规性标准的持牌、高绩效机构。",
-        "title": "审核机构网络"
-      },
-      "platform": {
-        "description": "一站式强大仪表板，涵盖发现、预订、管理、沟通、付款和跟踪。",
-        "title": "单一集成平台"
-      },
-      "sectionTitle": "为什么选择CareNet？",
-      "tracking": {
-        "description": "全面了解护理人员日程和服务交付情况——带来透明度和责任感。",
-        "title": "实时护理跟踪"
-      },
-      "verified": {
-        "description": "背景审查、认证和值得信赖的专业人员——通过警方审查、健康检查和心理评估筛选。",
-        "title": "验证护理人员"
-      }
-    },
-    "hero": {
-      "brand": "CareNet",
-      "careShop": "护理商店",
-      "experienceApp": "Experience the App",
-      "jobPortal": "工作门户",
-      "register": "注册",
-      "signInRegister": "Sign in / Register",
-      "subtitle": "孟加拉国值得信赖的平台，连接家庭与验证护理人员和专业机构",
-      "tagline": "优质护理，互联"
-    }
   },
   "section15": {
     "agencyScorecardSubtitle": "Agency lens on placement quality (?patientId= for a specific client).",

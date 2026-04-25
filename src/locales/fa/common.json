@@ -2,12 +2,17 @@
   "a11y": {
     "bottomNav": "ناوبری پایینی",
     "closeMenu": "بستن منو",
+    "closeRoleSidebar": "Close role sidebar",
     "closeSidebar": "بستن نوار کناری",
     "mainContent": "محتوای اصلی",
     "messages": "پیام‌ها",
     "notifications": "اعلان‌ها",
     "openMenu": "باز کردن منو",
+    "openPersonaMenu": "Open profile menu for {{role}}",
+    "personaMenuDisabled": "Profile menu (no active role)",
     "roleNav": "ناوبری نقش‌ها",
+    "roleSidebarClosed": "Role menu closed",
+    "roleSidebarOpened": "Role menu opened",
     "sidebarNav": "ناوبری نوار کناری",
     "skipToContent": "پرش به محتوای اصلی",
     "switchToDark": "تعویض به حالت تاریک",
@@ -203,6 +208,7 @@
     "orders": "سفارشات",
     "patients": "بیماران",
     "payments": "پرداخت‌ها",
+    "persona": "Profile",
     "placements": "قرارگیری‌ها",
     "products": "محصولات",
     "queue": "صف",
@@ -670,6 +676,7 @@
     "shop": "Shop Owner"
   },
   "sidebar": {
+    "account": "Account",
     "agencies": "آژانس‌ها",
     "agencyApprovals": "تأیید آژانس‌ها",
     "analytics": "تحلیل‌ها",
@@ -685,11 +692,13 @@
     "clientIntake": "پذیرش مشتری",
     "clients": "مشتریان",
     "cmsManager": "مدیر CMS",
+    "commissions": "Commissions",
     "compareCaregivers": "مقایسه مراقبت‌کنندگان",
     "contactUs": "تماس با ما",
     "content": "محتوا",
     "contracts": "قراردادها",
     "contractsOverview": "مرور کلی قراردادها",
+    "createLead": "Create Lead",
     "dailyEarnings": "درآمد روزانه",
     "dashboard": "داشبورد",
     "dataPrivacy": "حریم خصوصی داده",
@@ -708,6 +717,7 @@
     "inventory": "موجودی",
     "jobManagement": "مدیریت شغل",
     "languages": "زبان‌ها",
+    "leads": "Leads",
     "marketplace": "بازار",
     "carePackageCatalog": "Care packages",
     "caregivingJobs": "Caregiving jobs",
@@ -722,6 +732,7 @@
     "myJobs": "شغل‌های من",
     "myPatients": "بیماران من",
     "newBooking": "رزرو جدید",
+    "noNavItems": "No items available",
     "notifications": "اعلان‌ها",
     "onboarding": "ورود",
     "orders": "سفارشات",
@@ -743,6 +754,7 @@
     "products": "محصولات",
     "profile": "پروفایل",
     "promoManagement": "مدیریت تبلیغات",
+    "rates": "Rates",
     "references": "مراجع",
     "roleActivations": "Role Activations",
     "refundRequest": "درخواست بازپرداخت",
@@ -1232,6 +1244,44 @@
       "noHistory": "No audit history available"
     }
   },
+  "home": {
+    "hero": {
+      "brand": "CareNet",
+      "tagline": "مراقبت با کیفیت، متصل",
+      "subtitle": "پلتفرم قابل اعتماد بنگلادش برای اتصال خانواده‌ها با مراقبت‌کنندگان تأیید شده و آژانس‌های حرفه‌ای",
+      "experienceApp": "Experience the App",
+      "signInRegister": "Sign in / Register",
+      "jobPortal": "درگاه شغل",
+      "careShop": "فروشگاه مراقبت",
+      "register": "ثبت‌نام"
+    },
+    "contact": {
+      "emailLabel": "ایمیل",
+      "emailNow": "ایمیل اکنون",
+      "hotline": "خط مستقیم",
+      "sendSms": "ارسال پیامک",
+      "title": "نیاز به کمک؟"
+    },
+    "features": {
+      "agency": {
+        "description": "آژانس‌های مجاز با عملکرد بالا با استانداردهای قابل اعتماد بودن و پایبندی ثابت.",
+        "title": "شبکه آژانس‌های تأیید شده"
+      },
+      "platform": {
+        "description": "کشف، رزرو، مدیریت، ارتباط، پرداخت و پیگیری — همه از یک داشبورد قدرتمند.",
+        "title": "پلتفرم یکپارچه"
+      },
+      "sectionTitle": "چرا CareNet؟",
+      "tracking": {
+        "description": "پوشش کامل برنامه‌های مراقبت‌کنندگان و ارائه خدمات — شفافیت و پاسخگویی را فراهم می‌کند.",
+        "title": "پیگیری مراقبت در رایانامه‌ای"
+      },
+      "verified": {
+        "description": "متخصصان تأیید شده با پیشینه‌ی تأیید شده — از طریق تأیید پلیس، بررسی سلامت و ارزیابی روانی.",
+        "title": "مراقبت‌کنندگان تأیید شده"
+      }
+    }
+  },
   "dailySchedule": {
     "addPhoto": "Add photo",
     "addTaskDescription": "Create a task or calendar event for the selected day.",
@@ -1356,44 +1406,6 @@
     "selectPrompt": "Pick a role to explore the app:",
     "subtitle": "Try dashboards and flows with sample data — no real account required.",
     "title": "Experience the App"
-  },
-  "home": {
-    "contact": {
-      "emailLabel": "ایمیل",
-      "emailNow": "ایمیل اکنون",
-      "hotline": "خط مستقیم",
-      "sendSms": "ارسال پیامک",
-      "title": "نیاز به کمک؟"
-    },
-    "features": {
-      "agency": {
-        "description": "آژانس‌های مجاز با عملکرد بالا با استانداردهای قابل اعتماد بودن و پایبندی ثابت.",
-        "title": "شبکه آژانس‌های تأیید شده"
-      },
-      "platform": {
-        "description": "کشف، رزرو، مدیریت، ارتباط، پرداخت و پیگیری — همه از یک داشبورد قدرتمند.",
-        "title": "پلتفرم یکپارچه"
-      },
-      "sectionTitle": "چرا CareNet؟",
-      "tracking": {
-        "description": "پوشش کامل برنامه‌های مراقبت‌کنندگان و ارائه خدمات — شفافیت و پاسخگویی را فراهم می‌کند.",
-        "title": "پیگیری مراقبت در رایانامه‌ای"
-      },
-      "verified": {
-        "description": "متخصصان تأیید شده با پیشینه‌ی تأیید شده — از طریق تأیید پلیس، بررسی سلامت و ارزیابی روانی.",
-        "title": "مراقبت‌کنندگان تأیید شده"
-      }
-    },
-    "hero": {
-      "brand": "CareNet",
-      "careShop": "فروشگاه مراقبت",
-      "experienceApp": "Experience the App",
-      "jobPortal": "درگاه شغل",
-      "register": "ثبت‌نام",
-      "signInRegister": "Sign in / Register",
-      "subtitle": "پلتفرم قابل اعتماد بنگلادش برای اتصال خانواده‌ها با مراقبت‌کنندگان تأیید شده و آژانس‌های حرفه‌ای",
-      "tagline": "مراقبت با کیفیت، متصل"
-    }
   },
   "section15": {
     "agencyScorecardSubtitle": "Agency lens on placement quality (?patientId= for a specific client).",

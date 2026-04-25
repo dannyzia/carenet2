@@ -11,6 +11,7 @@ import { getAuthEmailRedirectTo } from "@/frontend/auth/authEmailRedirect";
 import { DEMO_ACCOUNTS, DEMO_PASSWORD } from "@/frontend/auth/mockAuth";
 import type { Role } from "@/frontend/auth/types";
 import { AUTH_PUBLIC_SIGNUP_PATH } from "@/frontend/constants/authPublicPaths";
+import { roleDashboardPath } from "@/backend/navigation/roleAppPaths";
 
 type Step = "credentials" | "role-select";
 
@@ -65,7 +66,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (isAuthenticated && user) {
-      navigate(returnTo || `/${user.activeRole}/dashboard`, { replace: true });
+      navigate(returnTo || roleDashboardPath(user.activeRole), { replace: true });
     }
   }, [isAuthenticated, user, navigate, returnTo]);
 
@@ -86,7 +87,7 @@ export default function LoginPage() {
         } else if (result.user.roles.length > 1) {
           setStep("role-select");
         } else {
-          navigate(returnTo || `/${result.user.activeRole}/dashboard`, { replace: true });
+          navigate(returnTo || roleDashboardPath(result.user.activeRole), { replace: true });
         }
       }
     } else {
@@ -115,12 +116,12 @@ export default function LoginPage() {
 
   const handleDemoLogin = async (role: Role) => {
     await demoLogin(role);
-    navigate(`/${role}/dashboard`, { replace: true });
+    navigate(roleDashboardPath(role), { replace: true });
   };
 
   const handleRoleSelect = (role: Role) => {
     if (!user) return;
-    navigate(`/${role}/dashboard`, { replace: true });
+    navigate(roleDashboardPath(role), { replace: true });
   };
 
   const [resendEmail, setResendEmail] = useState("");

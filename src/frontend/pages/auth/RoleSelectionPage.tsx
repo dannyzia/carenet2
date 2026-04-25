@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 import { useDocumentTitle } from "@/frontend/hooks";
 import { useAuth } from "@/frontend/auth/AuthContext";
 import type { Role } from "@/frontend/auth/types";
+import { roleDashboardPath } from "@/backend/navigation/roleAppPaths";
 
 const SELF_REGISTER_ROLES: Role[] = ["guardian", "caregiver", "patient", "agency", "shop", "channel_partner"];
 
@@ -33,7 +34,7 @@ export default function RoleSelectionPage() {
   const visibleRoles = isRoleSwitch ? allRoles.filter((r) => user?.roles.includes(r.id)) : allRoles.filter((r) => SELF_REGISTER_ROLES.includes(r.id));
 
   const handleRoleSelect = (roleId: Role) => {
-    if (isRoleSwitch && user) { switchRole(roleId); navigate(`/${roleId}/dashboard`, { replace: true }); }
+    if (isRoleSwitch && user) { switchRole(roleId); navigate(roleDashboardPath(roleId), { replace: true }); }
     else { navigate(`/auth/register/${roleId}`); }
   };
 

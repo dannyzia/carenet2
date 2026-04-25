@@ -172,8 +172,6 @@ export const DEMO_ACCOUNTS: { role: Role; email: string; name: string }[] = [
   { role: "guardian", email: "guardian@carenet.demo", name: "Mock_Rashed Hossain" },
   { role: "patient", email: "patient@carenet.demo", name: "Mock_Amina Begum" },
   { role: "agency", email: "agency@carenet.demo", name: "Mock_CareFirst Agency" },
-  { role: "admin", email: "admin@carenet.demo", name: "Mock_Admin User" },
-  { role: "moderator", email: "moderator@carenet.demo", name: "Mock_Mod User" },
   { role: "shop", email: "shop@carenet.demo", name: "Mock_MediMart Store" },
   { role: "channel_partner", email: "channelpartner@carenet.demo", name: "Mock_Channel Partner" },
 ];

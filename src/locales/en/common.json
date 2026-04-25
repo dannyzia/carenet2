@@ -2,12 +2,17 @@
   "a11y": {
     "bottomNav": "Bottom navigation",
     "closeMenu": "Close menu",
+    "closeRoleSidebar": "Close role sidebar",
     "closeSidebar": "Close sidebar",
     "mainContent": "Main content",
     "messages": "Messages",
     "notifications": "Notifications",
     "openMenu": "Open menu",
+    "openPersonaMenu": "Open profile menu for {{role}}",
+    "personaMenuDisabled": "Profile menu (no active role)",
     "roleNav": "Role navigation",
+    "roleSidebarClosed": "Role menu closed",
+    "roleSidebarOpened": "Role menu opened",
     "sidebarNav": "Sidebar navigation",
     "skipToContent": "Skip to main content",
     "switchToDark": "Switch to dark mode",
@@ -203,6 +208,7 @@
     "orders": "Orders",
     "patients": "Patients",
     "payments": "Payments",
+    "persona": "Profile",
     "placements": "Placements",
     "products": "Products",
     "queue": "Queue",
@@ -630,6 +636,7 @@
     "shop": "Shop Owner"
   },
   "sidebar": {
+    "account": "Account",
     "agencies": "Agencies",
     "agencyApprovals": "Agency Approvals",
     "analytics": "Analytics",
@@ -645,11 +652,13 @@
     "clientIntake": "Client Intake",
     "clients": "Clients",
     "cmsManager": "CMS Manager",
+    "commissions": "Commissions",
     "compareCaregivers": "Compare Caregivers",
     "contactUs": "Contact Us",
     "content": "Content",
     "contracts": "Contracts",
     "contractsOverview": "Contracts Overview",
+    "createLead": "Create Lead",
     "dailyEarnings": "Daily Earnings",
     "dashboard": "Dashboard",
     "dataPrivacy": "Data Privacy",
@@ -668,6 +677,7 @@
     "inventory": "Inventory",
     "jobManagement": "Job Management",
     "languages": "Languages",
+    "leads": "Leads",
     "marketplace": "Marketplace",
     "carePackageCatalog": "Care packages",
     "caregivingJobs": "Caregiving jobs",
@@ -682,6 +692,7 @@
     "myJobs": "My Jobs",
     "myPatients": "My Patients",
     "newBooking": "New Booking",
+    "noNavItems": "No items available",
     "notifications": "Notifications",
     "onboarding": "Onboarding",
     "orders": "Orders",
@@ -703,6 +714,7 @@
     "products": "Products",
     "profile": "Profile",
     "promoManagement": "Promo Management",
+    "rates": "Rates",
     "references": "References",
     "roleActivations": "Role Activations",
     "refundRequest": "Refund Request",
@@ -1160,6 +1172,17 @@
       "registered": "Registered",
       "auditLog": "Audit Log",
       "noHistory": "No audit history available"
+    }
+  },
+  "home": {
+    "hero": {
+      "brand": "CareNet",
+      "tagline": "Quality care, connected",
+      "subtitle": "Bangladesh's trusted platform for connecting families with verified caregivers and professional agencies",
+      "experienceApp": "Experience the App",
+      "signInRegister": "Sign in / Register",
+      "jobPortal": "Job Portal",
+      "careShop": "Care Shop"
     }
   }
 }

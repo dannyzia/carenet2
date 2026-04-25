@@ -7,10 +7,7 @@
         <IgnoreTimeShift/>
     </Compare>
     <Synchronize>
-        <Changes>
-            <Left Create="right" Update="right" Delete="right"/>
-            <Right Create="left" Update="left" Delete="left"/>
-        </Changes>
+        <Differences LeftOnly="right" LeftNewer="right" RightNewer="right" RightOnly="right"/>
         <DeletionPolicy>RecycleBin</DeletionPolicy>
         <VersioningFolder Style="Replace"/>
     </Synchronize>

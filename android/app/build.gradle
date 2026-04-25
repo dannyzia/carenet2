@@ -1,24 +1,5 @@
 apply plugin: 'com.android.application'
 
-// Keep :app outputs outside android/app/build/ so packageRelease can delete/recreate the output
-// folder even when OneDrive/Explorer/antivirus holds a lock on a previous app-release.apk.
-// Override with env CARENET_ANDROID_BUILD_DIR (absolute path).
-def resolveCarenetAppBuildDirectory() {
-    def fromEnv = System.getenv("CARENET_ANDROID_BUILD_DIR")
-    if (fromEnv != null && !fromEnv.trim().isEmpty()) {
-        return file(fromEnv.trim())
-    }
-    def os = System.getProperty("os.name", "").toLowerCase()
-    if (os.contains("windows")) {
-        def la = System.getenv("LOCALAPPDATA")
-        if (la != null && !la.isEmpty()) {
-            return file(la + "/CareNet2-Android-app-build")
-        }
-    }
-    return file("${rootProject.projectDir}/../.carenet-android-build")
-}
-layout.buildDirectory.set(resolveCarenetAppBuildDirectory())
-
 // Play Store release signing — see android/keystore.properties.example
 def keystorePropertiesFile = rootProject.file("keystore.properties")
 def keystoreProperties = new Properties()

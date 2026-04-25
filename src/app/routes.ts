@@ -43,7 +43,7 @@ export const router = createBrowserRouter([
       {
         Component: PublicLayout,
         children: [
-          { index: true, ...p(() => import("@/frontend/pages/auth/LoginPage")) },
+          { index: true, ...p(() => import("@/frontend/pages/public/HomePage")) },
           { path: "privacy", ...p(() => import("@/frontend/pages/public/PrivacyPage")) },
           { path: "terms", ...p(() => import("@/frontend/pages/public/TermsPage")) },
           { path: "marketplace", ...p(() => import("@/frontend/pages/public/MarketplacePage")) },
@@ -340,9 +340,6 @@ export const router = createBrowserRouter([
               { path: "billing/invoice/:invoiceId", ...p(() => import("@/frontend/pages/billing/BillingInvoiceDetailPage")) },
               { path: "billing/submit-proof/:invoiceId", ...p(() => import("@/frontend/pages/billing/SubmitPaymentProofPage")) },
               { path: "billing/verify/:proofId", ...p(() => import("@/frontend/pages/billing/VerifyPaymentPage")) },
-
-              // ─── Dev Pages ───
-              { path: "dev/connectivity", ...p(() => import("@/frontend/pages/dev/ConnectivityDemoPage")) },
             ],
           },
         ],
@@ -367,6 +364,11 @@ export const router = createBrowserRouter([
           { path: "shop/wishlist", ...p(() => import("@/frontend/pages/shop-front/WishlistPage")) },
         ],
       },
+
+      // ═══════════════════════════════════════════════════════════
+      // DEV TOOLS — Development-only pages (no auth required)
+      // ═══════════════════════════════════════════════════════════
+      { path: "dev/connectivity", ...p(() => import("@/frontend/pages/dev/ConnectivityDemoPage")) },
     ],
   },
 ]);

@@ -2,12 +2,17 @@
   "a11y": {
     "bottomNav": "תפריט תחתון",
     "closeMenu": "סגור תפריט",
+    "closeRoleSidebar": "Close role sidebar",
     "closeSidebar": "סגור סרגל צד",
     "mainContent": "תוכן ראשי",
     "messages": "הודעות",
     "notifications": "התראות",
     "openMenu": "פתח תפריט",
+    "openPersonaMenu": "Open profile menu for {{role}}",
+    "personaMenuDisabled": "Profile menu (no active role)",
     "roleNav": "ניווט תפקיד",
+    "roleSidebarClosed": "Role menu closed",
+    "roleSidebarOpened": "Role menu opened",
     "sidebarNav": "ניווט סרגל צד",
     "skipToContent": "דלג לתוכן ראשי",
     "switchToDark": "מעבר למצב כהה",
@@ -203,6 +208,7 @@
     "orders": "הזמנות",
     "patients": "מטופלים",
     "payments": "תשלומים",
+    "persona": "Profile",
     "placements": "מיקומים",
     "products": "מוצרים",
     "queue": "תור",
@@ -680,6 +686,7 @@
     "shop": "Shop Owner"
   },
   "sidebar": {
+    "account": "Account",
     "agencies": "סוכנויות",
     "agencyApprovals": "אישורי סוכנות",
     "analytics": "ניתוחים",
@@ -695,11 +702,13 @@
     "clientIntake": "קליטת לקוח",
     "clients": "לקוחות",
     "cmsManager": "מנהל CMS",
+    "commissions": "Commissions",
     "compareCaregivers": "השוואת מטפלים",
     "contactUs": "צור קשר איתנו",
     "content": "תוכן",
     "contracts": "חוזים",
     "contractsOverview": "סקירת חוזים",
+    "createLead": "Create Lead",
     "dailyEarnings": "הכנסות יומיות",
     "dashboard": "לוף מחוונים",
     "dataPrivacy": "פרטיות נתונים",
@@ -718,6 +727,7 @@
     "inventory": "מלאי",
     "jobManagement": "ניהול עבודה",
     "languages": "שפות",
+    "leads": "Leads",
     "marketplace": "שוק",
     "carePackageCatalog": "Care packages",
     "caregivingJobs": "Caregiving jobs",
@@ -732,6 +742,7 @@
     "myJobs": "עבודות שלי",
     "myPatients": "מטופלים שלי",
     "newBooking": "הזמנה חדשה",
+    "noNavItems": "No items available",
     "notifications": "התראות",
     "onboarding": "הכנסה",
     "orders": "הזמנות",
@@ -753,6 +764,7 @@
     "products": "מוצרים",
     "profile": "פרופיל",
     "promoManagement": "ניהול קידום מכרז",
+    "rates": "Rates",
     "references": "הפניה",
     "roleActivations": "Role Activations",
     "refundRequest": "בקשת החזר כספי",
@@ -1242,6 +1254,44 @@
       "noHistory": "No audit history available"
     }
   },
+  "home": {
+    "hero": {
+      "brand": "CareNet",
+      "tagline": "טיפול איכותי, מחובר",
+      "subtitle": "פלטפורמת בנגלדש המהימנה לאחרים משפחות עם מטפלים מאומתים וסוכנויות מקצועיות",
+      "experienceApp": "Experience the App",
+      "signInRegister": "Sign in / Register",
+      "jobPortal": "פורטל עבודה",
+      "careShop": "חנות טיפול",
+      "register": "הרשם"
+    },
+    "contact": {
+      "emailLabel": "דוא\"ל",
+      "emailNow": "שלח דוא\"ל עכשיו",
+      "hotline": "שירות טלפון",
+      "sendSms": "שלח SMS",
+      "title": "זקוק לעזרה?"
+    },
+    "features": {
+      "agency": {
+        "description": "סוכנויות מורשות עם ביצועים גבוהים ומודלי אמינות והתאמה מוכרים.",
+        "title": "רשת סוכנויות מאומתות"
+      },
+      "platform": {
+        "description": "גלה, הזמן, נהל, תקשר, שולם ועקוב — הכל ממערכת מודרנית אחת.",
+        "title": "פלטפורמה מאוחדת אחת"
+      },
+      "sectionTitle": "למה CareNet?",
+      "tracking": {
+        "description": "ראות מלאה לתוך לוחות הזמנות של מטפלים ומסירת שירות — מביא שקיפות ואחריות.",
+        "title": "עיקוב טיפול בזמן אמת"
+      },
+      "verified": {
+        "description": "מקצוענים מאומתים, מאושרים ואמינים — מסננים דרך אימות משטרה, בדיקות בריאות והערכה פסיכולוגית.",
+        "title": "מטפלים מאומתים"
+      }
+    }
+  },
   "dailySchedule": {
     "addPhoto": "Add photo",
     "addTaskDescription": "Create a task or calendar event for the selected day.",
@@ -1366,44 +1416,6 @@
     "selectPrompt": "Pick a role to explore the app:",
     "subtitle": "Try dashboards and flows with sample data — no real account required.",
     "title": "Experience the App"
-  },
-  "home": {
-    "contact": {
-      "emailLabel": "דוא\"ל",
-      "emailNow": "שלח דוא\"ל עכשיו",
-      "hotline": "שירות טלפון",
-      "sendSms": "שלח SMS",
-      "title": "זקוק לעזרה?"
-    },
-    "features": {
-      "agency": {
-        "description": "סוכנויות מורשות עם ביצועים גבוהים ומודלי אמינות והתאמה מוכרים.",
-        "title": "רשת סוכנויות מאומתות"
-      },
-      "platform": {
-        "description": "גלה, הזמן, נהל, תקשר, שולם ועקוב — הכל ממערכת מודרנית אחת.",
-        "title": "פלטפורמה מאוחדת אחת"
-      },
-      "sectionTitle": "למה CareNet?",
-      "tracking": {
-        "description": "ראות מלאה לתוך לוחות הזמנות של מטפלים ומסירת שירות — מביא שקיפות ואחריות.",
-        "title": "עיקוב טיפול בזמן אמת"
-      },
-      "verified": {
-        "description": "מקצוענים מאומתים, מאושרים ואמינים — מסננים דרך אימות משטרה, בדיקות בריאות והערכה פסיכולוגית.",
-        "title": "מטפלים מאומתים"
-      }
-    },
-    "hero": {
-      "brand": "CareNet",
-      "careShop": "חנות טיפול",
-      "experienceApp": "Experience the App",
-      "jobPortal": "פורטל עבודה",
-      "register": "הרשם",
-      "signInRegister": "Sign in / Register",
-      "subtitle": "פלטפורמת בנגלדש המהימנה לאחרים משפחות עם מטפלים מאומתים וסוכנויות מקצועיות",
-      "tagline": "טיפול איכותי, מחובר"
-    }
   },
   "section15": {
     "agencyScorecardSubtitle": "Agency lens on placement quality (?patientId= for a specific client).",

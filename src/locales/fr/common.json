@@ -2,12 +2,17 @@
   "a11y": {
     "bottomNav": "Navigation inférieure",
     "closeMenu": "Fermer le menu",
+    "closeRoleSidebar": "Close role sidebar",
     "closeSidebar": "Fermer la barre latérale",
     "mainContent": "Contenu principal",
     "messages": "Messages",
     "notifications": "Notifications",
     "openMenu": "Ouvrir le menu",
+    "openPersonaMenu": "Open profile menu for {{role}}",
+    "personaMenuDisabled": "Profile menu (no active role)",
     "roleNav": "Navigation des rôles",
+    "roleSidebarClosed": "Role menu closed",
+    "roleSidebarOpened": "Role menu opened",
     "sidebarNav": "Navigation de la barre latérale",
     "skipToContent": "Passer au contenu principal",
     "switchToDark": "Passer au mode sombre",
@@ -203,6 +208,7 @@
     "orders": "Commandes",
     "patients": "Patients",
     "payments": "Paiements",
+    "persona": "Profile",
     "placements": "Placements",
     "products": "Produits",
     "queue": "File d'attente",
@@ -670,6 +676,7 @@
     "shop": "Shop Owner"
   },
   "sidebar": {
+    "account": "Account",
     "agencies": "Agences",
     "agencyApprovals": "Approbations d'agences",
     "analytics": "Analytique",
@@ -685,11 +692,13 @@
     "clientIntake": "Prise en charge du client",
     "clients": "Clients",
     "cmsManager": "Gestionnaire CMS",
+    "commissions": "Commissions",
     "compareCaregivers": "Comparer les aides-soignants",
     "contactUs": "Contactez-nous",
     "content": "Contenu",
     "contracts": "Contrats",
     "contractsOverview": "Vue d'ensemble des contrats",
+    "createLead": "Create Lead",
     "dailyEarnings": "Revenus quotidiens",
     "dashboard": "Tableau de bord",
     "dataPrivacy": "Confidentialité des données",
@@ -708,6 +717,7 @@
     "inventory": "Inventaire",
     "jobManagement": "Gestion des emplois",
     "languages": "Langues",
+    "leads": "Leads",
     "marketplace": "Marché",
     "carePackageCatalog": "Care packages",
     "caregivingJobs": "Caregiving jobs",
@@ -722,6 +732,7 @@
     "myJobs": "Mes emplois",
     "myPatients": "Mes patients",
     "newBooking": "Nouvelle réservation",
+    "noNavItems": "No items available",
     "notifications": "Notifications",
     "onboarding": "Intégration",
     "orders": "Commandes",
@@ -743,6 +754,7 @@
     "products": "Produits",
     "profile": "Profil",
     "promoManagement": "Gestion des promotions",
+    "rates": "Rates",
     "references": "Références",
     "roleActivations": "Role Activations",
     "refundRequest": "Demande de remboursement",
@@ -1232,6 +1244,44 @@
       "noHistory": "No audit history available"
     }
   },
+  "home": {
+    "hero": {
+      "brand": "CareNet",
+      "tagline": "Des soins de qualité, connectés",
+      "subtitle": "Plateforme de confiance du Bangladesh pour connecter les familles avec des aides-soignants vérifiés et des agences professionnelles",
+      "experienceApp": "Experience the App",
+      "signInRegister": "Sign in / Register",
+      "jobPortal": "Portail d'emplois",
+      "careShop": "Boutique de soins",
+      "register": "S'inscrire"
+    },
+    "contact": {
+      "emailLabel": "Email",
+      "emailNow": "Envoyer un email maintenant",
+      "hotline": "Ligne d'assistance",
+      "sendSms": "Envoyer un SMS",
+      "title": "Besoin d'aide ?"
+    },
+    "features": {
+      "agency": {
+        "description": "Agences agréées, performantes avec fiabilité et conformité éprouvées.",
+        "title": "Réseau d'agences vérifiées"
+      },
+      "platform": {
+        "description": "Découvrir, réserver, gérer, communiquer, payer et suivre — tout depuis un tableau de bord puissant.",
+        "title": "Plateforme intégrée unique"
+      },
+      "sectionTitle": "Pourquoi CareNet ?",
+      "tracking": {
+        "description": "Visibilité complète sur les horaires des aides-soignants et la prestation des services — apportant transparence et responsabilité.",
+        "title": "Suivi des soins en temps réel"
+      },
+      "verified": {
+        "description": "Professionnels vérifiés, certifiés et fiables — sélectionnés via vérification policière, contrôles sanitaires et évaluation psychologique.",
+        "title": "Aides-soignants vérifiés"
+      }
+    }
+  },
   "dailySchedule": {
     "addPhoto": "Add photo",
     "addTaskDescription": "Create a task or calendar event for the selected day.",
@@ -1356,44 +1406,6 @@
     "selectPrompt": "Pick a role to explore the app:",
     "subtitle": "Try dashboards and flows with sample data — no real account required.",
     "title": "Experience the App"
-  },
-  "home": {
-    "contact": {
-      "emailLabel": "Email",
-      "emailNow": "Envoyer un email maintenant",
-      "hotline": "Ligne d'assistance",
-      "sendSms": "Envoyer un SMS",
-      "title": "Besoin d'aide ?"
-    },
-    "features": {
-      "agency": {
-        "description": "Agences agréées, performantes avec fiabilité et conformité éprouvées.",
-        "title": "Réseau d'agences vérifiées"
-      },
-      "platform": {
-        "description": "Découvrir, réserver, gérer, communiquer, payer et suivre — tout depuis un tableau de bord puissant.",
-        "title": "Plateforme intégrée unique"
-      },
-      "sectionTitle": "Pourquoi CareNet ?",
-      "tracking": {
-        "description": "Visibilité complète sur les horaires des aides-soignants et la prestation des services — apportant transparence et responsabilité.",
-        "title": "Suivi des soins en temps réel"
-      },
-      "verified": {
-        "description": "Professionnels vérifiés, certifiés et fiables — sélectionnés via vérification policière, contrôles sanitaires et évaluation psychologique.",
-        "title": "Aides-soignants vérifiés"
-      }
-    },
-    "hero": {
-      "brand": "CareNet",
-      "careShop": "Boutique de soins",
-      "experienceApp": "Experience the App",
-      "jobPortal": "Portail d'emplois",
-      "register": "S'inscrire",
-      "signInRegister": "Sign in / Register",
-      "subtitle": "Plateforme de confiance du Bangladesh pour connecter les familles avec des aides-soignants vérifiés et des agences professionnelles",
-      "tagline": "Des soins de qualité, connectés"
-    }
   },
   "section15": {
     "agencyScorecardSubtitle": "Agency lens on placement quality (?patientId= for a specific client).",

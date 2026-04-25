@@ -10,6 +10,7 @@ import { USE_SUPABASE, supabase } from "@/backend/services/supabase";
 import { getAuthEmailRedirectTo } from "@/frontend/auth/authEmailRedirect";
 import { getMyChanPProfile, type ChanPProfile } from "@/backend/services/channelPartnerService";
 import type { Role } from "@/frontend/auth/types";
+import { roleDashboardPath } from "@/backend/navigation/roleAppPaths";
 
 const roleConfig: Record<string, { label: string; color: string; gradient: string }> = {
   guardian: { label: "Guardian", color: "#FF8FA3", gradient: "var(--cn-gradient-caregiver)" },
@@ -103,7 +104,7 @@ export default function RegisterPage() {
     setLoading(false);
     if (result.success) {
       if (result.signedInWithoutEmailConfirmation) {
-        navigate(`/${resolvedRole}/dashboard`, { replace: true });
+        navigate(roleDashboardPath(resolvedRole), { replace: true });
         return;
       }
       setRegisteredEmail(formData.email || "");

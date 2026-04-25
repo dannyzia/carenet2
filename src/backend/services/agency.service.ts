@@ -17,6 +17,7 @@ import type {
 import type { AgencyExecutiveDashboardData } from "@/backend/models/agencyExecutiveDashboard.model";
 import type { OperationalDashboardData } from "@/backend/models/operationalDashboard.model";
 import { mapAgencyExecutiveToOperationalDashboard } from "./agencyExecutiveToOperational";
+import { withDashboardFallback, EMPTY_OPERATIONAL_DASHBOARD } from "./dashboardFallback";
 import { loadMockBarrel } from "@/backend/api/mock/loadMockBarrel";
 import { USE_SUPABASE, sbRead, sbWrite, sb, sbData, currentUserId, useInAppMockDataset, dataCacheScope } from "./_sb";
 import {
@@ -537,8 +538,13 @@ export const agencyService = {
   },
 
   async getOperationalDashboard(): Promise<OperationalDashboardData> {
-    const exec = await agencyService.getExecutiveDashboard();
-    return mapAgencyExecutiveToOperationalDashboard(exec);
+    return withDashboardFallback(
+      async () => {
+        const exec = await agencyService.getExecutiveDashboard();
+        return mapAgencyExecutiveToOperationalDashboard(exec);
+      },
+      EMPTY_OPERATIONAL_DASHBOARD,
+    );
   },
 
   async getJobApplications(_jobId?: string): Promise<JobApplication[]> {

@@ -2,12 +2,17 @@
   "a11y": {
     "bottomNav": "التنقل السفلي",
     "closeMenu": "إغلاق القائمة",
+    "closeRoleSidebar": "Close role sidebar",
     "closeSidebar": "إغلاق الشريط الجانبي",
     "mainContent": "المحتوى الرئيسي",
     "messages": "الرسائل",
     "notifications": "الإشعارات",
     "openMenu": "فتح القائمة",
+    "openPersonaMenu": "Open profile menu for {{role}}",
+    "personaMenuDisabled": "Profile menu (no active role)",
     "roleNav": "تنقل الأدوار",
+    "roleSidebarClosed": "Role menu closed",
+    "roleSidebarOpened": "Role menu opened",
     "sidebarNav": "تنقل الشريط الجانبي",
     "skipToContent": "تخطي إلى المحتوى الرئيسي",
     "switchToDark": "التبديل إلى الوضع الداكن",
@@ -203,6 +208,7 @@
     "orders": "الطلبات",
     "patients": "المرضى",
     "payments": "المدفوعات",
+    "persona": "Profile",
     "placements": "التعيينات",
     "products": "المنتجات",
     "queue": "الطابور",
@@ -670,6 +676,7 @@
     "shop": "صاحب المحل"
   },
   "sidebar": {
+    "account": "Account",
     "agencies": "الوكالات",
     "agencyApprovals": "موافقات الوكالة",
     "analytics": "التحليلات",
@@ -685,11 +692,13 @@
     "clientIntake": "استيعاب العميل",
     "clients": "العملاء",
     "cmsManager": "مدير CMS",
+    "commissions": "Commissions",
     "compareCaregivers": "مقارنة مقدمي الرعاية",
     "contactUs": "اتصل بنا",
     "content": "المحتوى",
     "contracts": "العقود",
     "contractsOverview": "نظرة عامة على العقود",
+    "createLead": "Create Lead",
     "dailyEarnings": "الأرباح اليومية",
     "dashboard": "لوحة التحكم",
     "dataPrivacy": "خصوصية البيانات",
@@ -708,6 +717,7 @@
     "inventory": "المخزون",
     "jobManagement": "إدارة الوظائف",
     "languages": "اللغات",
+    "leads": "Leads",
     "marketplace": "السوق",
     "carePackageCatalog": "Care packages",
     "caregivingJobs": "Caregiving jobs",
@@ -722,6 +732,7 @@
     "myJobs": "وظائفي",
     "myPatients": "مرضاي",
     "newBooking": "حجز جديد",
+    "noNavItems": "No items available",
     "notifications": "الإشعارات",
     "onboarding": "الإعداد",
     "orders": "الطلبات",
@@ -743,6 +754,7 @@
     "products": "المنتجات",
     "profile": "الملف الشخصي",
     "promoManagement": "إدارة العروض الترويجية",
+    "rates": "Rates",
     "references": "المراجع",
     "roleActivations": "Role Activations",
     "refundRequest": "طلب استرداد",
@@ -1232,6 +1244,44 @@
       "noHistory": "No audit history available"
     }
   },
+  "home": {
+    "hero": {
+      "brand": "CareNet",
+      "tagline": "رعاية جودة، متصلة",
+      "subtitle": "منصة بنغلاديش الموثوقة لربط العائلات بمقدمي الرعاية المعتمدين والوكالات المهنية",
+      "experienceApp": "Experience the App",
+      "signInRegister": "Sign in / Register",
+      "jobPortal": "بوابة الوظائف",
+      "careShop": "متجر الرعاية",
+      "register": "تسجيل"
+    },
+    "contact": {
+      "emailLabel": "البريد الإلكتروني",
+      "emailNow": "إرسال بريد إلكتروني الآن",
+      "hotline": "الخط الساخن",
+      "sendSms": "إرسال رسالة نصية",
+      "title": "بحاجة إلى مساعدة؟"
+    },
+    "features": {
+      "agency": {
+        "description": "وكالات مرخصة عالية الأداء مع معايير موثوقية وامتثال مثبتة.",
+        "title": "شبكة وكالات مدققة"
+      },
+      "platform": {
+        "description": "اكتشف، احجز، أدار، تواصل، ادفع، وتتبع — كل شيء من لوحة تحكم قوية واحدة.",
+        "title": "منصة متكاملة واحدة"
+      },
+      "sectionTitle": "لماذا CareNet؟",
+      "tracking": {
+        "description": "رؤية كاملة لجداول مقدمي الرعاية وتسليم الخدمة — جلب الشفافية والمساءلة.",
+        "title": "تتبع الرعاية في الوقت الفعلي"
+      },
+      "verified": {
+        "description": "محترفون تم التحقق منهم ومعتمدون وموثوق بهم — تم فحصهم من خلال التحقق من الشرطة والفحوصات الصحية والتقييم النفسي.",
+        "title": "مقدمو رعاية تم التحقق منهم"
+      }
+    }
+  },
   "dailySchedule": {
     "addPhoto": "Add photo",
     "addTaskDescription": "Create a task or calendar event for the selected day.",
@@ -1356,44 +1406,6 @@
     "selectPrompt": "Pick a role to explore the app:",
     "subtitle": "Try dashboards and flows with sample data — no real account required.",
     "title": "Experience the App"
-  },
-  "home": {
-    "contact": {
-      "emailLabel": "البريد الإلكتروني",
-      "emailNow": "إرسال بريد إلكتروني الآن",
-      "hotline": "الخط الساخن",
-      "sendSms": "إرسال رسالة نصية",
-      "title": "بحاجة إلى مساعدة؟"
-    },
-    "features": {
-      "agency": {
-        "description": "وكالات مرخصة عالية الأداء مع معايير موثوقية وامتثال مثبتة.",
-        "title": "شبكة وكالات مدققة"
-      },
-      "platform": {
-        "description": "اكتشف، احجز، أدار، تواصل، ادفع، وتتبع — كل شيء من لوحة تحكم قوية واحدة.",
-        "title": "منصة متكاملة واحدة"
-      },
-      "sectionTitle": "لماذا CareNet؟",
-      "tracking": {
-        "description": "رؤية كاملة لجداول مقدمي الرعاية وتسليم الخدمة — جلب الشفافية والمساءلة.",
-        "title": "تتبع الرعاية في الوقت الفعلي"
-      },
-      "verified": {
-        "description": "محترفون تم التحقق منهم ومعتمدون وموثوق بهم — تم فحصهم من خلال التحقق من الشرطة والفحوصات الصحية والتقييم النفسي.",
-        "title": "مقدمو رعاية تم التحقق منهم"
-      }
-    },
-    "hero": {
-      "brand": "CareNet",
-      "careShop": "متجر الرعاية",
-      "experienceApp": "Experience the App",
-      "jobPortal": "بوابة الوظائف",
-      "register": "تسجيل",
-      "signInRegister": "Sign in / Register",
-      "subtitle": "منصة بنغلاديش الموثوقة لربط العائلات بمقدمي الرعاية المعتمدين والوكالات المهنية",
-      "tagline": "رعاية جودة، متصلة"
-    }
   },
   "section15": {
     "agencyScorecardSubtitle": "Agency lens on placement quality (?patientId= for a specific client).",

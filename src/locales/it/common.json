@@ -2,12 +2,17 @@
   "a11y": {
     "bottomNav": "Navigazione inferiore",
     "closeMenu": "Chiudi menu",
+    "closeRoleSidebar": "Close role sidebar",
     "closeSidebar": "Chiudi barra laterale",
     "mainContent": "Contenuto principale",
     "messages": "Messaggi",
     "notifications": "Notifiche",
     "openMenu": "Apri menu",
+    "openPersonaMenu": "Open profile menu for {{role}}",
+    "personaMenuDisabled": "Profile menu (no active role)",
     "roleNav": "Navigazione ruolo",
+    "roleSidebarClosed": "Role menu closed",
+    "roleSidebarOpened": "Role menu opened",
     "sidebarNav": "Navigazione barra laterale",
     "skipToContent": "Vai al contenuto principale",
     "switchToDark": "Passa alla modalità scura",
@@ -203,6 +208,7 @@
     "orders": "Ordini",
     "patients": "Pazienti",
     "payments": "Pagamenti",
+    "persona": "Profile",
     "placements": "Assegnazioni",
     "products": "Prodotti",
     "queue": "Coda",
@@ -670,6 +676,7 @@
     "shop": "Shop Owner"
   },
   "sidebar": {
+    "account": "Account",
     "agencies": "Agenzie",
     "agencyApprovals": "Approvazioni agenzie",
     "analytics": "Analisi",
@@ -685,11 +692,13 @@
     "clientIntake": "Accoglienza clienti",
     "clients": "Clienti",
     "cmsManager": "Gestore CMS",
+    "commissions": "Commissions",
     "compareCaregivers": "Confronta assistenti",
     "contactUs": "Contattaci",
     "content": "Contenuto",
     "contracts": "Contratti",
     "contractsOverview": "Panoramica contratti",
+    "createLead": "Create Lead",
     "dailyEarnings": "Guadagni giornalieri",
     "dashboard": "Cruscotto",
     "dataPrivacy": "Privacy dati",
@@ -708,6 +717,7 @@
     "inventory": "Inventario",
     "jobManagement": "Gestione lavori",
     "languages": "Lingue",
+    "leads": "Leads",
     "marketplace": "Marketplace",
     "carePackageCatalog": "Care packages",
     "caregivingJobs": "Caregiving jobs",
@@ -722,6 +732,7 @@
     "myJobs": "Miei lavori",
     "myPatients": "Miei pazienti",
     "newBooking": "Nuova prenotazione",
+    "noNavItems": "No items available",
     "notifications": "Notifiche",
     "onboarding": "Onboarding",
     "orders": "Ordini",
@@ -743,6 +754,7 @@
     "products": "Prodotti",
     "profile": "Profilo",
     "promoManagement": "Gestione promozioni",
+    "rates": "Rates",
     "references": "Riferimenti",
     "roleActivations": "Role Activations",
     "refundRequest": "Richiesta rimborso",
@@ -1232,6 +1244,44 @@
       "noHistory": "No audit history available"
     }
   },
+  "home": {
+    "hero": {
+      "brand": "CareNet",
+      "tagline": "Assistenza di qualità, connessa",
+      "subtitle": "La piattaforma affidabile del Bangladesh per connettere famiglie con assistenti verificati e agenzie professionali",
+      "experienceApp": "Experience the App",
+      "signInRegister": "Sign in / Register",
+      "jobPortal": "Portale lavori",
+      "careShop": "Care Shop",
+      "register": "Registrati"
+    },
+    "contact": {
+      "emailLabel": "Email",
+      "emailNow": "Email ora",
+      "hotline": "Numero verde",
+      "sendSms": "Invia SMS",
+      "title": "Hai bisogno di aiuto?"
+    },
+    "features": {
+      "agency": {
+        "description": "Agenzie autorizzate, ad alte prestazioni con standard di affidabilità e conformità comprovati.",
+        "title": "Rete agenzie verificate"
+      },
+      "platform": {
+        "description": "Scopri, prenota, gestisci, comunica, paga e traccia — tutto da un potente cruscotto.",
+        "title": "Piattaforma integrata unica"
+      },
+      "sectionTitle": "Perché CareNet?",
+      "tracking": {
+        "description": "Visibilità completa sugli orari degli assistenti e sulla consegna dei servizi — portando trasparenza e responsabilità.",
+        "title": "Monitoraggio assistenza in tempo reale"
+      },
+      "verified": {
+        "description": "Professionisti verificati, certificati e affidabili — selezionati attraverso verifica polizia, controlli sanitari e valutazione psicologica.",
+        "title": "Assistenti verificati"
+      }
+    }
+  },
   "dailySchedule": {
     "addPhoto": "Add photo",
     "addTaskDescription": "Create a task or calendar event for the selected day.",
@@ -1356,44 +1406,6 @@
     "selectPrompt": "Pick a role to explore the app:",
     "subtitle": "Try dashboards and flows with sample data — no real account required.",
     "title": "Experience the App"
-  },
-  "home": {
-    "contact": {
-      "emailLabel": "Email",
-      "emailNow": "Email ora",
-      "hotline": "Numero verde",
-      "sendSms": "Invia SMS",
-      "title": "Hai bisogno di aiuto?"
-    },
-    "features": {
-      "agency": {
-        "description": "Agenzie autorizzate, ad alte prestazioni con standard di affidabilità e conformità comprovati.",
-        "title": "Rete agenzie verificate"
-      },
-      "platform": {
-        "description": "Scopri, prenota, gestisci, comunica, paga e traccia — tutto da un potente cruscotto.",
-        "title": "Piattaforma integrata unica"
-      },
-      "sectionTitle": "Perché CareNet?",
-      "tracking": {
-        "description": "Visibilità completa sugli orari degli assistenti e sulla consegna dei servizi — portando trasparenza e responsabilità.",
-        "title": "Monitoraggio assistenza in tempo reale"
-      },
-      "verified": {
-        "description": "Professionisti verificati, certificati e affidabili — selezionati attraverso verifica polizia, controlli sanitari e valutazione psicologica.",
-        "title": "Assistenti verificati"
-      }
-    },
-    "hero": {
-      "brand": "CareNet",
-      "careShop": "Care Shop",
-      "experienceApp": "Experience the App",
-      "jobPortal": "Portale lavori",
-      "register": "Registrati",
-      "signInRegister": "Sign in / Register",
-      "subtitle": "La piattaforma affidabile del Bangladesh per connettere famiglie con assistenti verificati e agenzie professionali",
-      "tagline": "Assistenza di qualità, connessa"
-    }
   },
   "section15": {
     "agencyScorecardSubtitle": "Agency lens on placement quality (?patientId= for a specific client).",

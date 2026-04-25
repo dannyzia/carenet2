@@ -2,12 +2,17 @@
   "a11y": {
     "bottomNav": "Alt menü",
     "closeMenu": "Menüyü kapat",
+    "closeRoleSidebar": "Close role sidebar",
     "closeSidebar": "Kenar çubuğunu kapat",
     "mainContent": "Ana içerik",
     "messages": "Mesajlar",
     "notifications": "Bildirimler",
     "openMenu": "Menüyü aç",
+    "openPersonaMenu": "Open profile menu for {{role}}",
+    "personaMenuDisabled": "Profile menu (no active role)",
     "roleNav": "Rol gezintisi",
+    "roleSidebarClosed": "Role menu closed",
+    "roleSidebarOpened": "Role menu opened",
     "sidebarNav": "Kenar çubuğu gezintisi",
     "skipToContent": "Ana içeriğe atla",
     "switchToDark": "Koyu moda geç",
@@ -203,6 +208,7 @@
     "orders": "Siparişler",
     "patients": "Hastalar",
     "payments": "Ödemeler",
+    "persona": "Profile",
     "placements": "Yerleşimler",
     "products": "Ürünler",
     "queue": "Kuyruk",
@@ -670,6 +676,7 @@
     "shop": "Shop Owner"
   },
   "sidebar": {
+    "account": "Account",
     "agencies": "Ajanslar",
     "agencyApprovals": "Ajans Onayları",
     "analytics": "Analitik",
@@ -685,11 +692,13 @@
     "clientIntake": "Müşteri Kabulü",
     "clients": "Müşteriler",
     "cmsManager": "İçerik Yönetim Sistemi Yöneticisi",
+    "commissions": "Commissions",
     "compareCaregivers": "Bakıcıları Karşılaştır",
     "contactUs": "Bizimle İletişime Geçin",
     "content": "İçerik",
     "contracts": "Sözleşmeler",
     "contractsOverview": "Sözleşmelere Genel Bakış",
+    "createLead": "Create Lead",
     "dailyEarnings": "Günlük Kazançlar",
     "dashboard": "Gösterge Tablosu",
     "dataPrivacy": "Veri Gizliliği",
@@ -708,6 +717,7 @@
     "inventory": "Stok",
     "jobManagement": "İş Yönetimi",
     "languages": "Diller",
+    "leads": "Leads",
     "marketplace": "Pazar Yeri",
     "carePackageCatalog": "Care packages",
     "caregivingJobs": "Caregiving jobs",
@@ -722,6 +732,7 @@
     "myJobs": "İşlerim",
     "myPatients": "Hastalarım",
     "newBooking": "Yeni Rezervasyon",
+    "noNavItems": "No items available",
     "notifications": "Bildirimler",
     "onboarding": "Ekleme",
     "orders": "Siparişler",
@@ -743,6 +754,7 @@
     "products": "Ürünler",
     "profile": "Profil",
     "promoManagement": "Promosyon Yönetimi",
+    "rates": "Rates",
     "references": "Referanslar",
     "roleActivations": "Role Activations",
     "refundRequest": "İade İsteği",
@@ -1232,6 +1244,44 @@
       "noHistory": "No audit history available"
     }
   },
+  "home": {
+    "hero": {
+      "brand": "CareNet",
+      "tagline": "Kaliteli bakım, bağlantılı",
+      "subtitle": "Bangladeş'in aileleri doğrulanmış bakıcılar ve profesyonel ajanslarla buluşturan güvenilir platformu",
+      "experienceApp": "Experience the App",
+      "signInRegister": "Sign in / Register",
+      "jobPortal": "İş Portalı",
+      "careShop": "Bakım Mağazası",
+      "register": "Kayıt Ol"
+    },
+    "contact": {
+      "emailLabel": "E-posta",
+      "emailNow": "Şimdi E-posta Gönder",
+      "hotline": "Hattı Arayın",
+      "sendSms": "SMS Gönder",
+      "title": "Yardıma mı ihtiyacınız var?"
+    },
+    "features": {
+      "agency": {
+        "description": "Güvenilirlik ve uyumluluk standartları kanıtlanmış, yüksek performanslı lisanslı ajanslar.",
+        "title": "Denetlenmiş Ajans Ağı"
+      },
+      "platform": {
+        "description": "Keşfet, rezervasyon yap, yönet, iletişim kur, öde ve takip et — her şey tek güçlü pano üzerinden.",
+        "title": "Tek Entegre Platform"
+      },
+      "sectionTitle": "Neden CareNet?",
+      "tracking": {
+        "description": "Bakıcı programları ve hizmet teslimatı üzerinde tam görünürlük — şeffaflık ve hesap verebilirlik getiriyor.",
+        "title": "Gerçek Zamanlı Bakım Takibi"
+      },
+      "verified": {
+        "description": "Arka plan kontrolü yapılmış, sertifikalı ve güvenilir profesyoneller — polis doğrulaması, sağlık kontrolleri ve psikolojik değerlendirme sürecinden geçirilmiş.",
+        "title": "Doğrulanmış Bakıcılar"
+      }
+    }
+  },
   "dailySchedule": {
     "addPhoto": "Add photo",
     "addTaskDescription": "Create a task or calendar event for the selected day.",
@@ -1356,44 +1406,6 @@
     "selectPrompt": "Pick a role to explore the app:",
     "subtitle": "Try dashboards and flows with sample data — no real account required.",
     "title": "Experience the App"
-  },
-  "home": {
-    "contact": {
-      "emailLabel": "E-posta",
-      "emailNow": "Şimdi E-posta Gönder",
-      "hotline": "Hattı Arayın",
-      "sendSms": "SMS Gönder",
-      "title": "Yardıma mı ihtiyacınız var?"
-    },
-    "features": {
-      "agency": {
-        "description": "Güvenilirlik ve uyumluluk standartları kanıtlanmış, yüksek performanslı lisanslı ajanslar.",
-        "title": "Denetlenmiş Ajans Ağı"
-      },
-      "platform": {
-        "description": "Keşfet, rezervasyon yap, yönet, iletişim kur, öde ve takip et — her şey tek güçlü pano üzerinden.",
-        "title": "Tek Entegre Platform"
-      },
-      "sectionTitle": "Neden CareNet?",
-      "tracking": {
-        "description": "Bakıcı programları ve hizmet teslimatı üzerinde tam görünürlük — şeffaflık ve hesap verebilirlik getiriyor.",
-        "title": "Gerçek Zamanlı Bakım Takibi"
-      },
-      "verified": {
-        "description": "Arka plan kontrolü yapılmış, sertifikalı ve güvenilir profesyoneller — polis doğrulaması, sağlık kontrolleri ve psikolojik değerlendirme sürecinden geçirilmiş.",
-        "title": "Doğrulanmış Bakıcılar"
-      }
-    },
-    "hero": {
-      "brand": "CareNet",
-      "careShop": "Bakım Mağazası",
-      "experienceApp": "Experience the App",
-      "jobPortal": "İş Portalı",
-      "register": "Kayıt Ol",
-      "signInRegister": "Sign in / Register",
-      "subtitle": "Bangladeş'in aileleri doğrulanmış bakıcılar ve profesyonel ajanslarla buluşturan güvenilir platformu",
-      "tagline": "Kaliteli bakım, bağlantılı"
-    }
   },
   "section15": {
     "agencyScorecardSubtitle": "Agency lens on placement quality (?patientId= for a specific client).",

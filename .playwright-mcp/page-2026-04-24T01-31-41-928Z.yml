@@ -1,0 +1,182 @@
+- generic [ref=e2]:
+  - link "Skip to main content" [ref=e3] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e5]:
+    - link "Skip to main content" [ref=e6] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=e7]:
+      - generic [ref=e8]:
+        - search [ref=e9]:
+          - img [ref=e10]
+          - textbox "Search..." [ref=e13]
+        - generic [ref=e14]:
+          - link "Notifications" [ref=e15] [cursor=pointer]:
+            - /url: /notifications
+            - img [ref=e16]
+          - link "Messages" [ref=e19] [cursor=pointer]:
+            - /url: /cp/messages
+            - img [ref=e20]
+          - generic [ref=e22] [cursor=pointer]:
+            - generic [ref=e23]: M
+            - generic [ref=e24]:
+              - paragraph [ref=e25]: Mock_Channel Partner
+              - paragraph [ref=e26]: Channel Partner
+            - img [ref=e27]
+    - generic [ref=e29]:
+      - complementary "Sidebar navigation" [ref=e30]:
+        - link "CareNet" [ref=e32] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e33]: CareNet
+        - generic [ref=e34]: Channel Partner Portal
+        - generic [ref=e35]:
+          - navigation "Role navigation" [ref=e36]:
+            - generic [ref=e37]:
+              - paragraph [ref=e38]: Main
+              - generic [ref=e39]:
+                - link "Dashboard" [ref=e40] [cursor=pointer]:
+                  - /url: /cp/dashboard
+                  - img [ref=e41]
+                  - generic [ref=e46]: Dashboard
+                  - img [ref=e47]
+                - link "sidebar.leads" [ref=e49] [cursor=pointer]:
+                  - /url: /cp/leads
+                  - img [ref=e50]
+                  - generic [ref=e55]: sidebar.leads
+                - link "sidebar.commissions" [ref=e56] [cursor=pointer]:
+                  - /url: /cp/commissions
+                  - img [ref=e57]
+                  - generic [ref=e59]: sidebar.commissions
+                - link "sidebar.rates" [ref=e60] [cursor=pointer]:
+                  - /url: /cp/rates
+                  - img [ref=e61]
+                  - generic [ref=e62]: sidebar.rates
+                - link "sidebar.account" [ref=e63] [cursor=pointer]:
+                  - /url: /cp/account
+                  - img [ref=e64]
+                  - generic [ref=e67]: sidebar.account
+            - button "Tools" [ref=e70]:
+              - generic [ref=e71]: Tools
+              - img [ref=e72]
+          - generic [ref=e74]:
+            - button "Browse" [ref=e76]:
+              - generic [ref=e77]: Browse
+              - img [ref=e78]
+            - button "Support & Info" [ref=e81]:
+              - generic [ref=e82]: Support & Info
+              - img [ref=e83]
+          - generic [ref=e85]:
+            - generic [ref=e86]:
+              - generic "Establishing channel..." [ref=e88]: Connecting
+              - generic [ref=e90]:
+                - generic [ref=e91]:
+                  - combobox "Interface language" [ref=e92] [cursor=pointer]:
+                    - option "አማርኛ"
+                    - option "العربية"
+                    - option "বাংলা"
+                    - option "Dansk"
+                    - option "Deutsch"
+                    - option "Ελληνικά"
+                    - option "English" [selected]
+                    - option "Español"
+                    - option "فارسی"
+                    - option "Suomi"
+                    - option "Français"
+                    - option "ગુજરાતી"
+                    - option "עברית"
+                    - option "हिन्दी"
+                    - option "Indonesia"
+                    - option "Italiano"
+                    - option "日本語"
+                    - option "ಕನ್ನಡ"
+                    - option "한국어"
+                    - option "മലയാളം"
+                    - option "मराठी"
+                    - option "Melayu"
+                    - option "မြန်မာ"
+                    - option "नेपाली"
+                    - option "Nederlands"
+                    - option "Norsk"
+                    - option "ਪੰਜਾਬੀ"
+                    - option "Polski"
+                    - option "Português"
+                    - option "Русский"
+                    - option "සිංහල"
+                    - option "Svenska"
+                    - option "Kiswahili"
+                    - option "தமிழ்"
+                    - option "తెలుగు"
+                    - option "ไทย"
+                    - option "Türkçe"
+                    - option "اردو"
+                    - option "Tiếng Việt"
+                    - option "繁體中文"
+                    - option "中文"
+                    - option "isiZulu"
+                  - img
+                - button "Switch to dark mode" [ref=e93]:
+                  - img [ref=e94]
+              - link "Settings" [ref=e96] [cursor=pointer]:
+                - /url: /settings
+                - img [ref=e97]
+                - generic [ref=e100]: Settings
+            - button "Log Out" [ref=e102]:
+              - img [ref=e103]
+              - generic [ref=e106]: Log Out
+      - main "Main content" [ref=e108]:
+        - generic [ref=e109]:
+          - heading "cp.dashboard.title" [level=1] [ref=e110]
+          - generic [ref=e111]:
+            - heading "cp.dashboard.expiringRates" [level=3] [ref=e112]
+            - list [ref=e113]:
+              - listitem [ref=e114]: "cp.roles.guardian: 15% (expires 01/01/2025)"
+              - listitem [ref=e115]: "cp.roles.agency: 20% (expires 01/01/2025)"
+              - listitem [ref=e116]: "cp.roles.caregiver: 10% (expires 01/01/2025)"
+              - listitem [ref=e117]: "cp.roles.shop: 12.5% (expires 16/10/2024)"
+          - generic [ref=e118]:
+            - generic [ref=e119]:
+              - heading "cp.dashboard.referralCode" [level=3] [ref=e120]
+              - paragraph [ref=e121]: REF-CP-A1B2C3
+            - generic [ref=e122]:
+              - heading "cp.dashboard.status" [level=3] [ref=e123]
+              - paragraph [ref=e124]: active
+            - generic [ref=e125]:
+              - heading "cp.dashboard.totalEarnings" [level=3] [ref=e126]
+              - paragraph [ref=e127]: 781 CP
+          - generic [ref=e128]:
+            - link "👥 cp.dashboard.myLeads" [ref=e129] [cursor=pointer]:
+              - /url: /cp/leads
+              - generic [ref=e130]: 👥
+              - text: cp.dashboard.myLeads
+            - link "➕ cp.dashboard.createLead" [ref=e131] [cursor=pointer]:
+              - /url: /cp/create-lead
+              - generic [ref=e132]: ➕
+              - text: cp.dashboard.createLead
+            - link "💰 cp.dashboard.commissions" [ref=e133] [cursor=pointer]:
+              - /url: /cp/commissions
+              - generic [ref=e134]: 💰
+              - text: cp.dashboard.commissions
+            - link "📊 cp.dashboard.myRates" [ref=e135] [cursor=pointer]:
+              - /url: /cp/rates
+              - generic [ref=e136]: 📊
+              - text: cp.dashboard.myRates
+    - navigation [ref=e137]:
+      - generic [ref=e138]:
+        - link "Home" [ref=e139] [cursor=pointer]:
+          - /url: /cp/dashboard
+          - img [ref=e142]
+          - generic [ref=e145]: Home
+        - button "Back" [ref=e146]:
+          - img [ref=e147]
+          - generic [ref=e149]: Back
+        - link "Search" [ref=e150] [cursor=pointer]:
+          - /url: /global-search
+          - img [ref=e152]
+          - generic [ref=e155]: Search
+        - link "Messages" [ref=e156] [cursor=pointer]:
+          - /url: /cp/messages
+          - img [ref=e158]
+          - generic [ref=e160]: Messages
+        - button "Menu" [ref=e161]:
+          - img [ref=e162]
+          - generic [ref=e163]: Menu
+  - region "Notifications alt+T"

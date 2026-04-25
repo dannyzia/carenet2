@@ -2,12 +2,17 @@
   "a11y": {
     "bottomNav": "Bottennavigering",
     "closeMenu": "Stäng menyn",
+    "closeRoleSidebar": "Close role sidebar",
     "closeSidebar": "Stäng sidomenyn",
     "mainContent": "Huvudinnehåll",
     "messages": "Meddelanden",
     "notifications": "Meddelanden",
     "openMenu": "Öppna menyn",
+    "openPersonaMenu": "Open profile menu for {{role}}",
+    "personaMenuDisabled": "Profile menu (no active role)",
     "roleNav": "Rollnavigering",
+    "roleSidebarClosed": "Role menu closed",
+    "roleSidebarOpened": "Role menu opened",
     "sidebarNav": "Sidomenynavigering",
     "skipToContent": "Hoppa till huvudinnehåll",
     "switchToDark": "Växla till mörkt läge",
@@ -203,6 +208,7 @@
     "orders": "Beställningar",
     "patients": "Patienter",
     "payments": "Betalningar",
+    "persona": "Profile",
     "placements": "Placeringar",
     "products": "Produkter",
     "queue": "Kö",
@@ -670,6 +676,7 @@
     "shop": "Shop Owner"
   },
   "sidebar": {
+    "account": "Account",
     "agencies": "Myndigheter",
     "agencyApprovals": "Myndighetsgodkännanden",
     "analytics": "Analys",
@@ -685,11 +692,13 @@
     "clientIntake": "Klientintagning",
     "clients": "Klienter",
     "cmsManager": "CMS-hanterare",
+    "commissions": "Commissions",
     "compareCaregivers": "Jämför vårdgivare",
     "contactUs": "Kontakta oss",
     "content": "Innehåll",
     "contracts": "Avtal",
     "contractsOverview": "Avtalöversikt",
+    "createLead": "Create Lead",
     "dailyEarnings": "Dagliga intäkter",
     "dashboard": "Översikt",
     "dataPrivacy": "Data sekretess",
@@ -708,6 +717,7 @@
     "inventory": "Lager",
     "jobManagement": "Jobbhantering",
     "languages": "Språk",
+    "leads": "Leads",
     "marketplace": "Marknadsplats",
     "carePackageCatalog": "Care packages",
     "caregivingJobs": "Caregiving jobs",
@@ -722,6 +732,7 @@
     "myJobs": "Mina jobb",
     "myPatients": "Mina patienter",
     "newBooking": "Ny bokning",
+    "noNavItems": "No items available",
     "notifications": "Meddelanden",
     "onboarding": "Introduktion",
     "orders": "Beställningar",
@@ -743,6 +754,7 @@
     "products": "Produkter",
     "profile": "Profil",
     "promoManagement": "Kampanjhantering",
+    "rates": "Rates",
     "references": "Referenser",
     "roleActivations": "Role Activations",
     "refundRequest": "Återbetalningsbegäran",
@@ -1232,6 +1244,44 @@
       "noHistory": "No audit history available"
     }
   },
+  "home": {
+    "hero": {
+      "brand": "CareNet",
+      "tagline": "Kvalitetsvård, ansluten",
+      "subtitle": "Bangladeshs betrodda plattform för att koppla ihop familjer med verifierade vårdgivare och professionella myndigheter",
+      "experienceApp": "Experience the App",
+      "signInRegister": "Sign in / Register",
+      "jobPortal": "Jobbportal",
+      "careShop": "Care Shop",
+      "register": "Registrera"
+    },
+    "contact": {
+      "emailLabel": "E-post",
+      "emailNow": "E-post nu",
+      "hotline": "Hotslinje",
+      "sendSms": "Skicka SMS",
+      "title": "Behöver du hjälp?"
+    },
+    "features": {
+      "agency": {
+        "description": "Licensierade, högpresterande myndigheter med beprövad tillförlitlighet och efterlevnadsstandarder.",
+        "title": "Granskad myndighetsnätverk"
+      },
+      "platform": {
+        "description": "Upptäck, boka, hantera, kommunicera, betala och spåra — allt från en kraftfull instrumentpanel.",
+        "title": "Enhetlig integrerad plattform"
+      },
+      "sectionTitle": "Varför CareNet?",
+      "tracking": {
+        "description": "Full insyn i vårdgivares scheman och serviceleverans — ger transparens och ansvar.",
+        "title": "Real-time-vårdspårning"
+      },
+      "verified": {
+        "description": "Bakgrundsgranskade, certifierade och betrodda yrkesmän — skärda genom polisiella kontroller, hälsokontroller och psykologisk utvärdering.",
+        "title": "Verifierade vårdgivare"
+      }
+    }
+  },
   "dailySchedule": {
     "addPhoto": "Add photo",
     "addTaskDescription": "Create a task or calendar event for the selected day.",
@@ -1356,44 +1406,6 @@
     "selectPrompt": "Pick a role to explore the app:",
     "subtitle": "Try dashboards and flows with sample data — no real account required.",
     "title": "Experience the App"
-  },
-  "home": {
-    "contact": {
-      "emailLabel": "E-post",
-      "emailNow": "E-post nu",
-      "hotline": "Hotslinje",
-      "sendSms": "Skicka SMS",
-      "title": "Behöver du hjälp?"
-    },
-    "features": {
-      "agency": {
-        "description": "Licensierade, högpresterande myndigheter med beprövad tillförlitlighet och efterlevnadsstandarder.",
-        "title": "Granskad myndighetsnätverk"
-      },
-      "platform": {
-        "description": "Upptäck, boka, hantera, kommunicera, betala och spåra — allt från en kraftfull instrumentpanel.",
-        "title": "Enhetlig integrerad plattform"
-      },
-      "sectionTitle": "Varför CareNet?",
-      "tracking": {
-        "description": "Full insyn i vårdgivares scheman och serviceleverans — ger transparens och ansvar.",
-        "title": "Real-time-vårdspårning"
-      },
-      "verified": {
-        "description": "Bakgrundsgranskade, certifierade och betrodda yrkesmän — skärda genom polisiella kontroller, hälsokontroller och psykologisk utvärdering.",
-        "title": "Verifierade vårdgivare"
-      }
-    },
-    "hero": {
-      "brand": "CareNet",
-      "careShop": "Care Shop",
-      "experienceApp": "Experience the App",
-      "jobPortal": "Jobbportal",
-      "register": "Registrera",
-      "signInRegister": "Sign in / Register",
-      "subtitle": "Bangladeshs betrodda plattform för att koppla ihop familjer med verifierade vårdgivare och professionella myndigheter",
-      "tagline": "Kvalitetsvård, ansluten"
-    }
   },
   "section15": {
     "agencyScorecardSubtitle": "Agency lens on placement quality (?patientId= for a specific client).",

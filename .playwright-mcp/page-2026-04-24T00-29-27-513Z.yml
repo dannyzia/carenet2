@@ -1,0 +1,164 @@
+- generic [ref=e2]:
+  - link "Skip to main content" [ref=e3] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e155]:
+    - link "Skip to main content" [ref=e156] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=e157]:
+      - generic [ref=e158]:
+        - search [ref=e159]:
+          - img [ref=e160]
+          - textbox "Search..." [ref=e163]
+        - generic [ref=e164]:
+          - link "Notifications" [ref=e165] [cursor=pointer]:
+            - /url: /notifications
+            - img [ref=e166]
+          - link "Messages" [ref=e169] [cursor=pointer]:
+            - /url: /guardian/messages
+            - img [ref=e170]
+          - generic [ref=e172] [cursor=pointer]:
+            - generic [ref=e173]: M
+            - generic [ref=e174]:
+              - paragraph [ref=e175]: Mock_Rashed Hossain
+              - paragraph [ref=e176]: Guardian
+            - img [ref=e177]
+    - generic [ref=e179]:
+      - complementary "Sidebar navigation" [ref=e180]:
+        - link "CareNet" [ref=e182] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e183]: CareNet
+        - generic [ref=e184]: Guardian Portal
+        - generic [ref=e185]:
+          - navigation "Role navigation" [ref=e186]:
+            - generic [ref=e187]:
+              - paragraph [ref=e188]: Main
+              - generic [ref=e189]:
+                - link "Dashboard" [ref=e190] [cursor=pointer]:
+                  - /url: /guardian/dashboard
+                  - img [ref=e191]
+                  - generic [ref=e196]: Dashboard
+                  - img [ref=e197]
+                - link "Care Requirements" [ref=e199] [cursor=pointer]:
+                  - /url: /guardian/care-requirements
+                  - img [ref=e200]
+                  - generic [ref=e203]: Care Requirements
+                - link "Care Marketplace" [ref=e204] [cursor=pointer]:
+                  - /url: /guardian/marketplace-hub
+                  - img [ref=e205]
+                  - generic [ref=e208]: Care Marketplace
+                - link "Placements" [ref=e209] [cursor=pointer]:
+                  - /url: /guardian/placements
+                  - img [ref=e210]
+                  - generic [ref=e212]: Placements
+                - link "My Patients" [ref=e213] [cursor=pointer]:
+                  - /url: /guardian/patients
+                  - img [ref=e214]
+                  - generic [ref=e216]: My Patients
+                - link "Schedule" [ref=e217] [cursor=pointer]:
+                  - /url: /guardian/schedule
+                  - img [ref=e218]
+                  - generic [ref=e220]: Schedule
+                - link "Messages" [ref=e221] [cursor=pointer]:
+                  - /url: /guardian/messages
+                  - img [ref=e222]
+                  - generic [ref=e224]: Messages
+                - link "Profile" [ref=e225] [cursor=pointer]:
+                  - /url: /guardian/profile
+                  - img [ref=e226]
+                  - generic [ref=e229]: Profile
+            - button "Finance" [ref=e232]:
+              - generic [ref=e233]: Finance
+              - img [ref=e234]
+            - button "Tools" [ref=e238]:
+              - generic [ref=e239]: Tools
+              - img [ref=e240]
+          - generic [ref=e242]:
+            - button "Browse" [ref=e244]:
+              - generic [ref=e245]: Browse
+              - img [ref=e246]
+            - button "Support & Info" [ref=e249]:
+              - generic [ref=e250]: Support & Info
+              - img [ref=e251]
+          - generic [ref=e253]:
+            - generic [ref=e254]:
+              - generic "Establishing channel..." [ref=e256]: Connecting
+              - generic [ref=e258]:
+                - generic [ref=e259]:
+                  - combobox "Interface language" [ref=e260] [cursor=pointer]:
+                    - option "አማርኛ"
+                    - option "العربية"
+                    - option "বাংলা"
+                    - option "Dansk"
+                    - option "Deutsch"
+                    - option "Ελληνικά"
+                    - option "English" [selected]
+                    - option "Español"
+                    - option "فارسی"
+                    - option "Suomi"
+                    - option "Français"
+                    - option "ગુજરાતી"
+                    - option "עברית"
+                    - option "हिन्दी"
+                    - option "Indonesia"
+                    - option "Italiano"
+                    - option "日本語"
+                    - option "ಕನ್ನಡ"
+                    - option "한국어"
+                    - option "മലയാളം"
+                    - option "मराठी"
+                    - option "Melayu"
+                    - option "မြန်မာ"
+                    - option "नेपाली"
+                    - option "Nederlands"
+                    - option "Norsk"
+                    - option "ਪੰਜਾਬੀ"
+                    - option "Polski"
+                    - option "Português"
+                    - option "Русский"
+                    - option "සිංහල"
+                    - option "Svenska"
+                    - option "Kiswahili"
+                    - option "தமிழ்"
+                    - option "తెలుగు"
+                    - option "ไทย"
+                    - option "Türkçe"
+                    - option "اردو"
+                    - option "Tiếng Việt"
+                    - option "繁體中文"
+                    - option "中文"
+                    - option "isiZulu"
+                  - img
+                - button "Switch to dark mode" [ref=e261]:
+                  - img [ref=e262]
+              - link "Settings" [ref=e264] [cursor=pointer]:
+                - /url: /settings
+                - img [ref=e265]
+                - generic [ref=e268]: Settings
+            - button "Log Out" [ref=e270]:
+              - img [ref=e271]
+              - generic [ref=e274]: Log Out
+      - main "Main content" [ref=e276]:
+        - generic [ref=e277]:
+          - heading "Welcome, Rashed Hossain!" [level=1] [ref=e278]
+          - paragraph [ref=e279]: Something went wrong. Please try again.
+    - navigation [ref=e280]:
+      - generic [ref=e281]:
+        - link "Home" [ref=e282] [cursor=pointer]:
+          - /url: /guardian/dashboard
+          - img [ref=e285]
+          - generic [ref=e288]: Home
+        - button "Back" [ref=e289]:
+          - img [ref=e290]
+          - generic [ref=e292]: Back
+        - link "Search" [ref=e293] [cursor=pointer]:
+          - /url: /guardian/marketplace-hub?tab=packages
+          - img [ref=e295]
+          - generic [ref=e298]: Search
+        - link "Messages" [ref=e299] [cursor=pointer]:
+          - /url: /guardian/messages
+          - img [ref=e301]
+          - generic [ref=e303]: Messages
+        - button "Menu" [ref=e304]:
+          - img [ref=e305]
+          - generic [ref=e306]: Menu
+  - region "Notifications alt+T"

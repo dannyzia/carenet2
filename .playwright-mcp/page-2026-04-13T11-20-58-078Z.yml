@@ -1,0 +1,143 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - link "Skip to main content" [ref=e4] [cursor=pointer]:
+      - /url: "#main-content"
+    - generic [ref=e5]:
+      - complementary "Sidebar navigation" [ref=e6]:
+        - generic [ref=e7]:
+          - link "CareNet" [ref=e8] [cursor=pointer]:
+            - /url: /
+            - generic [ref=e9]: CareNet
+          - button "Close sidebar" [ref=e10]:
+            - img [ref=e11]
+        - button "Log Out" [ref=e15]:
+          - img [ref=e16]
+          - text: Log Out
+        - generic [ref=e19]: Shop Owner Portal
+        - generic [ref=e20]:
+          - navigation "Role navigation" [ref=e21]:
+            - generic [ref=e22]:
+              - paragraph [ref=e23]: Main
+              - generic [ref=e24]:
+                - link "Dashboard" [ref=e25] [cursor=pointer]:
+                  - /url: /shop/dashboard
+                  - img [ref=e26]
+                  - generic [ref=e31]: Dashboard
+                  - img [ref=e32]
+                - link "Products" [ref=e34] [cursor=pointer]:
+                  - /url: /shop/products
+                  - img [ref=e35]
+                  - generic [ref=e39]: Products
+                - link "Orders" [ref=e40] [cursor=pointer]:
+                  - /url: /shop/orders
+                  - img [ref=e41]
+                  - generic [ref=e44]: Orders
+                - link "Inventory" [ref=e45] [cursor=pointer]:
+                  - /url: /shop/inventory
+                  - img [ref=e46]
+                  - generic [ref=e49]: Inventory
+                - link "Analytics" [ref=e50] [cursor=pointer]:
+                  - /url: /shop/analytics
+                  - img [ref=e51]
+                  - generic [ref=e52]: Analytics
+                - link "Billing 2" [ref=e53] [cursor=pointer]:
+                  - /url: /billing
+                  - img [ref=e54]
+                  - generic [ref=e57]: Billing
+                  - generic [ref=e58]: "2"
+            - button "Management" [ref=e61]:
+              - generic [ref=e62]: Management
+              - img [ref=e63]
+          - generic [ref=e65]:
+            - button "Browse" [ref=e67]:
+              - generic [ref=e68]: Browse
+              - img [ref=e69]
+            - button "Support & Info" [ref=e72]:
+              - generic [ref=e73]: Support & Info
+              - img [ref=e74]
+          - generic [ref=e77]:
+            - generic "Establishing channel..." [ref=e79]: Connecting
+            - generic [ref=e81]:
+              - generic [ref=e82]:
+                - combobox "Interface language" [ref=e83] [cursor=pointer]:
+                  - option "አማርኛ"
+                  - option "العربية"
+                  - option "বাংলা"
+                  - option "Dansk"
+                  - option "Deutsch"
+                  - option "Ελληνικά"
+                  - option "English" [selected]
+                  - option "Español"
+                  - option "فارسی"
+                  - option "Suomi"
+                  - option "Français"
+                  - option "ગુજરાતી"
+                  - option "עברית"
+                  - option "हिन्दी"
+                  - option "Indonesia"
+                  - option "Italiano"
+                  - option "日本語"
+                  - option "ಕನ್ನಡ"
+                  - option "한국어"
+                  - option "മലയാളം"
+                  - option "मराठी"
+                  - option "Melayu"
+                  - option "မြန်မာ"
+                  - option "नेपाली"
+                  - option "Nederlands"
+                  - option "Norsk"
+                  - option "ਪੰਜਾਬੀ"
+                  - option "Polski"
+                  - option "Português"
+                  - option "Русский"
+                  - option "සිංහල"
+                  - option "Svenska"
+                  - option "Kiswahili"
+                  - option "தமிழ்"
+                  - option "తెలుగు"
+                  - option "ไทย"
+                  - option "Türkçe"
+                  - option "اردو"
+                  - option "Tiếng Việt"
+                  - option "繁體中文"
+                  - option "中文"
+                  - option "isiZulu"
+                - img
+              - button "Switch to dark mode" [ref=e84]:
+                - img [ref=e85]
+            - link "Settings" [ref=e87] [cursor=pointer]:
+              - /url: /settings
+              - img [ref=e88]
+              - generic [ref=e91]: Settings
+      - generic [ref=e92]:
+        - banner [ref=e93]:
+          - generic [ref=e95]:
+            - link "Notifications" [ref=e96] [cursor=pointer]:
+              - /url: /notifications
+              - img [ref=e97]
+            - generic [ref=e101] [cursor=pointer]: M
+        - main "Main content" [active] [ref=e102]:
+          - generic [ref=e103]:
+            - heading "Shop Dashboard" [level=1] [ref=e104]
+            - paragraph [ref=e105]: Something went wrong. Please try again.
+    - navigation [ref=e106]:
+      - generic [ref=e107]:
+        - link "Home" [ref=e108] [cursor=pointer]:
+          - /url: /shop/dashboard
+          - img [ref=e111]
+          - generic [ref=e114]: Home
+        - button "Back" [ref=e115]:
+          - img [ref=e116]
+          - generic [ref=e118]: Back
+        - link "Search" [ref=e119] [cursor=pointer]:
+          - /url: /global-search
+          - img [ref=e121]
+          - generic [ref=e124]: Search
+        - link "Messages" [ref=e125] [cursor=pointer]:
+          - /url: /shop/messages
+          - img [ref=e127]
+          - generic [ref=e129]: Messages
+        - button "Menu" [ref=e130]:
+          - img [ref=e131]
+          - generic [ref=e132]: Menu
+  - region "Notifications alt+T"

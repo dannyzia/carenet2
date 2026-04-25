@@ -3,6 +3,7 @@ import { Clock } from "lucide-react";
 import { useAuth } from "@/frontend/auth/AuthContext";
 import { useNavigate } from "react-router";
 import i18n from "@/frontend/i18n";
+import { roleDashboardPath } from "@/backend/navigation/roleAppPaths";
 
 export default function PendingApprovalPage() {
   const { user, refreshActivationStatus } = useAuth();
@@ -14,8 +15,7 @@ export default function PendingApprovalPage() {
   // Auto-navigate when status changes to approved
   useEffect(() => {
     if (user.activationStatus === 'approved') {
-      const dashboardPath = `/${user.activeRole}/dashboard`;
-      navigate(dashboardPath);
+      navigate(roleDashboardPath(user.activeRole));
     }
   }, [user.activationStatus, user.activeRole, navigate]);
 

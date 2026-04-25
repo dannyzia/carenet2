@@ -18,6 +18,19 @@ import { USE_SUPABASE, getSupabaseClient } from "./supabase";
 import { isDemoSession } from "./_sb";
 import { isOnline, onOnlineChange } from "@/backend/utils/onlineState";
 
+// ─── Initialize online state listener ───
+// Update connection status when device goes offline/online
+if (typeof window !== "undefined") {
+  onOnlineChange((online) => {
+    if (!online && _currentStatus === "connected") {
+      setConnectionStatus("disconnected");
+    } else if (online && _currentStatus === "disconnected") {
+      setConnectionStatus("connecting");
+      _attemptReconnect();
+    }
+  });
+}
+
 /** Postgres schema used for realtime `postgres_changes` (matches `sbData()` routing). */
 export function getRealtimeDataSchema(): "public" | "demo" {
   return isDemoSession() ? "demo" : "public";
@@ -216,7 +229,6 @@ const _heartbeatListeners = new Set<HeartbeatListener>();
 let _currentHeartbeatStatus: HeartbeatStatus = "healthy";
 
 function _setHeartbeatStatus(status: HeartbeatStatus) {
-  if (status === _currentHeartbeatStatus) return;
   _currentHeartbeatStatus = status;
   _heartbeatListeners.forEach((fn) => {
     try { fn(status); } catch (e) { console.error("[Realtime] heartbeat listener error:", e); }
@@ -459,6 +471,7 @@ export function stopHeartbeat(): void {
     clearInterval(_heartbeatTimer);
     _heartbeatTimer = null;
   }
+  _setHeartbeatStatus("healthy"); // Reset to healthy when stopped
 }
 
 export function isHeartbeatRunning(): boolean {

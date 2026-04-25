@@ -1,6 +1,7 @@
 import { Navigate, Outlet } from "react-router";
 import { useAuth } from "@/frontend/auth/AuthContext";
 import type { Role } from "@/frontend/auth/types";
+import { roleDashboardPath } from "@/backend/navigation/roleAppPaths";
 
 /**
  * Renders child routes only if the signed-in user has at least one allowed role.
@@ -13,7 +14,7 @@ export function RequireRole({ allowedRoles }: { allowedRoles: Role[] }) {
   }
   const allowed = allowedRoles.some((r) => user.roles.includes(r));
   if (!allowed) {
-    return <Navigate to={`/${user.activeRole}/dashboard`} replace />;
+    return <Navigate to={roleDashboardPath(user.activeRole)} replace />;
   }
   return <Outlet />;
 }

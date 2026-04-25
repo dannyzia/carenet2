@@ -17,6 +17,7 @@ import type {
 } from "@/backend/models";
 import type { OperationalDashboardData } from "@/backend/models/operationalDashboard.model";
 import { mapGuardianOperationalDashboard } from "./guardianOperationalMapper";
+import { withDashboardFallback, EMPTY_OPERATIONAL_DASHBOARD } from "./dashboardFallback";
 import {
   USE_SUPABASE,
   sbRead,
@@ -762,10 +763,19 @@ export const guardianService = {
   },
 
   async getOperationalDashboard(): Promise<OperationalDashboardData> {
-    const [alerts, activity] = await Promise.all([
-      guardianService.getDashboardAlerts(),
-      guardianService.getRecentActivity(),
-    ]);
-    return mapGuardianOperationalDashboard({ alerts, activity });
+    return withDashboardFallback(
+      async () => {
+        const [alerts, activity] = await Promise.all([
+          guardianService.getDashboardAlerts(),
+          guardianService.getRecentActivity(),
+        ]);
+        return mapGuardianOperationalDashboard({ alerts, activity });
+      },
+      EMPTY_OPERATIONAL_DASHBOARD,
+      (m) => mapGuardianOperationalDashboard({
+        alerts: m.MOCK_GUARDIAN_DASHBOARD_ALERTS,
+        activity: m.MOCK_GUARDIAN_RECENT_ACTIVITY,
+      }),
+    );
   },
 };

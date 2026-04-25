@@ -2,12 +2,17 @@
   "a11y": {
     "bottomNav": "নিচের নেভিগেশন",
     "closeMenu": "মেনু বন্ধ করুন",
+    "closeRoleSidebar": "Close role sidebar",
     "closeSidebar": "সাইডবার বন্ধ করুন",
     "mainContent": "প্রধান বিষয়বস্তু",
     "messages": "বার্তা",
     "notifications": "বিজ্ঞপ্তি",
     "openMenu": "মেনু খুলুন",
+    "openPersonaMenu": "Open profile menu for {{role}}",
+    "personaMenuDisabled": "Profile menu (no active role)",
     "roleNav": "ভূমিকা নেভিগেশন",
+    "roleSidebarClosed": "Role menu closed",
+    "roleSidebarOpened": "Role menu opened",
     "sidebarNav": "সাইডবার নেভিগেশন",
     "skipToContent": "প্রধান বিষয়বস্তুতে যান",
     "switchToDark": "ডার্ক মোডে স্যুইচ করুন",
@@ -203,6 +208,7 @@
     "orders": "অর্ডার",
     "patients": "রোগী",
     "payments": "পেমেন্ট",
+    "persona": "Profile",
     "placements": "প্লেসমেন্ট",
     "products": "পণ্য",
     "queue": "কিউ",
@@ -670,6 +676,7 @@
     "shop": "दुकान का मालिक"
   },
   "sidebar": {
+    "account": "Account",
     "agencies": "এজেন্সি",
     "agencyApprovals": "এজেন্সি অনুমোদন",
     "analytics": "বিশ্লেষণ",
@@ -685,11 +692,13 @@
     "clientIntake": "ক্লায়েন্ট ইনটেক",
     "clients": "ক্লায়েন্ট",
     "cmsManager": "সিএমএস ম্যানেজার",
+    "commissions": "Commissions",
     "compareCaregivers": "কেয়ারগিভার তুলনা",
     "contactUs": "আমাদের সাথে যোগাযোগ করুন",
     "content": "কন্টেন্ট",
     "contracts": "চুক্তি",
     "contractsOverview": "চুক্তির ওভারভিউ",
+    "createLead": "Create Lead",
     "dailyEarnings": "দৈনিক উপার্জন",
     "dashboard": "ড্যাশবোর্ড",
     "dataPrivacy": "ডেটা প্রাইভেসি",
@@ -708,6 +717,7 @@
     "inventory": "ইনভেন্টরি",
     "jobManagement": "চাকরি ব্যবস্থাপনা",
     "languages": "ভাষা",
+    "leads": "Leads",
     "marketplace": "মার্কেটপ্লেস",
     "carePackageCatalog": "Care packages",
     "caregivingJobs": "Caregiving jobs",
@@ -722,6 +732,7 @@
     "myJobs": "আমার চাকরি",
     "myPatients": "আমার রোগী",
     "newBooking": "নতুন বুকিং",
+    "noNavItems": "No items available",
     "notifications": "বিজ্ঞপ্তি",
     "onboarding": "অনবোর্ডিং",
     "orders": "অর্ডার",
@@ -743,6 +754,7 @@
     "products": "পণ্য",
     "profile": "প্রোফাইল",
     "promoManagement": "প্রমোশন ব্যবস্থাপনা",
+    "rates": "Rates",
     "references": "রেফারেন্স",
     "roleActivations": "Role Activations",
     "refundRequest": "রিফান্ড অনুরোধ",
@@ -1232,6 +1244,44 @@
       "noHistory": "No audit history available"
     }
   },
+  "home": {
+    "hero": {
+      "brand": "কেয়ারনেট",
+      "tagline": "মানসম্পন্ন কেয়ার, সংযুক্ত",
+      "subtitle": "বাংলাদেশের বিশ্বস্ত প্ল্যাটফর্ম যা পরিবারকে যাচাইকৃত কেয়ারগিভার এবং পেশাদার এজেন্সির সাথে সংযুক্ত করে",
+      "experienceApp": "Experience the App",
+      "signInRegister": "Sign in / Register",
+      "jobPortal": "চাকরি পোর্টাল",
+      "careShop": "কেয়ার শপ",
+      "register": "রেজিস্টার"
+    },
+    "contact": {
+      "emailLabel": "ইমেইল",
+      "emailNow": "এখনই ইমেইল করুন",
+      "hotline": "হটলাইন",
+      "sendSms": "এসএমএস পাঠান",
+      "title": "সাহায্য প্রয়োজন?"
+    },
+    "features": {
+      "agency": {
+        "description": "লাইসেন্সপ্রাপ্ত, উচ্চ-কর্মক্ষমতাসম্পন্ন এজেন্সি যাদের প্রমাণিত নির্ভরযোগ্যতা এবং অনুগতি মানদণ্ড রয়েছে।",
+        "title": "যাচাইকৃত এজেন্সি নেটওয়ার্ক"
+      },
+      "platform": {
+        "description": "আবিষ্কার করুন, বুক করুন, পরিচালনা করুন, যোগাযোগ করুন, পেমেন্ট করুন এবং ট্র্যাক করুন—সবকিছু একটি শক্তিশালী ড্যাশবোর্ড থেকে।",
+        "title": "একক সংহত প্ল্যাটফর্ম"
+      },
+      "sectionTitle": "কেন কেয়ারনেট?",
+      "tracking": {
+        "description": "কেয়ারগিভার সময়সূচী এবং সেবা প্রদানের পূর্ণ দৃশ্যমানতা—স্বচ্ছতা এবং জবাবদিহিতা নিয়ে আসে।",
+        "title": "রিয়েল-টাইম কেয়ার ট্র্যাকিং"
+      },
+      "verified": {
+        "description": "ব্যাকগ্রাউন্ড-চেক করা, সার্টিফাইড, এবং বিশ্বস্ত পেশাদার—পুলিশ যাচাই, স্বাস্থ্য পরীক্ষা, এবং মনস্তাত্ত্বিক মূল্যায়নের মাধ্যমে স্ক্রিন করা হয়েছে।",
+        "title": "যাচাইকৃত কেয়ারগিভার"
+      }
+    }
+  },
   "dailySchedule": {
     "addPhoto": "Add photo",
     "addTaskDescription": "Create a task or calendar event for the selected day.",
@@ -1356,44 +1406,6 @@
     "selectPrompt": "Pick a role to explore the app:",
     "subtitle": "Try dashboards and flows with sample data — no real account required.",
     "title": "Experience the App"
-  },
-  "home": {
-    "contact": {
-      "emailLabel": "ইমেইল",
-      "emailNow": "এখনই ইমেইল করুন",
-      "hotline": "হটলাইন",
-      "sendSms": "এসএমএস পাঠান",
-      "title": "সাহায্য প্রয়োজন?"
-    },
-    "features": {
-      "agency": {
-        "description": "লাইসেন্সপ্রাপ্ত, উচ্চ-কর্মক্ষমতাসম্পন্ন এজেন্সি যাদের প্রমাণিত নির্ভরযোগ্যতা এবং অনুগতি মানদণ্ড রয়েছে।",
-        "title": "যাচাইকৃত এজেন্সি নেটওয়ার্ক"
-      },
-      "platform": {
-        "description": "আবিষ্কার করুন, বুক করুন, পরিচালনা করুন, যোগাযোগ করুন, পেমেন্ট করুন এবং ট্র্যাক করুন—সবকিছু একটি শক্তিশালী ড্যাশবোর্ড থেকে।",
-        "title": "একক সংহত প্ল্যাটফর্ম"
-      },
-      "sectionTitle": "কেন কেয়ারনেট?",
-      "tracking": {
-        "description": "কেয়ারগিভার সময়সূচী এবং সেবা প্রদানের পূর্ণ দৃশ্যমানতা—স্বচ্ছতা এবং জবাবদিহিতা নিয়ে আসে।",
-        "title": "রিয়েল-টাইম কেয়ার ট্র্যাকিং"
-      },
-      "verified": {
-        "description": "ব্যাকগ্রাউন্ড-চেক করা, সার্টিফাইড, এবং বিশ্বস্ত পেশাদার—পুলিশ যাচাই, স্বাস্থ্য পরীক্ষা, এবং মনস্তাত্ত্বিক মূল্যায়নের মাধ্যমে স্ক্রিন করা হয়েছে।",
-        "title": "যাচাইকৃত কেয়ারগিভার"
-      }
-    },
-    "hero": {
-      "brand": "কেয়ারনেট",
-      "careShop": "কেয়ার শপ",
-      "experienceApp": "Experience the App",
-      "jobPortal": "চাকরি পোর্টাল",
-      "register": "রেজিস্টার",
-      "signInRegister": "Sign in / Register",
-      "subtitle": "বাংলাদেশের বিশ্বস্ত প্ল্যাটফর্ম যা পরিবারকে যাচাইকৃত কেয়ারগিভার এবং পেশাদার এজেন্সির সাথে সংযুক্ত করে",
-      "tagline": "মানসম্পন্ন কেয়ার, সংযুক্ত"
-    }
   },
   "section15": {
     "agencyScorecardSubtitle": "Agency lens on placement quality (?patientId= for a specific client).",

@@ -2,12 +2,17 @@
   "a11y": {
     "bottomNav": "Untere Navigation",
     "closeMenu": "Menü schließen",
+    "closeRoleSidebar": "Close role sidebar",
     "closeSidebar": "Seitenleiste schließen",
     "mainContent": "Hauptinhalt",
     "messages": "Nachrichten",
     "notifications": "Benachrichtigungen",
     "openMenu": "Menü öffnen",
+    "openPersonaMenu": "Open profile menu for {{role}}",
+    "personaMenuDisabled": "Profile menu (no active role)",
     "roleNav": "Rollen-Navigation",
+    "roleSidebarClosed": "Role menu closed",
+    "roleSidebarOpened": "Role menu opened",
     "sidebarNav": "Seitenleisten-Navigation",
     "skipToContent": "Zum Hauptinhalt springen",
     "switchToDark": "Auf dunklen Modus umschalten",
@@ -203,6 +208,7 @@
     "orders": "Bestellungen",
     "patients": "Patienten",
     "payments": "Zahlungen",
+    "persona": "Profile",
     "placements": "Vermittlungen",
     "products": "Produkte",
     "queue": "Warteschlange",
@@ -670,6 +676,7 @@
     "shop": "Shop Owner"
   },
   "sidebar": {
+    "account": "Account",
     "agencies": "Agenturen",
     "agencyApprovals": "Agentur-Zulassungen",
     "analytics": "Analytics",
@@ -685,11 +692,13 @@
     "clientIntake": "Kundenaufnahme",
     "clients": "Kunden",
     "cmsManager": "CMS-Manager",
+    "commissions": "Commissions",
     "compareCaregivers": "Pflegekräfte vergleichen",
     "contactUs": "Kontaktieren Sie uns",
     "content": "Inhalt",
     "contracts": "Verträge",
     "contractsOverview": "Vertragsübersicht",
+    "createLead": "Create Lead",
     "dailyEarnings": "Tägliche Einnahmen",
     "dashboard": "Dashboard",
     "dataPrivacy": "Datenschutz",
@@ -708,6 +717,7 @@
     "inventory": "Inventar",
     "jobManagement": "Job-Verwaltung",
     "languages": "Sprachen",
+    "leads": "Leads",
     "marketplace": "Marktplatz",
     "carePackageCatalog": "Care packages",
     "caregivingJobs": "Caregiving jobs",
@@ -722,6 +732,7 @@
     "myJobs": "Meine Jobs",
     "myPatients": "Meine Patienten",
     "newBooking": "Neue Buchung",
+    "noNavItems": "No items available",
     "notifications": "Benachrichtigungen",
     "onboarding": "Onboarding",
     "orders": "Bestellungen",
@@ -743,6 +754,7 @@
     "products": "Produkte",
     "profile": "Profil",
     "promoManagement": "Promo-Verwaltung",
+    "rates": "Rates",
     "references": "Referenzen",
     "roleActivations": "Role Activations",
     "refundRequest": "Rückerstattungsanfrage",
@@ -1232,6 +1244,44 @@
       "noHistory": "No audit history available"
     }
   },
+  "home": {
+    "hero": {
+      "brand": "CareNet",
+      "tagline": "Qualitätspflege, vernetzt",
+      "subtitle": "Bangladeshs vertrauenswürdige Plattform für die Verbindung von Familien mit geprüften Pflegekräften und professionellen Agenturen",
+      "experienceApp": "Experience the App",
+      "signInRegister": "Sign in / Register",
+      "jobPortal": "Job Portal",
+      "careShop": "Care Shop",
+      "register": "Registrieren"
+    },
+    "contact": {
+      "emailLabel": "E-Mail",
+      "emailNow": "Jetzt E-Mail",
+      "hotline": "Hotline",
+      "sendSms": "SMS senden",
+      "title": "Hilfe benötigt?"
+    },
+    "features": {
+      "agency": {
+        "description": "Lizenzierte, leistungsstarke Agenturen mit nachgewiesener Zuverlässigkeit und Compliance-Standards.",
+        "title": "Geprüftes Agenturnetzwerk"
+      },
+      "platform": {
+        "description": "Entdecken, buchen, verwalten, kommunizieren, bezahlen und verfolgen — alles von einem leistungsstarken Dashboard.",
+        "title": "Einzelne integrierte Plattform"
+      },
+      "sectionTitle": "Warum CareNet?",
+      "tracking": {
+        "description": "Vollständige Transparenz in die Zeitpläne der Pflegekräfte und Dienstleistungserbringung — Transparenz und Rechenschaftspflicht.",
+        "title": "Echtzeit-Pflegeverfolgung"
+      },
+      "verified": {
+        "description": "Hintergrund-geprüfte, zertifizierte und vertrauenswürdige Fachkräfte — geprüft durch polizeiliche Überprüfung, Gesundheitschecks und psychologische Bewertung.",
+        "title": "Geprüfte Pflegekräfte"
+      }
+    }
+  },
   "dailySchedule": {
     "addPhoto": "Add photo",
     "addTaskDescription": "Create a task or calendar event for the selected day.",
@@ -1356,44 +1406,6 @@
     "selectPrompt": "Pick a role to explore the app:",
     "subtitle": "Try dashboards and flows with sample data — no real account required.",
     "title": "Experience the App"
-  },
-  "home": {
-    "contact": {
-      "emailLabel": "E-Mail",
-      "emailNow": "Jetzt E-Mail",
-      "hotline": "Hotline",
-      "sendSms": "SMS senden",
-      "title": "Hilfe benötigt?"
-    },
-    "features": {
-      "agency": {
-        "description": "Lizenzierte, leistungsstarke Agenturen mit nachgewiesener Zuverlässigkeit und Compliance-Standards.",
-        "title": "Geprüftes Agenturnetzwerk"
-      },
-      "platform": {
-        "description": "Entdecken, buchen, verwalten, kommunizieren, bezahlen und verfolgen — alles von einem leistungsstarken Dashboard.",
-        "title": "Einzelne integrierte Plattform"
-      },
-      "sectionTitle": "Warum CareNet?",
-      "tracking": {
-        "description": "Vollständige Transparenz in die Zeitpläne der Pflegekräfte und Dienstleistungserbringung — Transparenz und Rechenschaftspflicht.",
-        "title": "Echtzeit-Pflegeverfolgung"
-      },
-      "verified": {
-        "description": "Hintergrund-geprüfte, zertifizierte und vertrauenswürdige Fachkräfte — geprüft durch polizeiliche Überprüfung, Gesundheitschecks und psychologische Bewertung.",
-        "title": "Geprüfte Pflegekräfte"
-      }
-    },
-    "hero": {
-      "brand": "CareNet",
-      "careShop": "Care Shop",
-      "experienceApp": "Experience the App",
-      "jobPortal": "Job Portal",
-      "register": "Registrieren",
-      "signInRegister": "Sign in / Register",
-      "subtitle": "Bangladeshs vertrauenswürdige Plattform für die Verbindung von Familien mit geprüften Pflegekräften und professionellen Agenturen",
-      "tagline": "Qualitätspflege, vernetzt"
-    }
   },
   "section15": {
     "agencyScorecardSubtitle": "Agency lens on placement quality (?patientId= for a specific client).",

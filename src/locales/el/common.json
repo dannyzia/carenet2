@@ -2,12 +2,17 @@
   "a11y": {
     "bottomNav": "Κάτω πλοήγηση",
     "closeMenu": "Κλείσιμο μενού",
+    "closeRoleSidebar": "Close role sidebar",
     "closeSidebar": "Κλείσιμο πλευρικής μπάρας",
     "mainContent": "Κύριο περιεχόμενο",
     "messages": "Μηνύματα",
     "notifications": "Ειδοποιήσεις",
     "openMenu": "Άνοιγμα μενού",
+    "openPersonaMenu": "Open profile menu for {{role}}",
+    "personaMenuDisabled": "Profile menu (no active role)",
     "roleNav": "Πλοήγηση ρόλων",
+    "roleSidebarClosed": "Role menu closed",
+    "roleSidebarOpened": "Role menu opened",
     "sidebarNav": "Πλοήγηση πλευρικής μπάρας",
     "skipToContent": "Παράκαμψη στο κύριο περιεχόμενο",
     "switchToDark": "Αλλαγή σε σκοτεινό θέμα",
@@ -203,6 +208,7 @@
     "orders": "Παραγγελίες",
     "patients": "Ασθενείς",
     "payments": "Πληρωμές",
+    "persona": "Profile",
     "placements": "Τοποθετήσεις",
     "products": "Προϊόντα",
     "queue": "Ουρά",
@@ -670,6 +676,7 @@
     "shop": "Shop Owner"
   },
   "sidebar": {
+    "account": "Account",
     "agencies": "Γραφεία",
     "agencyApprovals": "Έγκριση Γραφείων",
     "analytics": "Ανάλυση",
@@ -685,11 +692,13 @@
     "clientIntake": "Εισαγωγή Πελάτη",
     "clients": "Πελάτες",
     "cmsManager": "Διαχειριστής CMS",
+    "commissions": "Commissions",
     "compareCaregivers": "Σύγκριση Φροντιστών",
     "contactUs": "Επικοινωνήστε μαζί μας",
     "content": "Περιεχόμενο",
     "contracts": "Συμβάσεις",
     "contractsOverview": "Επισκόπηση Συμβάσεων",
+    "createLead": "Create Lead",
     "dailyEarnings": "Ημερήσια Έσοδα",
     "dashboard": "Ταμπλό",
     "dataPrivacy": "Απορρήτου Δεδομένων",
@@ -708,6 +717,7 @@
     "inventory": "Αποθέματα",
     "jobManagement": "Διαχείριση Θέσεων Εργασίας",
     "languages": "Γλώσσες",
+    "leads": "Leads",
     "marketplace": "Αγοράσμα",
     "carePackageCatalog": "Care packages",
     "caregivingJobs": "Caregiving jobs",
@@ -722,6 +732,7 @@
     "myJobs": "Οι Θέσεις Εργασίας μου",
     "myPatients": "Οι Ασθενείς μου",
     "newBooking": "Νέα Κράτηση",
+    "noNavItems": "No items available",
     "notifications": "Ειδοποιήσεις",
     "onboarding": "Εισαγωγή",
     "orders": "Παραγγελίες",
@@ -743,6 +754,7 @@
     "products": "Προϊόντα",
     "profile": "Προφίλ",
     "promoManagement": "Διαχείριση Προώθησης",
+    "rates": "Rates",
     "references": "Αναφορές",
     "roleActivations": "Role Activations",
     "refundRequest": "Αίτηση Επιστροφής",
@@ -1232,6 +1244,44 @@
       "noHistory": "No audit history available"
     }
   },
+  "home": {
+    "hero": {
+      "brand": "CareNet",
+      "tagline": "Ποιοτική φροντίδα, συνδεδεμένη",
+      "subtitle": "Η αξιόπιστη πλατφόρμα της Μπανγκλαντές για συνδέοντας οικογένειες με επαληθευμένους φροντιστές και επαγγελματικά γραφεία",
+      "experienceApp": "Experience the App",
+      "signInRegister": "Sign in / Register",
+      "jobPortal": "Πύλη Θέσεων Εργασίας",
+      "careShop": "Κατάστημα Φροντίδας",
+      "register": "Εγγραφή"
+    },
+    "contact": {
+      "emailLabel": "Email",
+      "emailNow": "Email Τώρα",
+      "hotline": "Γραμμή Υποστήριξης",
+      "sendSms": "Αποστολή SMS",
+      "title": "Χρειάζεστε Βοήθεια;"
+    },
+    "features": {
+      "agency": {
+        "description": "Άδεια, υψηλής απόδοσης γραφεία με αποδεδειγμένη αξιοπιστία και πρότυπα συμμόρφωσης.",
+        "title": "Δίκτυο Ελεγχόμενων Γραφείων"
+      },
+      "platform": {
+        "description": "Ανακαλύψτε, κλείστε, διαχειριστείτε, επικοινωνήστε, πληρώστε και παρακολουθήστε — όλα από ένα ισχυρό ταμπλό.",
+        "title": "Μονόπλευρη Ενσωματωμένη Πλατφόρμα"
+      },
+      "sectionTitle": "Γιατί CareNet;",
+      "tracking": {
+        "description": "Πλήρης ορατότητα στα ωράρια φροντίδας και την παροχή υπηρεσιών — φέρνοντας διαφάνεια και ευθύνη.",
+        "title": "Πραγματικής Ώρας Παρακολούθηση Φροντίδας"
+      },
+      "verified": {
+        "description": "Φροντιστές με επαληθευμένη πιστοποίηση, πιστοποιημένοι και αξιόπιστοι επαγγελματίες — ελεγχόμενοι μέσω επαλήθευσης από την αστυνομία, ελέγχων υγείας και ψυχολογικής αξιολόγησης.",
+        "title": "Επαληθευμένοι Φροντιστές"
+      }
+    }
+  },
   "dailySchedule": {
     "addPhoto": "Add photo",
     "addTaskDescription": "Create a task or calendar event for the selected day.",
@@ -1356,44 +1406,6 @@
     "selectPrompt": "Pick a role to explore the app:",
     "subtitle": "Try dashboards and flows with sample data — no real account required.",
     "title": "Experience the App"
-  },
-  "home": {
-    "contact": {
-      "emailLabel": "Email",
-      "emailNow": "Email Τώρα",
-      "hotline": "Γραμμή Υποστήριξης",
-      "sendSms": "Αποστολή SMS",
-      "title": "Χρειάζεστε Βοήθεια;"
-    },
-    "features": {
-      "agency": {
-        "description": "Άδεια, υψηλής απόδοσης γραφεία με αποδεδειγμένη αξιοπιστία και πρότυπα συμμόρφωσης.",
-        "title": "Δίκτυο Ελεγχόμενων Γραφείων"
-      },
-      "platform": {
-        "description": "Ανακαλύψτε, κλείστε, διαχειριστείτε, επικοινωνήστε, πληρώστε και παρακολουθήστε — όλα από ένα ισχυρό ταμπλό.",
-        "title": "Μονόπλευρη Ενσωματωμένη Πλατφόρμα"
-      },
-      "sectionTitle": "Γιατί CareNet;",
-      "tracking": {
-        "description": "Πλήρης ορατότητα στα ωράρια φροντίδας και την παροχή υπηρεσιών — φέρνοντας διαφάνεια και ευθύνη.",
-        "title": "Πραγματικής Ώρας Παρακολούθηση Φροντίδας"
-      },
-      "verified": {
-        "description": "Φροντιστές με επαληθευμένη πιστοποίηση, πιστοποιημένοι και αξιόπιστοι επαγγελματίες — ελεγχόμενοι μέσω επαλήθευσης από την αστυνομία, ελέγχων υγείας και ψυχολογικής αξιολόγησης.",
-        "title": "Επαληθευμένοι Φροντιστές"
-      }
-    },
-    "hero": {
-      "brand": "CareNet",
-      "careShop": "Κατάστημα Φροντίδας",
-      "experienceApp": "Experience the App",
-      "jobPortal": "Πύλη Θέσεων Εργασίας",
-      "register": "Εγγραφή",
-      "signInRegister": "Sign in / Register",
-      "subtitle": "Η αξιόπιστη πλατφόρμα της Μπανγκλαντές για συνδέοντας οικογένειες με επαληθευμένους φροντιστές και επαγγελματικά γραφεία",
-      "tagline": "Ποιοτική φροντίδα, συνδεδεμένη"
-    }
   },
   "section15": {
     "agencyScorecardSubtitle": "Agency lens on placement quality (?patientId= for a specific client).",

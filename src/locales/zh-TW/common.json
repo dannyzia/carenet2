@@ -2,12 +2,17 @@
   "a11y": {
     "bottomNav": "底部導航",
     "closeMenu": "關閉選單",
+    "closeRoleSidebar": "Close role sidebar",
     "closeSidebar": "關閉側邊欄",
     "mainContent": "主要內容",
     "messages": "訊息",
     "notifications": "通知",
     "openMenu": "開啟選單",
+    "openPersonaMenu": "Open profile menu for {{role}}",
+    "personaMenuDisabled": "Profile menu (no active role)",
     "roleNav": "角色導航",
+    "roleSidebarClosed": "Role menu closed",
+    "roleSidebarOpened": "Role menu opened",
     "sidebarNav": "側邊欄導覽",
     "skipToContent": "跳至主要內容",
     "switchToDark": "切換至深色模式",
@@ -203,6 +208,7 @@
     "orders": "訂單",
     "patients": "病人",
     "payments": "付款",
+    "persona": "Profile",
     "placements": "安置",
     "products": "產品",
     "queue": "佇列",
@@ -670,6 +676,7 @@
     "shop": "Shop Owner"
   },
   "sidebar": {
+    "account": "Account",
     "agencies": "機構",
     "agencyApprovals": "機構審核",
     "analytics": "分析",
@@ -685,11 +692,13 @@
     "clientIntake": "客戶納入",
     "clients": "客戶",
     "cmsManager": "CMS 管理",
+    "commissions": "Commissions",
     "compareCaregivers": "比較照護者",
     "contactUs": "聯絡我們",
     "content": "內容",
     "contracts": "合約",
     "contractsOverview": "合約概覽",
+    "createLead": "Create Lead",
     "dailyEarnings": "每日收入",
     "dashboard": "儀表板",
     "dataPrivacy": "資料隱私",
@@ -708,6 +717,7 @@
     "inventory": "庫存",
     "jobManagement": "工作管理",
     "languages": "語言",
+    "leads": "Leads",
     "marketplace": "市場",
     "carePackageCatalog": "Care packages",
     "caregivingJobs": "Caregiving jobs",
@@ -722,6 +732,7 @@
     "myJobs": "我的工作",
     "myPatients": "我的病人",
     "newBooking": "新預訂",
+    "noNavItems": "No items available",
     "notifications": "通知",
     "onboarding": "上線",
     "orders": "訂單",
@@ -743,6 +754,7 @@
     "products": "產品",
     "profile": "個人資料",
     "promoManagement": "促銷管理",
+    "rates": "Rates",
     "references": "參考",
     "roleActivations": "Role Activations",
     "refundRequest": "退款請求",
@@ -1232,6 +1244,44 @@
       "noHistory": "No audit history available"
     }
   },
+  "home": {
+    "hero": {
+      "brand": "CareNet",
+      "tagline": "優質照護，連結",
+      "subtitle": "孟加拉國值得信賴的平台，連結家庭與驗證過的照護者和專業機構",
+      "experienceApp": "Experience the App",
+      "signInRegister": "Sign in / Register",
+      "jobPortal": "工作入口網站",
+      "careShop": "照護商店",
+      "register": "註冊"
+    },
+    "contact": {
+      "emailLabel": "電子郵件",
+      "emailNow": "立即電子郵件",
+      "hotline": "熱線",
+      "sendSms": "傳送簡訊",
+      "title": "需要協助？"
+    },
+    "features": {
+      "agency": {
+        "description": "具有經證實可靠性和合規標準的持照、高績效機構。",
+        "title": "審核過的機構網路"
+      },
+      "platform": {
+        "description": "探索、預訂、管理、通訊、付款和追蹤 — 一切來自一個強大儀表板。",
+        "title": "單一整合平台"
+      },
+      "sectionTitle": "為什麼選擇 CareNet？",
+      "tracking": {
+        "description": "對照護者時間表和服務交付的完整可見性 — 帶來透明度和責任。",
+        "title": "即時照護追蹤"
+      },
+      "verified": {
+        "description": "背景篩查、認證和值得信賴的專業人士 — 透過警方驗證、健康檢查和心理評估進行篩選。",
+        "title": "驗證過的照護者"
+      }
+    }
+  },
   "dailySchedule": {
     "addPhoto": "Add photo",
     "addTaskDescription": "Create a task or calendar event for the selected day.",
@@ -1356,44 +1406,6 @@
     "selectPrompt": "Pick a role to explore the app:",
     "subtitle": "Try dashboards and flows with sample data — no real account required.",
     "title": "Experience the App"
-  },
-  "home": {
-    "contact": {
-      "emailLabel": "電子郵件",
-      "emailNow": "立即電子郵件",
-      "hotline": "熱線",
-      "sendSms": "傳送簡訊",
-      "title": "需要協助？"
-    },
-    "features": {
-      "agency": {
-        "description": "具有經證實可靠性和合規標準的持照、高績效機構。",
-        "title": "審核過的機構網路"
-      },
-      "platform": {
-        "description": "探索、預訂、管理、通訊、付款和追蹤 — 一切來自一個強大儀表板。",
-        "title": "單一整合平台"
-      },
-      "sectionTitle": "為什麼選擇 CareNet？",
-      "tracking": {
-        "description": "對照護者時間表和服務交付的完整可見性 — 帶來透明度和責任。",
-        "title": "即時照護追蹤"
-      },
-      "verified": {
-        "description": "背景篩查、認證和值得信賴的專業人士 — 透過警方驗證、健康檢查和心理評估進行篩選。",
-        "title": "驗證過的照護者"
-      }
-    },
-    "hero": {
-      "brand": "CareNet",
-      "careShop": "照護商店",
-      "experienceApp": "Experience the App",
-      "jobPortal": "工作入口網站",
-      "register": "註冊",
-      "signInRegister": "Sign in / Register",
-      "subtitle": "孟加拉國值得信賴的平台，連結家庭與驗證過的照護者和專業機構",
-      "tagline": "優質照護，連結"
-    }
   },
   "section15": {
     "agencyScorecardSubtitle": "Agency lens on placement quality (?patientId= for a specific client).",

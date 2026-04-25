@@ -2,12 +2,17 @@
   "a11y": {
     "bottomNav": "ਤਲਲੀ ਨੇਵੀਗੇਸ਼ਨ",
     "closeMenu": "ਮੇਨੂ ਬੰਦ ਕਰੋ",
+    "closeRoleSidebar": "Close role sidebar",
     "closeSidebar": "ਸਾਇਡਬਾਰ ਬੰਦ ਕਰੋ",
     "mainContent": "ਮੁੱਖ ਸਮੱਗਰੀ",
     "messages": "ਸੁਨੇਹੇ",
     "notifications": "ਸੂਚਨਾਵਾਂ",
     "openMenu": "ਮੇਨੂ ਖੋਲ੍ਹੋ",
+    "openPersonaMenu": "Open profile menu for {{role}}",
+    "personaMenuDisabled": "Profile menu (no active role)",
     "roleNav": "ਭੂਮਿਕਾ ਨੇਵੀਗੇਸ਼ਨ",
+    "roleSidebarClosed": "Role menu closed",
+    "roleSidebarOpened": "Role menu opened",
     "sidebarNav": "ਸਾਇਡਬਾਰ ਨੇਵੀਗੇਸ਼ਨ",
     "skipToContent": "ਮੁੱਖ ਸਮੱਗਰੀ 'ਤੇ ਜਾਓ",
     "switchToDark": "ਗੂੜ੍ਹੇ ਮੋਡ 'ਤੇ ਸਵਿੱਚ ਕਰੋ",
@@ -203,6 +208,7 @@
     "orders": "ਆਰਡਰ",
     "patients": "ਮਰੀਜ਼",
     "payments": "ਭੁਗਤਾਨ",
+    "persona": "Profile",
     "placements": "ਪਲੇਸਮੈਂਟ",
     "products": "ਉਤਪਾਦ",
     "queue": "ਕਤਾਰ",
@@ -670,6 +676,7 @@
     "shop": "Shop Owner"
   },
   "sidebar": {
+    "account": "Account",
     "agencies": "ਏਜੰਸੀਆਂ",
     "agencyApprovals": "ਏਜੰਸੀ ਪ੍ਰਵਾਨਗੀ",
     "analytics": "ਵਿਸ਼ਲੇਸ਼ਣ",
@@ -685,11 +692,13 @@
     "clientIntake": "ਗਾਹਕ ਦਾਖਲਾ",
     "clients": "ਗਾਹਕ",
     "cmsManager": "CMS ਪਰਬੰਧਕ",
+    "commissions": "Commissions",
     "compareCaregivers": "ਦੇਖਭਾਲ ਕਰਨ ਵਾਲਿਆਂ ਦੀ ਤੁਲਨਾ",
     "contactUs": "ਸਾਡੇ ਨਾਲ ਸੰਪਰਕ ਕਰੋ",
     "content": "ਸਮੱਗਰੀ",
     "contracts": "ਕਰਾਰ",
     "contractsOverview": "ਕਰਾਰ ਝਲਕ",
+    "createLead": "Create Lead",
     "dailyEarnings": "ਰੋਜ਼ਾਨਾ ਆਮਦਨ",
     "dashboard": "ਡੈਸ਼ਬੋਰਡ",
     "dataPrivacy": "ਡਾਟਾ ਪਰਦੇਦਾਰੀ",
@@ -708,6 +717,7 @@
     "inventory": "ਇਨਵੈਂਟਰੀ",
     "jobManagement": "ਨੌਕਰੀ ਪ੍ਰਬੰਧਨ",
     "languages": "ਭਾਸ਼ਾਵਾਂ",
+    "leads": "Leads",
     "marketplace": "ਮਾਰਕੀਟਪਲੇਸ",
     "carePackageCatalog": "Care packages",
     "caregivingJobs": "Caregiving jobs",
@@ -722,6 +732,7 @@
     "myJobs": "ਮੇਰੀਆਂ ਨੌਕਰੀਆਂ",
     "myPatients": "ਮੇਰੇ ਮਰੀਜ਼",
     "newBooking": "ਨਵੀਂ ਬੁੱਕਿੰਗ",
+    "noNavItems": "No items available",
     "notifications": "ਸੂਚਨਾਵਾਂ",
     "onboarding": "ਆਨਬੋਰਡਿੰਗ",
     "orders": "ਆਰਡਰ",
@@ -743,6 +754,7 @@
     "products": "ਉਤਪਾਦ",
     "profile": "ਪਰੋਫਾਈਲ",
     "promoManagement": "ਪ੍ਰਮੋਸ਼ਨਲ ਪ੍ਰਬੰਧਨ",
+    "rates": "Rates",
     "references": "ਰੈਫਰੈਂਸ",
     "roleActivations": "Role Activations",
     "refundRequest": "ਰਿਫੰਡ ਬੇਨਤੀ",
@@ -1232,6 +1244,44 @@
       "noHistory": "No audit history available"
     }
   },
+  "home": {
+    "hero": {
+      "brand": "CareNet",
+      "tagline": "ਗੁਣਵੱਤਾ ਭਰੀ ਦੇਖਭਾਲ, ਜੁੜੀ ਹੋਈ",
+      "subtitle": "ਬੰਗਲਾਦੇਸ਼ ਦਾ ਭਰੋਸੇਯੋਗ ਪਲੇਟਫਾਰਮ ਪਰਿਵਾਰਾਂ ਨੂੰ ਪੁਸ਼ਟੀ ਕੀਤੇ ਦੇਖਭਾਲ ਕਰਨ ਵਾਲਿਆਂ ਅਤੇ ਪੇਸ਼ੇਵਰ ਏਜੰਸੀਆਂ ਨਾਲ ਜੋੜਨ ਲਈ",
+      "experienceApp": "Experience the App",
+      "signInRegister": "Sign in / Register",
+      "jobPortal": "ਨੌਕਰੀ ਪੋਰਟਲ",
+      "careShop": "ਦੇਖਭਾਲ ਸ਼ਾਪ",
+      "register": "ਰਜਿਸਟਰ"
+    },
+    "contact": {
+      "emailLabel": "ਈਮੇਲ",
+      "emailNow": "ਹੁਣੇ ਈਮੇਲ ਕਰੋ",
+      "hotline": "ਹਾਟਲਾਈਨ",
+      "sendSms": "ਐੱਸਐੱਮਐੱਸ ਭੇਜੋ",
+      "title": "ਸਹਾਇਤਾ ਚਾਹੀਦੀ ਹੈ?"
+    },
+    "features": {
+      "agency": {
+        "description": "ਲਾਇਸੈਂਸ਼ੁਦਾ, ਉੱਚ ਕਾਰਗੁਜ਼ਾਰੀ ਏਜੰਸੀਆਂ ਜਿਨ੍ਹਾਂ ਦੀ ਭਰੋਸੇਯੋਗਤਾ ਅਤੇ ਅਨੁਪਾਲਨ ਮਿਆਰਾਂ ਦੀ ਪੁਸ਼ਟੀ ਹੋਈ ਹੈ।",
+        "title": "ਜਾਂਚੀ ਗਈ ਏਜੰਸੀ ਨੈੱਟਵਰਕ"
+      },
+      "platform": {
+        "description": "ਲੱਭੋ, ਬੁੱਕ ਕਰੋ, ਪ੍ਰਬੰਧਿਤ ਕਰੋ, ਸੰਪਰਕ ਕਰੋ, ਭੁਗਤਾਨ ਕਰੋ ਅਤੇ ਟਰੈਕ ਕਰੋ — ਸਭ ਕੁਝ ਇੱਕ ਸ਼ਕਤੀਸ਼ਾਲੀ ਡੈਸ਼ਬੋਰਡ ਤੋਂ।",
+        "title": "ਇੱਕੀਕ੍ਰਿਤ ਪਲੇਟਫਾਰਮ"
+      },
+      "sectionTitle": "ਕਿਉਂ CareNet?",
+      "tracking": {
+        "description": "ਦੇਖਭਾਲ ਕਰਨ ਵਾਲੇ ਸ਼ਿਡਿਊਲ ਅਤੇ ਸੇਵਾ ਪ੍ਰਦਾਨ ਕਰਨ ਦੀ ਪੂਰੀ ਜਾਣਕਾਰੀ — ਪਾਰਦਰਸ਼ਿਤਾ ਅਤੇ ਜਵਾਬਦੇਹੀ ਲਿਆਉਣਾ।",
+        "title": "ਰੀਅਲ-ਟਾਈਮ ਦੇਖਭਾਲ ਟਰੈਕਿੰਗ"
+      },
+      "verified": {
+        "description": "ਪੁਸ਼ਟੀ ਕੀਤੇ ਪ੍ਰਫੈਸ਼ਨਲ — ਪੁਲਿਸ ਜਾਂਚ, ਸਿਹਤ ਜਾਂਚ ਅਤੇ ਮਨੋਵਿਗਿਆਨਕ ਮੁਲਾਂਕਣ ਰਾਹੀਂ ਜਾਂਚੇ ਗਏ, ਭਰੋਸੇਯੋਗ ਅਤੇ ਸਰਟੀਫਾਈਡ।",
+        "title": "ਪੁਸ਼ਟੀ ਕੀਤੇ ਦੇਖਭਾਲ ਕਰਨ ਵਾਲੇ"
+      }
+    }
+  },
   "dailySchedule": {
     "addPhoto": "Add photo",
     "addTaskDescription": "Create a task or calendar event for the selected day.",
@@ -1356,44 +1406,6 @@
     "selectPrompt": "Pick a role to explore the app:",
     "subtitle": "Try dashboards and flows with sample data — no real account required.",
     "title": "Experience the App"
-  },
-  "home": {
-    "contact": {
-      "emailLabel": "ਈਮੇਲ",
-      "emailNow": "ਹੁਣੇ ਈਮੇਲ ਕਰੋ",
-      "hotline": "ਹਾਟਲਾਈਨ",
-      "sendSms": "ਐੱਸਐੱਮਐੱਸ ਭੇਜੋ",
-      "title": "ਸਹਾਇਤਾ ਚਾਹੀਦੀ ਹੈ?"
-    },
-    "features": {
-      "agency": {
-        "description": "ਲਾਇਸੈਂਸ਼ੁਦਾ, ਉੱਚ ਕਾਰਗੁਜ਼ਾਰੀ ਏਜੰਸੀਆਂ ਜਿਨ੍ਹਾਂ ਦੀ ਭਰੋਸੇਯੋਗਤਾ ਅਤੇ ਅਨੁਪਾਲਨ ਮਿਆਰਾਂ ਦੀ ਪੁਸ਼ਟੀ ਹੋਈ ਹੈ।",
-        "title": "ਜਾਂਚੀ ਗਈ ਏਜੰਸੀ ਨੈੱਟਵਰਕ"
-      },
-      "platform": {
-        "description": "ਲੱਭੋ, ਬੁੱਕ ਕਰੋ, ਪ੍ਰਬੰਧਿਤ ਕਰੋ, ਸੰਪਰਕ ਕਰੋ, ਭੁਗਤਾਨ ਕਰੋ ਅਤੇ ਟਰੈਕ ਕਰੋ — ਸਭ ਕੁਝ ਇੱਕ ਸ਼ਕਤੀਸ਼ਾਲੀ ਡੈਸ਼ਬੋਰਡ ਤੋਂ।",
-        "title": "ਇੱਕੀਕ੍ਰਿਤ ਪਲੇਟਫਾਰਮ"
-      },
-      "sectionTitle": "ਕਿਉਂ CareNet?",
-      "tracking": {
-        "description": "ਦੇਖਭਾਲ ਕਰਨ ਵਾਲੇ ਸ਼ਿਡਿਊਲ ਅਤੇ ਸੇਵਾ ਪ੍ਰਦਾਨ ਕਰਨ ਦੀ ਪੂਰੀ ਜਾਣਕਾਰੀ — ਪਾਰਦਰਸ਼ਿਤਾ ਅਤੇ ਜਵਾਬਦੇਹੀ ਲਿਆਉਣਾ।",
-        "title": "ਰੀਅਲ-ਟਾਈਮ ਦੇਖਭਾਲ ਟਰੈਕਿੰਗ"
-      },
-      "verified": {
-        "description": "ਪੁਸ਼ਟੀ ਕੀਤੇ ਪ੍ਰਫੈਸ਼ਨਲ — ਪੁਲਿਸ ਜਾਂਚ, ਸਿਹਤ ਜਾਂਚ ਅਤੇ ਮਨੋਵਿਗਿਆਨਕ ਮੁਲਾਂਕਣ ਰਾਹੀਂ ਜਾਂਚੇ ਗਏ, ਭਰੋਸੇਯੋਗ ਅਤੇ ਸਰਟੀਫਾਈਡ।",
-        "title": "ਪੁਸ਼ਟੀ ਕੀਤੇ ਦੇਖਭਾਲ ਕਰਨ ਵਾਲੇ"
-      }
-    },
-    "hero": {
-      "brand": "CareNet",
-      "careShop": "ਦੇਖਭਾਲ ਸ਼ਾਪ",
-      "experienceApp": "Experience the App",
-      "jobPortal": "ਨੌਕਰੀ ਪੋਰਟਲ",
-      "register": "ਰਜਿਸਟਰ",
-      "signInRegister": "Sign in / Register",
-      "subtitle": "ਬੰਗਲਾਦੇਸ਼ ਦਾ ਭਰੋਸੇਯੋਗ ਪਲੇਟਫਾਰਮ ਪਰਿਵਾਰਾਂ ਨੂੰ ਪੁਸ਼ਟੀ ਕੀਤੇ ਦੇਖਭਾਲ ਕਰਨ ਵਾਲਿਆਂ ਅਤੇ ਪੇਸ਼ੇਵਰ ਏਜੰਸੀਆਂ ਨਾਲ ਜੋੜਨ ਲਈ",
-      "tagline": "ਗੁਣਵੱਤਾ ਭਰੀ ਦੇਖਭਾਲ, ਜੁੜੀ ਹੋਈ"
-    }
   },
   "section15": {
     "agencyScorecardSubtitle": "Agency lens on placement quality (?patientId= for a specific client).",

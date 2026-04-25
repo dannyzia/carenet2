@@ -2,12 +2,17 @@
   "a11y": {
     "bottomNav": "하단 네비게이션",
     "closeMenu": "메뉴 닫기",
+    "closeRoleSidebar": "Close role sidebar",
     "closeSidebar": "사이드바 닫기",
     "mainContent": "주요 콘텐츠",
     "messages": "메시지",
     "notifications": "알림",
     "openMenu": "메뉴 열기",
+    "openPersonaMenu": "Open profile menu for {{role}}",
+    "personaMenuDisabled": "Profile menu (no active role)",
     "roleNav": "역할 네비게이션",
+    "roleSidebarClosed": "Role menu closed",
+    "roleSidebarOpened": "Role menu opened",
     "sidebarNav": "사이드바 네비게이션",
     "skipToContent": "주요 콘텐츠로 건너뛰기",
     "switchToDark": "다크 모드로 전환",
@@ -203,6 +208,7 @@
     "orders": "주문",
     "patients": "환자",
     "payments": "결제",
+    "persona": "Profile",
     "placements": "배치",
     "products": "제품",
     "queue": "대기열",
@@ -670,6 +676,7 @@
     "shop": "Shop Owner"
   },
   "sidebar": {
+    "account": "Account",
     "agencies": "기관",
     "agencyApprovals": "기관 승인",
     "analytics": "분석",
@@ -685,11 +692,13 @@
     "clientIntake": "클라이언트 접수",
     "clients": "클라이언트",
     "cmsManager": "CMS 관리자",
+    "commissions": "Commissions",
     "compareCaregivers": "돌봄 제공자 비교",
     "contactUs": "문의하기",
     "content": "콘텐츠",
     "contracts": "계약",
     "contractsOverview": "계약 개요",
+    "createLead": "Create Lead",
     "dailyEarnings": "일일 수입",
     "dashboard": "대시보드",
     "dataPrivacy": "데이터 개인정보",
@@ -708,6 +717,7 @@
     "inventory": "재고",
     "jobManagement": "직업 관리",
     "languages": "언어",
+    "leads": "Leads",
     "marketplace": "마켓플레이스",
     "carePackageCatalog": "Care packages",
     "caregivingJobs": "Caregiving jobs",
@@ -722,6 +732,7 @@
     "myJobs": "내 직업",
     "myPatients": "내 환자",
     "newBooking": "새 예약",
+    "noNavItems": "No items available",
     "notifications": "알림",
     "onboarding": "온보딩",
     "orders": "주문",
@@ -743,6 +754,7 @@
     "products": "제품",
     "profile": "프로필",
     "promoManagement": "프로모션 관리",
+    "rates": "Rates",
     "references": "참조",
     "roleActivations": "Role Activations",
     "refundRequest": "환불 요청",
@@ -1232,6 +1244,44 @@
       "noHistory": "No audit history available"
     }
   },
+  "home": {
+    "hero": {
+      "brand": "CareNet",
+      "tagline": "품질 좋은 돌봄, 연결됨",
+      "subtitle": "방글라데시의 신뢰할 수 있는 플랫폼으로 가족들을 검증된 돌봄 제공자와 전문 기관에 연결",
+      "experienceApp": "Experience the App",
+      "signInRegister": "Sign in / Register",
+      "jobPortal": "구인구직 포털",
+      "careShop": "케어 샵",
+      "register": "등록"
+    },
+    "contact": {
+      "emailLabel": "이메일",
+      "emailNow": "지금 이메일 보내기",
+      "hotline": "핫라인",
+      "sendSms": "SMS 보내기",
+      "title": "도움이 필요하세요?"
+    },
+    "features": {
+      "agency": {
+        "description": "검증된 신뢰성과 규정 준수 기준을 갖춘 면허 있는 고성능 기관.",
+        "title": "검증된 기관 네트워크"
+      },
+      "platform": {
+        "description": "발견, 예약, 관리, 소통, 결제, 추적 — 모든 것을 하나의 강력한 대시보드에서.",
+        "title": "단일 통합 플랫폼"
+      },
+      "sectionTitle": "왜 CareNet인가요?",
+      "tracking": {
+        "description": "돌봄 제공자 일정 및 서비스 제공에 대한 전체 가시성 — 투명성과 책임감 제공.",
+        "title": "실시간 돌봄 추적"
+      },
+      "verified": {
+        "description": "배경 확인, 인증, 신뢰할 수 있는 전문가 — 경찰 확인, 건강 검진, 심리 평가를 통해 검증됨.",
+        "title": "검증된 돌봄 제공자"
+      }
+    }
+  },
   "dailySchedule": {
     "addPhoto": "Add photo",
     "addTaskDescription": "Create a task or calendar event for the selected day.",
@@ -1356,44 +1406,6 @@
     "selectPrompt": "Pick a role to explore the app:",
     "subtitle": "Try dashboards and flows with sample data — no real account required.",
     "title": "Experience the App"
-  },
-  "home": {
-    "contact": {
-      "emailLabel": "이메일",
-      "emailNow": "지금 이메일 보내기",
-      "hotline": "핫라인",
-      "sendSms": "SMS 보내기",
-      "title": "도움이 필요하세요?"
-    },
-    "features": {
-      "agency": {
-        "description": "검증된 신뢰성과 규정 준수 기준을 갖춘 면허 있는 고성능 기관.",
-        "title": "검증된 기관 네트워크"
-      },
-      "platform": {
-        "description": "발견, 예약, 관리, 소통, 결제, 추적 — 모든 것을 하나의 강력한 대시보드에서.",
-        "title": "단일 통합 플랫폼"
-      },
-      "sectionTitle": "왜 CareNet인가요?",
-      "tracking": {
-        "description": "돌봄 제공자 일정 및 서비스 제공에 대한 전체 가시성 — 투명성과 책임감 제공.",
-        "title": "실시간 돌봄 추적"
-      },
-      "verified": {
-        "description": "배경 확인, 인증, 신뢰할 수 있는 전문가 — 경찰 확인, 건강 검진, 심리 평가를 통해 검증됨.",
-        "title": "검증된 돌봄 제공자"
-      }
-    },
-    "hero": {
-      "brand": "CareNet",
-      "careShop": "케어 샵",
-      "experienceApp": "Experience the App",
-      "jobPortal": "구인구직 포털",
-      "register": "등록",
-      "signInRegister": "Sign in / Register",
-      "subtitle": "방글라데시의 신뢰할 수 있는 플랫폼으로 가족들을 검증된 돌봄 제공자와 전문 기관에 연결",
-      "tagline": "품질 좋은 돌봄, 연결됨"
-    }
   },
   "section15": {
     "agencyScorecardSubtitle": "Agency lens on placement quality (?patientId= for a specific client).",

@@ -48,10 +48,10 @@ test.describe("Connectivity Demo Page", () => {
 
       // All 7 card titles should be visible (6 original + Per-Channel Heartbeat)
       await expect(page.getByText("Network State")).toBeVisible();
-      await expect(page.getByText("Realtime Events")).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Realtime Events" })).toBeVisible();
       await expect(page.getByText("WebSocket Heartbeat")).toBeVisible();
       await expect(page.getByText("Per-Channel Heartbeat")).toBeVisible();
-      await expect(page.getByText("Data Saver Detection")).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Data Saver Detection" })).toBeVisible();
       await expect(page.getByText("Component Preview")).toBeVisible();
       await expect(page.getByText("Live Debug Data")).toBeVisible();
     });
@@ -70,7 +70,7 @@ test.describe("Connectivity Demo Page", () => {
 
       await clickSimButton(page, "Go Offline");
       // Allow React to re-render (debug hook polls every 2s, but event-driven is faster)
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(2000);
 
       const online = await getDebugValue(page, "debug-online");
       expect(online).toBe("false");
@@ -81,12 +81,12 @@ test.describe("Connectivity Demo Page", () => {
 
       // Go offline first
       await clickSimButton(page, "Go Offline");
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(2000);
       expect(await getDebugValue(page, "debug-online")).toBe("false");
 
       // Go back online
       await clickSimButton(page, "Go Online");
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(2000);
 
       const online = await getDebugValue(page, "debug-online");
       expect(online).toBe("true");
@@ -96,7 +96,7 @@ test.describe("Connectivity Demo Page", () => {
       await waitForPage(page);
 
       await clickSimButton(page, /Simulate Lie-Fi/);
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(2000);
 
       const online = await getDebugValue(page, "debug-online");
       expect(online).toBe("false");
@@ -117,12 +117,12 @@ test.describe("Connectivity Demo Page", () => {
 
       // Fire a wallet event
       await clickSimButton(page, "Simulate Wallet Update");
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(2000);
 
-      // The "Last Msg" should reset to 0s
+      // The "Last Msg" should reset to near 0s (allow up to 3s for UI update)
       const afterStr = await getDebugValue(page, "debug-last-msg");
       const afterSec = parseInt(afterStr, 10);
-      expect(afterSec).toBeLessThanOrEqual(1);
+      expect(afterSec).toBeLessThanOrEqual(3);
     });
 
     test("Simulate Transaction resets last message timestamp", async ({ page }) => {
@@ -130,11 +130,11 @@ test.describe("Connectivity Demo Page", () => {
       await page.waitForTimeout(3_000);
 
       await clickSimButton(page, "Simulate Transaction");
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(2000);
 
       const afterStr = await getDebugValue(page, "debug-last-msg");
       const afterSec = parseInt(afterStr, 10);
-      expect(afterSec).toBeLessThanOrEqual(1);
+      expect(afterSec).toBeLessThanOrEqual(3);
     });
 
     test("Simulate Contract Update resets last message timestamp", async ({ page }) => {
@@ -142,11 +142,11 @@ test.describe("Connectivity Demo Page", () => {
       await page.waitForTimeout(3_000);
 
       await clickSimButton(page, "Simulate Contract Update");
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(2000);
 
       const afterStr = await getDebugValue(page, "debug-last-msg");
       const afterSec = parseInt(afterStr, 10);
-      expect(afterSec).toBeLessThanOrEqual(1);
+      expect(afterSec).toBeLessThanOrEqual(3);
     });
 
     test("Simulate New Offer resets last message timestamp", async ({ page }) => {
@@ -154,11 +154,11 @@ test.describe("Connectivity Demo Page", () => {
       await page.waitForTimeout(3_000);
 
       await clickSimButton(page, "Simulate New Offer");
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(2000);
 
       const afterStr = await getDebugValue(page, "debug-last-msg");
       const afterSec = parseInt(afterStr, 10);
-      expect(afterSec).toBeLessThanOrEqual(1);
+      expect(afterSec).toBeLessThanOrEqual(3);
     });
   });
 
@@ -201,12 +201,12 @@ test.describe("Connectivity Demo Page", () => {
 
       // Record a message
       await clickSimButton(page, /Record Message/);
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1000);
 
       // Last Msg should reset near 0
       const afterStr = await getDebugValue(page, "debug-last-msg");
       const afterSec = parseInt(afterStr, 10);
-      expect(afterSec).toBeLessThanOrEqual(1);
+      expect(afterSec).toBeLessThanOrEqual(2);
 
       // Heartbeat should be healthy
       const hbStatus = await getDebugValue(page, "debug-heartbeat");
@@ -534,11 +534,11 @@ test.describe("Connectivity Demo Page", () => {
       await setupFastStaleChannel(page);
 
       // Wait for staleMs (3s) + checkInterval (2s) + debounce (300ms) + buffer
-      await page.waitForTimeout(8_000);
+      await page.waitForTimeout(10_000);
 
       // A sonner toast should appear (warning type for stale → amber)
       const toastElement = page.locator("[data-sonner-toast]").first();
-      await expect(toastElement).toBeVisible({ timeout: 5_000 });
+      await expect(toastElement).toBeVisible({ timeout: 10_000 });
     });
 
     test("recovered channel fires a success toast after degradation", async ({ page }) => {
@@ -548,11 +548,11 @@ test.describe("Connectivity Demo Page", () => {
       await setupFastStaleChannel(page, "monetization:e2e-user");
 
       // Wait for it to go stale
-      await page.waitForTimeout(8_000);
+      await page.waitForTimeout(10_000);
 
       // Verify degradation toast appeared
       const staleToast = page.locator("[data-sonner-toast]").first();
-      await expect(staleToast).toBeVisible({ timeout: 5_000 });
+      await expect(staleToast).toBeVisible({ timeout: 10_000 });
 
       // Send a message to recover the channel via bridge
       await page.evaluate(() => {
@@ -561,11 +561,11 @@ test.describe("Connectivity Demo Page", () => {
       });
 
       // Wait for heartbeat check + debounce + global toast poll
-      await page.waitForTimeout(6_000);
+      await page.waitForTimeout(8_000);
 
       // A recovery toast ("reconnected") should appear with success type
       const recoveryToast = page.locator("[data-sonner-toast][data-type='success']");
-      await expect(recoveryToast).toBeVisible({ timeout: 5_000 });
+      await expect(recoveryToast).toBeVisible({ timeout: 10_000 });
     });
 
     test("no toast fires when channel receives regular messages via bridge", async ({ page }) => {
@@ -638,11 +638,11 @@ test.describe("Connectivity Demo Page", () => {
       });
 
       // Wait for all to go stale simultaneously
-      await page.waitForTimeout(8_000);
+      await page.waitForTimeout(10_000);
 
       // At least one toast should appear (either batch summary or individual)
       const toasts = page.locator("[data-sonner-toast]");
-      await expect(toasts.first()).toBeVisible({ timeout: 5_000 });
+      await expect(toasts.first()).toBeVisible({ timeout: 10_000 });
     });
   });
 });

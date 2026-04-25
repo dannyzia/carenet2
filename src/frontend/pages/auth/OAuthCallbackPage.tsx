@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import { Heart } from "lucide-react";
 import { supabase, USE_SUPABASE } from "@/backend/services/supabase";
 import { cn } from "@/frontend/theme/tokens";
+import { roleDashboardPath } from "@/backend/navigation/roleAppPaths";
 
 export default function OAuthCallbackPage() {
   const navigate = useNavigate();
@@ -35,7 +36,7 @@ export default function OAuthCallbackPage() {
         if (!profile?.active_role) {
           navigate("/auth/role-selection", { replace: true });
         } else {
-          navigate(`/${profile.active_role}/dashboard`, { replace: true });
+          navigate(roleDashboardPath(profile.active_role as any), { replace: true });
         }
       } else {
         // No session — go to login

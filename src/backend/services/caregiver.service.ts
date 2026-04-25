@@ -28,6 +28,7 @@ import {
   useInAppMockDataset,
 } from "./_sb";
 import { EMPTY_CAREGIVER_DASHBOARD_SUMMARY } from "./liveEmptyDefaults";
+import { withDashboardFallback, EMPTY_OPERATIONAL_DASHBOARD } from "./dashboardFallback";
 import { getMyWallet } from "./walletService";
 import { getContractDashboardSummary } from "./contractService";
 import { mapCaregiverOperationalDashboard } from "./caregiverOperationalMapper";
@@ -868,22 +869,36 @@ export const caregiverService = {
   },
 
   async getOperationalDashboard(): Promise<OperationalDashboardData> {
-    const todayIso = new Date().toISOString().split("T")[0];
-    const [summary, upcoming, wallet, contract] = await Promise.all([
-      caregiverService.getDashboardSummary(),
-      caregiverService.getUpcomingSchedule(),
-      getMyWallet("caregiver"),
-      getContractDashboardSummary("caregiver"),
-    ]);
-    return mapCaregiverOperationalDashboard({
-      summary,
-      upcoming,
-      todayIso,
-      walletBalance: wallet?.balance ?? 0,
-      walletPendingDue: wallet?.pendingDue ?? 0,
-      contractActive: contract.activeCount,
-      contractPendingOffers: contract.pendingOffersCount,
-    });
+    return withDashboardFallback(
+      async () => {
+        const todayIso = new Date().toISOString().split("T")[0];
+        const [summary, upcoming, wallet, contract] = await Promise.all([
+          caregiverService.getDashboardSummary(),
+          caregiverService.getUpcomingSchedule(),
+          getMyWallet("caregiver"),
+          getContractDashboardSummary("caregiver"),
+        ]);
+        return mapCaregiverOperationalDashboard({
+          summary,
+          upcoming,
+          todayIso,
+          walletBalance: wallet?.balance ?? 0,
+          walletPendingDue: wallet?.pendingDue ?? 0,
+          contractActive: contract.activeCount,
+          contractPendingOffers: contract.pendingOffersCount,
+        });
+      },
+      EMPTY_OPERATIONAL_DASHBOARD,
+      (m) => mapCaregiverOperationalDashboard({
+        summary: m.MOCK_CAREGIVER_DASHBOARD_SUMMARY,
+        upcoming: m.MOCK_UPCOMING_SCHEDULE,
+        todayIso: new Date().toISOString().split("T")[0],
+        walletBalance: 0,
+        walletPendingDue: 0,
+        contractActive: 0,
+        contractPendingOffers: 0,
+      }),
+    );
   },
 
   // ─── Upload methods (Phase 2) ───

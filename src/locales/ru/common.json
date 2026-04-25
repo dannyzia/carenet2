@@ -2,12 +2,17 @@
   "a11y": {
     "bottomNav": "Нижняя навигация",
     "closeMenu": "Закрыть меню",
+    "closeRoleSidebar": "Close role sidebar",
     "closeSidebar": "Закрыть боковую панель",
     "mainContent": "Основное содержимое",
     "messages": "Сообщения",
     "notifications": "Уведомления",
     "openMenu": "Открыть меню",
+    "openPersonaMenu": "Open profile menu for {{role}}",
+    "personaMenuDisabled": "Profile menu (no active role)",
     "roleNav": "Навигация по ролям",
+    "roleSidebarClosed": "Role menu closed",
+    "roleSidebarOpened": "Role menu opened",
     "sidebarNav": "Боковая навигация",
     "skipToContent": "Перейти к основному содержимому",
     "switchToDark": "Переключить на темную тему",
@@ -203,6 +208,7 @@
     "orders": "Заказы",
     "patients": "Пациенты",
     "payments": "Платежи",
+    "persona": "Profile",
     "placements": "Размещения",
     "products": "Товары",
     "queue": "Очередь",
@@ -670,6 +676,7 @@
     "shop": "Shop Owner"
   },
   "sidebar": {
+    "account": "Account",
     "agencies": "Агентства",
     "agencyApprovals": "Одобрения агентств",
     "analytics": "Аналитика",
@@ -685,11 +692,13 @@
     "clientIntake": "Прием клиента",
     "clients": "Клиенты",
     "cmsManager": "CMS Manager",
+    "commissions": "Commissions",
     "compareCaregivers": "Сравнение сиделок",
     "contactUs": "Свяжитесь с нами",
     "content": "Контент",
     "contracts": "Контракты",
     "contractsOverview": "Обзор контрактов",
+    "createLead": "Create Lead",
     "dailyEarnings": "Ежедневный заработок",
     "dashboard": "Панель управления",
     "dataPrivacy": "Конфиденциальность данных",
@@ -708,6 +717,7 @@
     "inventory": "Инвентарь",
     "jobManagement": "Управление вакансиями",
     "languages": "Языки",
+    "leads": "Leads",
     "marketplace": "Маркетплейс",
     "carePackageCatalog": "Care packages",
     "caregivingJobs": "Caregiving jobs",
@@ -722,6 +732,7 @@
     "myJobs": "Мои вакансии",
     "myPatients": "Мои пациенты",
     "newBooking": "Новое бронирование",
+    "noNavItems": "No items available",
     "notifications": "Уведомления",
     "onboarding": "Подключение",
     "orders": "Заказы",
@@ -743,6 +754,7 @@
     "products": "Товары",
     "profile": "Профиль",
     "promoManagement": "Управление промо",
+    "rates": "Rates",
     "references": "Ссылки",
     "roleActivations": "Role Activations",
     "refundRequest": "Запрос на возврат",
@@ -1232,6 +1244,44 @@
       "noHistory": "No audit history available"
     }
   },
+  "home": {
+    "hero": {
+      "brand": "CareNet",
+      "tagline": "Качественный уход, связанный",
+      "subtitle": "Доверенная платформа Бангладеш для связи семей с проверенными сиделками и профессиональными агентствами",
+      "experienceApp": "Experience the App",
+      "signInRegister": "Sign in / Register",
+      "jobPortal": "Портал вакансий",
+      "careShop": "Магазин ухода",
+      "register": "Регистрация"
+    },
+    "contact": {
+      "emailLabel": "Email",
+      "emailNow": "Отправить Email",
+      "hotline": "Горячая линия",
+      "sendSms": "Отправить SMS",
+      "title": "Нужна помощь?"
+    },
+    "features": {
+      "agency": {
+        "description": "Лицензированные, высокопроизводительные агентства с подтвержденной надежностью и стандартами соответствия.",
+        "title": "Сеть проверенных агентств"
+      },
+      "platform": {
+        "description": "Обнаружение, бронирование, управление, коммуникация, оплата и отслеживание — все из одного мощного панели управления.",
+        "title": "Единая интегрированная платформа"
+      },
+      "sectionTitle": "Почему CareNet?",
+      "tracking": {
+        "description": "Полная видимость графиков работы сиделок и предоставления услуг — обеспечивая прозрачность и подотчетность.",
+        "title": "Отслеживание ухода в реальном времени"
+      },
+      "verified": {
+        "description": "Проверенные, сертифицированные и доверенные профессионалы — проверенные через полицейскую проверку, медицинские осмотры и психологическую оценку.",
+        "title": "Проверенные сиделки"
+      }
+    }
+  },
   "dailySchedule": {
     "addPhoto": "Add photo",
     "addTaskDescription": "Create a task or calendar event for the selected day.",
@@ -1356,44 +1406,6 @@
     "selectPrompt": "Pick a role to explore the app:",
     "subtitle": "Try dashboards and flows with sample data — no real account required.",
     "title": "Experience the App"
-  },
-  "home": {
-    "contact": {
-      "emailLabel": "Email",
-      "emailNow": "Отправить Email",
-      "hotline": "Горячая линия",
-      "sendSms": "Отправить SMS",
-      "title": "Нужна помощь?"
-    },
-    "features": {
-      "agency": {
-        "description": "Лицензированные, высокопроизводительные агентства с подтвержденной надежностью и стандартами соответствия.",
-        "title": "Сеть проверенных агентств"
-      },
-      "platform": {
-        "description": "Обнаружение, бронирование, управление, коммуникация, оплата и отслеживание — все из одного мощного панели управления.",
-        "title": "Единая интегрированная платформа"
-      },
-      "sectionTitle": "Почему CareNet?",
-      "tracking": {
-        "description": "Полная видимость графиков работы сиделок и предоставления услуг — обеспечивая прозрачность и подотчетность.",
-        "title": "Отслеживание ухода в реальном времени"
-      },
-      "verified": {
-        "description": "Проверенные, сертифицированные и доверенные профессионалы — проверенные через полицейскую проверку, медицинские осмотры и психологическую оценку.",
-        "title": "Проверенные сиделки"
-      }
-    },
-    "hero": {
-      "brand": "CareNet",
-      "careShop": "Магазин ухода",
-      "experienceApp": "Experience the App",
-      "jobPortal": "Портал вакансий",
-      "register": "Регистрация",
-      "signInRegister": "Sign in / Register",
-      "subtitle": "Доверенная платформа Бангладеш для связи семей с проверенными сиделками и профессиональными агентствами",
-      "tagline": "Качественный уход, связанный"
-    }
   },
   "section15": {
     "agencyScorecardSubtitle": "Agency lens on placement quality (?patientId= for a specific client).",

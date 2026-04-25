@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { adminService } from "@/backend/services/admin.service";
 import { moderatorService } from "@/backend/services/moderator.service";
 import { useAuth } from "@/backend/store/auth/AuthContext";
+import { isDemoUser } from "@/frontend/auth/mockAuth";
 
 export function usePendingActivationCount(): number {
   const [count, setCount] = useState(0);
@@ -13,6 +14,7 @@ export function usePendingActivationCount(): number {
 
   useEffect(() => {
     if (!user) return;
+    if (isDemoUser(user)) return;
 
     const fetchCount = async () => {
       try {

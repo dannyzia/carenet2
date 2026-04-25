@@ -2,12 +2,17 @@
   "a11y": {
     "bottomNav": "በታች አቀራረብ",
     "closeMenu": "መስማማትንዝጋ",
+    "closeRoleSidebar": "Close role sidebar",
     "closeSidebar": "ጎን መስማማትንዝጋ",
     "mainContent": "ዋና ይዘት",
     "messages": "መልዕክቶች",
     "notifications": "ማስጠንቀቂያዎች",
     "openMenu": "መስማማትንክፈት",
+    "openPersonaMenu": "Open profile menu for {{role}}",
+    "personaMenuDisabled": "Profile menu (no active role)",
     "roleNav": "ሚና አቀራረብ",
+    "roleSidebarClosed": "Role menu closed",
+    "roleSidebarOpened": "Role menu opened",
     "sidebarNav": "ጎን አቀራረብ",
     "skipToContent": "ዋና ይዘት ወደ ቀረብ",
     "switchToDark": "ወደ ጥቁር ቀይር",
@@ -203,6 +208,7 @@
     "orders": "ትዕዛዝዎች",
     "patients": "ተጠቃሚዎች",
     "payments": "ክፍያዎች",
+    "persona": "Profile",
     "placements": "ቦታዎች",
     "products": "ምርቶች",
     "queue": "የመጠቀሚያ",
@@ -720,6 +726,7 @@
     "shop": "Shop Owner"
   },
   "sidebar": {
+    "account": "Account",
     "agencies": "ኤጄንሲዎች",
     "agencyApprovals": "የኤጄንሲ ማፅደር ተገዢዎች",
     "analytics": "አናሌቲክስ",
@@ -735,11 +742,13 @@
     "clientIntake": "የተጠቃሚ ውስጥ",
     "clients": "ተጠቃሚዎች",
     "cmsManager": "CMS ዳይሬክተር",
+    "commissions": "Commissions",
     "compareCaregivers": "የጥንቃቄ ተማሪዎችን ይወያዩ",
     "contactUs": "እኛን ያገናኙ",
     "content": "ይዘት",
     "contracts": "ሽያጮች",
     "contractsOverview": "ሽያጮች አረፋ",
+    "createLead": "Create Lead",
     "dailyEarnings": "የዕለት ወጪ",
     "dashboard": "ዳሽቦርድ",
     "dataPrivacy": "ውሂብ የግላዊነት",
@@ -758,6 +767,7 @@
     "inventory": "ክምችት",
     "jobManagement": "የሥራ ምነጃ",
     "languages": "ቋንቋዎች",
+    "leads": "Leads",
     "marketplace": "መስማማት ቤት",
     "carePackageCatalog": "Care packages",
     "caregivingJobs": "Caregiving jobs",
@@ -772,6 +782,7 @@
     "myJobs": "ሥራዎቼ",
     "myPatients": "ተጠቃሚዎቼ",
     "newBooking": "አዲስ ቦታ",
+    "noNavItems": "No items available",
     "notifications": "ማስጠንቀቂያዎች",
     "onboarding": "ውስጥ",
     "orders": "ትዕዛዝዎች",
@@ -793,6 +804,7 @@
     "products": "ምርቶች",
     "profile": "መገለጫ",
     "promoManagement": "የፕሮሞሽናል ምነጃ",
+    "rates": "Rates",
     "references": "ማነሾች",
     "roleActivations": "Role Activations",
     "refundRequest": "የመመለስ ጥያቄ",
@@ -1282,6 +1294,44 @@
       "noHistory": "No audit history available"
     }
   },
+  "home": {
+    "hero": {
+      "brand": "CareNet",
+      "tagline": "የሚታመን ጥንቃቄ፣ ተስማሚ",
+      "subtitle": "ባንግላዴሽ የተረጋገጠ የጥንቃቄ ተማሪዎች እና የፈቃድ የተሰጠው ኤጄንሲዎችን የሚያስተሳስር የተረጋገጠ ሰሌዳ",
+      "experienceApp": "Experience the App",
+      "signInRegister": "Sign in / Register",
+      "jobPortal": "የሥራ ፖርታል",
+      "careShop": "የጥንቃቄ ቤት",
+      "register": "ምዝገብ"
+    },
+    "contact": {
+      "emailLabel": "ኢሜል",
+      "emailNow": "አሁን ኢሜል",
+      "hotline": "ሆትላይን",
+      "sendSms": "ኤስኤምኤስ ላክ",
+      "title": "ጥያቄ አለ?"
+    },
+    "features": {
+      "agency": {
+        "description": "ፈቃድ የተሰጠው፣ በሙሉ የሚሰራ ኤጄንሲዎች የተረጋገጠ የማመን ችሎታ እና የመተግበሪያ መመደብየት ደረጃዎች ያሉት።",
+        "title": "የተረጋገጠ ኤጄንሲ ድርጅት"
+      },
+      "platform": {
+        "description": "ይፈልጉ፣ ቦታ ያድርጉ፣ ያስተዳድሩ፣ ተገናኙ፣ ክፍያ አስከፍሉ እና ተከታችው — ሁሉም ከአንድ ኃይል የማስተዳደር ዳሽቦርድ ውስጥ።",
+        "title": "አንድ የተገናኘ የሰሌዳ"
+      },
+      "sectionTitle": "ስለ CareNet ስለሚያስገርም?",
+      "tracking": {
+        "description": "የጥንቃቄ ተማሪዎች መርሐግብር እና የምርምር ምልክት ውስጥ ፍፁም የማይታይነት — ጥልቀት እና የማስተዳደር ተገቢነትን የሚያመጣ።",
+        "title": "የቀጥታ የጥንቃቄ ተከታታይ"
+      },
+      "verified": {
+        "description": "የተረጋገጠ፣ የተረጋገጠ እና የተረጋገጠ ባለሙያዎች — በፖሊስ ተረጋግጠው፣ በጤንነት ተረጋግጠው እና በሳይኮሎጂ እንደ ተረጋግጠው ተረጋግጠው።",
+        "title": "የተረጋገጡ የጥንቃቄ ተማሪዎች"
+      }
+    }
+  },
   "dailySchedule": {
     "addPhoto": "Add photo",
     "addTaskDescription": "Create a task or calendar event for the selected day.",
@@ -1406,44 +1456,6 @@
     "selectPrompt": "Pick a role to explore the app:",
     "subtitle": "Try dashboards and flows with sample data — no real account required.",
     "title": "Experience the App"
-  },
-  "home": {
-    "contact": {
-      "emailLabel": "ኢሜል",
-      "emailNow": "አሁን ኢሜል",
-      "hotline": "ሆትላይን",
-      "sendSms": "ኤስኤምኤስ ላክ",
-      "title": "ጥያቄ አለ?"
-    },
-    "features": {
-      "agency": {
-        "description": "ፈቃድ የተሰጠው፣ በሙሉ የሚሰራ ኤጄንሲዎች የተረጋገጠ የማመን ችሎታ እና የመተግበሪያ መመደብየት ደረጃዎች ያሉት።",
-        "title": "የተረጋገጠ ኤጄንሲ ድርጅት"
-      },
-      "platform": {
-        "description": "ይፈልጉ፣ ቦታ ያድርጉ፣ ያስተዳድሩ፣ ተገናኙ፣ ክፍያ አስከፍሉ እና ተከታችው — ሁሉም ከአንድ ኃይል የማስተዳደር ዳሽቦርድ ውስጥ።",
-        "title": "አንድ የተገናኘ የሰሌዳ"
-      },
-      "sectionTitle": "ስለ CareNet ስለሚያስገርም?",
-      "tracking": {
-        "description": "የጥንቃቄ ተማሪዎች መርሐግብር እና የምርምር ምልክት ውስጥ ፍፁም የማይታይነት — ጥልቀት እና የማስተዳደር ተገቢነትን የሚያመጣ።",
-        "title": "የቀጥታ የጥንቃቄ ተከታታይ"
-      },
-      "verified": {
-        "description": "የተረጋገጠ፣ የተረጋገጠ እና የተረጋገጠ ባለሙያዎች — በፖሊስ ተረጋግጠው፣ በጤንነት ተረጋግጠው እና በሳይኮሎጂ እንደ ተረጋግጠው ተረጋግጠው።",
-        "title": "የተረጋገጡ የጥንቃቄ ተማሪዎች"
-      }
-    },
-    "hero": {
-      "brand": "CareNet",
-      "careShop": "የጥንቃቄ ቤት",
-      "experienceApp": "Experience the App",
-      "jobPortal": "የሥራ ፖርታል",
-      "register": "ምዝገብ",
-      "signInRegister": "Sign in / Register",
-      "subtitle": "ባንግላዴሽ የተረጋገጠ የጥንቃቄ ተማሪዎች እና የፈቃድ የተሰጠው ኤጄንሲዎችን የሚያስተሳስር የተረጋገጠ ሰሌዳ",
-      "tagline": "የሚታመን ጥንቃቄ፣ ተስማሚ"
-    }
   },
   "section15": {
     "agencyScorecardSubtitle": "Agency lens on placement quality (?patientId= for a specific client).",

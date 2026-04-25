@@ -2,12 +2,17 @@
   "a11y": {
     "bottomNav": "Bottom navigation",
     "closeMenu": "Close menu",
+    "closeRoleSidebar": "রোল সাইডবার বন্ধ করুন",
     "closeSidebar": "Close sidebar",
     "mainContent": "Main content",
     "messages": "Messages",
     "notifications": "Notifications",
     "openMenu": "Open menu",
+    "openPersonaMenu": "{{role}} এর প্রোফাইল মেনু খুলুন",
+    "personaMenuDisabled": "প্রোফাইল মেনু (কোন সক্রিয় ভূমিকা নেই)",
     "roleNav": "Role navigation",
+    "roleSidebarClosed": "রোল মেনু বন্ধ হয়েছে",
+    "roleSidebarOpened": "রোল মেনু খোলা হয়েছে",
     "sidebarNav": "Sidebar navigation",
     "skipToContent": "Skip to main content",
     "switchToDark": "Switch to dark mode",
@@ -203,6 +208,7 @@
     "orders": "Orders",
     "patients": "Patients",
     "payments": "Payments",
+    "persona": "প্রোফাইল",
     "placements": "Placements",
     "products": "Products",
     "queue": "Queue",
@@ -666,6 +672,7 @@
     "shop": "দোকানের মালিক"
   },
   "sidebar": {
+    "account": "অ্যাকাউন্ট",
     "agencies": "সংস্থাগুলি",
     "agencyApprovals": "এজেন্সি অনুমোদন",
     "analytics": "বিশ্লেষণ",
@@ -681,11 +688,13 @@
     "clientIntake": "ক্লায়েন্ট গ্রহণ",
     "clients": "ক্লায়েন্ট",
     "cmsManager": "সিএমএস ম্যানেজার",
+    "commissions": "কমিশন",
     "compareCaregivers": "যত্নশীলদের তুলনা করুন",
     "contactUs": "আমাদের সাথে যোগাযোগ করুন",
     "content": "বিষয়বস্তু",
     "contracts": "চুক্তি",
     "contractsOverview": "চুক্তি ওভারভিউ",
+    "createLead": "লিড তৈরি করুন",
     "dailyEarnings": "দৈনিক আয়",
     "dashboard": "ড্যাশবোর্ড",
     "dataPrivacy": "ডেটা গোপনীয়তা",
@@ -704,6 +713,7 @@
     "inventory": "ইনভেন্টরি",
     "jobManagement": "চাকরি ব্যবস্থাপনা",
     "languages": "ভাষা",
+    "leads": "লিড",
     "marketplace": "মার্কেটপ্লেস",
     "carePackageCatalog": "যত্ন প্যাকেজ",
     "caregivingJobs": "কেয়ারগিভিং জব",
@@ -718,6 +728,7 @@
     "myJobs": "আমার কাজ",
     "myPatients": "আমার রোগীদের",
     "newBooking": "নতুন বুকিং",
+    "noNavItems": "কোন আইটেম পাওয়া যায়নি",
     "notifications": "বিজ্ঞপ্তি",
     "onboarding": "অনবোর্ডিং",
     "orders": "আদেশ",
@@ -739,6 +750,7 @@
     "products": "পণ্য",
     "profile": "প্রোফাইল",
     "promoManagement": "প্রচার ব্যবস্থাপনা",
+    "rates": "রেট",
     "references": "তথ্যসূত্র",
     "roleActivations": "ভূমিকা সক্রিয়করণ",
     "refundRequest": "ফেরত অনুরোধ",
@@ -1402,6 +1414,17 @@
       "registered": "নিবন্ধিত",
       "auditLog": "অডিট লগ",
       "noHistory": "কোনো অডিট ইতিহাস উপলব্ধ নেই"
+    }
+  },
+  "home": {
+    "hero": {
+      "brand": "কেয়ারনেট",
+      "tagline": "গুণমানের যত্ন, সংযোগের সেতুবন্ধন—একটি গল্পের শুরু।",
+      "subtitle": "বাংলাদেশের বিশ্বস্ত প্ল্যাটফর্ম—পরিবার ও যাচাইকৃত পরিচর্যাকারী এবং পেশাদার এজেন্সিগুলির মধ্যে সেতুবন্ধনের এক অমূল্য সেতু।",
+      "experienceApp": "অ্যাপ অভিজ্ঞতা নিন",
+      "signInRegister": "সাইন ইন / নিবন্ধন",
+      "jobPortal": "চাকরি পোর্টাল",
+      "careShop": "কেয়ার শপ"
     }
   }
 }

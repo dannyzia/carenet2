@@ -1,0 +1,220 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e5]:
+        - link "CareNet" [ref=e6] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e7]: CareNet
+        - generic [ref=e8]:
+          - link "Notifications" [ref=e9] [cursor=pointer]:
+            - /url: /notifications
+            - img [ref=e10]
+          - generic [ref=e14]:
+            - combobox "Interface language" [ref=e15] [cursor=pointer]:
+              - option "አማርኛ"
+              - option "العربية"
+              - option "বাংলা"
+              - option "Dansk"
+              - option "Deutsch"
+              - option "Ελληνικά"
+              - option "English" [selected]
+              - option "Español"
+              - option "فارسی"
+              - option "Suomi"
+              - option "Français"
+              - option "ગુજરાતી"
+              - option "עברית"
+              - option "हिन्दी"
+              - option "Indonesia"
+              - option "Italiano"
+              - option "日本語"
+              - option "ಕನ್ನಡ"
+              - option "한국어"
+              - option "മലയാളം"
+              - option "मराठी"
+              - option "Melayu"
+              - option "မြန်မာ"
+              - option "नेपाली"
+              - option "Nederlands"
+              - option "Norsk"
+              - option "ਪੰਜਾਬੀ"
+              - option "Polski"
+              - option "Português"
+              - option "Русский"
+              - option "සිංහල"
+              - option "Svenska"
+              - option "Kiswahili"
+              - option "தமிழ்"
+              - option "తెలుగు"
+              - option "ไทย"
+              - option "Türkçe"
+              - option "اردو"
+              - option "Tiếng Việt"
+              - option "繁體中文"
+              - option "中文"
+              - option "isiZulu"
+            - img
+          - button "Switch to dark mode" [ref=e16]:
+            - img [ref=e17]
+    - complementary [ref=e19]:
+      - generic [ref=e20]:
+        - link "CareNet" [ref=e21] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e22]: CareNet
+        - button "Close menu" [ref=e23]:
+          - img [ref=e24]
+      - generic [ref=e27]:
+        - link "Register" [ref=e28] [cursor=pointer]:
+          - /url: /auth/role-selection
+          - button "Register" [ref=e29]
+        - link "Log In" [ref=e30] [cursor=pointer]:
+          - /url: /auth/login
+          - button "Log In" [ref=e31]:
+            - img
+            - text: Log In
+      - navigation [ref=e32]:
+        - generic [ref=e33]:
+          - link "Marketplace" [ref=e34] [cursor=pointer]:
+            - /url: /marketplace
+            - generic [ref=e35]: Marketplace
+          - link "nav.agencies" [ref=e36] [cursor=pointer]:
+            - /url: /agencies
+            - generic [ref=e37]: nav.agencies
+          - link "nav.shop" [ref=e38] [cursor=pointer]:
+            - /url: /shop
+            - generic [ref=e39]: nav.shop
+        - paragraph [ref=e40]: Browse
+        - generic [ref=e41]:
+          - link "Agencies" [ref=e42] [cursor=pointer]:
+            - /url: /agencies
+            - generic [ref=e43]: Agencies
+          - link "Shop" [ref=e44] [cursor=pointer]:
+            - /url: /shop
+            - generic [ref=e45]: Shop
+        - paragraph [ref=e46]: Support & Info
+        - generic [ref=e47]:
+          - link "Help Center" [ref=e48] [cursor=pointer]:
+            - /url: /support/help
+            - generic [ref=e49]: Help Center
+          - link "Privacy Policy" [ref=e50] [cursor=pointer]:
+            - /url: /privacy
+            - generic [ref=e51]: Privacy Policy
+          - link "Terms of Service" [ref=e52] [cursor=pointer]:
+            - /url: /terms
+            - generic [ref=e53]: Terms of Service
+      - generic [ref=e54]:
+        - generic [ref=e55]:
+          - img
+          - combobox "Interface language" [ref=e56] [cursor=pointer]:
+            - option "አማርኛ"
+            - option "العربية"
+            - option "বাংলা"
+            - option "Dansk"
+            - option "Deutsch"
+            - option "Ελληνικά"
+            - option "English" [selected]
+            - option "Español"
+            - option "فارسی"
+            - option "Suomi"
+            - option "Français"
+            - option "ગુજરાતી"
+            - option "עברית"
+            - option "हिन्दी"
+            - option "Indonesia"
+            - option "Italiano"
+            - option "日本語"
+            - option "ಕನ್ನಡ"
+            - option "한국어"
+            - option "മലയാളം"
+            - option "मराठी"
+            - option "Melayu"
+            - option "မြန်မာ"
+            - option "नेपाली"
+            - option "Nederlands"
+            - option "Norsk"
+            - option "ਪੰਜਾਬੀ"
+            - option "Polski"
+            - option "Português"
+            - option "Русский"
+            - option "සිංහල"
+            - option "Svenska"
+            - option "Kiswahili"
+            - option "தமிழ்"
+            - option "తెలుగు"
+            - option "ไทย"
+            - option "Türkçe"
+            - option "اردو"
+            - option "Tiếng Việt"
+            - option "繁體中文"
+            - option "中文"
+            - option "isiZulu"
+          - img
+        - button "Switch to dark mode" [ref=e57]:
+          - img [ref=e58]
+          - generic [ref=e60]: Dark mode
+    - main [ref=e61]:
+      - generic [ref=e62]:
+        - generic [ref=e63]:
+          - heading "CareNet" [level=1] [ref=e64]
+          - paragraph [ref=e65]: Trusted Care, Connected Community
+        - generic [ref=e66]:
+          - heading "Welcome Back" [level=2] [ref=e67]
+          - paragraph [ref=e68]: Sign in with your email and password
+          - generic [ref=e69]:
+            - generic [ref=e70]:
+              - generic [ref=e71]: Email
+              - generic [ref=e72]:
+                - img [ref=e73]
+                - textbox "Email" [ref=e76]:
+                  - /placeholder: you@example.com
+                  - text: shopowner1@indigobangladesh.xyz
+            - generic [ref=e77]:
+              - generic [ref=e78]:
+                - generic [ref=e79]: Password
+                - link "Forgot password?" [ref=e80] [cursor=pointer]:
+                  - /url: /auth/forgot-password
+              - generic [ref=e81]:
+                - img [ref=e82]
+                - textbox "Password" [ref=e85]:
+                  - /placeholder: Enter password
+                  - text: "@DELL123dell"
+                - button "Show password" [ref=e86]:
+                  - img [ref=e87]
+            - paragraph [ref=e143]: Invalid email or password. If you just signed up, make sure email confirmation is disabled in Supabase Auth settings, or confirm your email first.
+            - button "Log In" [ref=e90]:
+              - text: Log In
+              - img [ref=e144]
+          - button "Didn't receive a confirmation email?" [ref=e94]
+          - generic [ref=e97]: or continue with
+          - button "Continue with Google" [ref=e99]:
+            - img [ref=e100]
+            - generic [ref=e105]: Continue with Google
+          - button "Demo Access" [ref=e107]:
+            - generic [ref=e108]: Demo Access
+            - img [ref=e109]
+          - paragraph [ref=e112]:
+            - text: Don't have an account?
+            - link "Sign Up" [ref=e113] [cursor=pointer]:
+              - /url: /auth/role-selection
+        - paragraph [ref=e115]: CareNet Platform v2.0
+    - navigation [ref=e116]:
+      - generic [ref=e117]:
+        - link "Home" [ref=e118] [cursor=pointer]:
+          - /url: /
+          - img [ref=e120]
+          - generic [ref=e123]: Home
+        - button "Back" [ref=e124]:
+          - img [ref=e125]
+          - generic [ref=e127]: Back
+        - link "Search" [ref=e128] [cursor=pointer]:
+          - /url: /global-search
+          - img [ref=e130]
+          - generic [ref=e133]: Search
+        - link "Messages" [ref=e134] [cursor=pointer]:
+          - /url: /messages
+          - img [ref=e136]
+          - generic [ref=e138]: Messages
+        - button "Menu" [ref=e139]:
+          - img [ref=e140]
+          - generic [ref=e141]: Menu
+  - region "Notifications alt+T"

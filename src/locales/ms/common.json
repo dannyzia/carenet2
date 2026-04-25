@@ -2,12 +2,17 @@
   "a11y": {
     "bottomNav": "Navigasi bawah",
     "closeMenu": "Tutup menu",
+    "closeRoleSidebar": "Close role sidebar",
     "closeSidebar": "Tutup sidebar",
     "mainContent": "Kandungan utama",
     "messages": "Mesej",
     "notifications": "Pemberitahuan",
     "openMenu": "Buka menu",
+    "openPersonaMenu": "Open profile menu for {{role}}",
+    "personaMenuDisabled": "Profile menu (no active role)",
     "roleNav": "Navigasi peranan",
+    "roleSidebarClosed": "Role menu closed",
+    "roleSidebarOpened": "Role menu opened",
     "sidebarNav": "Navigasi sidebar",
     "skipToContent": "Langkau ke kandungan utama",
     "switchToDark": "Tukar ke mod gelap",
@@ -203,6 +208,7 @@
     "orders": "Pesanan",
     "patients": "Pesakit",
     "payments": "Bayaran",
+    "persona": "Profile",
     "placements": "Penempatan",
     "products": "Produk",
     "queue": "Gilir",
@@ -670,6 +676,7 @@
     "shop": "Shop Owner"
   },
   "sidebar": {
+    "account": "Account",
     "agencies": "Agensi",
     "agencyApprovals": "Kelulusan Agensi",
     "analytics": "Analitik",
@@ -685,11 +692,13 @@
     "clientIntake": "Penerimaan Klien",
     "clients": "Klien",
     "cmsManager": "Pengurus CMS",
+    "commissions": "Commissions",
     "compareCaregivers": "Banding Pemberi Penjagaan",
     "contactUs": "Hubungi Kami",
     "content": "Kandungan",
     "contracts": "Kontrak",
     "contractsOverview": "Gambaran Keseluruhan Kontrak",
+    "createLead": "Create Lead",
     "dailyEarnings": "Pendapatan Harian",
     "dashboard": "Papan Pemuka",
     "dataPrivacy": "Privasi Data",
@@ -708,6 +717,7 @@
     "inventory": "Inventori",
     "jobManagement": "Pengurusan Pekerjaan",
     "languages": "Bahasa",
+    "leads": "Leads",
     "marketplace": "Pasaran",
     "carePackageCatalog": "Care packages",
     "caregivingJobs": "Caregiving jobs",
@@ -722,6 +732,7 @@
     "myJobs": "Pekerjaan Saya",
     "myPatients": "Pesakit Saya",
     "newBooking": "Tempahan Baru",
+    "noNavItems": "No items available",
     "notifications": "Pemberitahuan",
     "onboarding": "Pendaftaran",
     "orders": "Pesanan",
@@ -743,6 +754,7 @@
     "products": "Produk",
     "profile": "Profil",
     "promoManagement": "Pengurusan Promosi",
+    "rates": "Rates",
     "references": "Rujukan",
     "roleActivations": "Role Activations",
     "refundRequest": "Permintaan Refund",
@@ -1232,6 +1244,44 @@
       "noHistory": "No audit history available"
     }
   },
+  "home": {
+    "hero": {
+      "brand": "CareNet",
+      "tagline": "Penjagaan berkualiti, berhubung",
+      "subtitle": "Platform terpercaya di Bangladesh untuk menghubungkan keluarga dengan pemberi penjagaan yang disahkan dan agensi profesional",
+      "experienceApp": "Experience the App",
+      "signInRegister": "Sign in / Register",
+      "jobPortal": "Portal Pekerjaan",
+      "careShop": "Kedai Penjagaan",
+      "register": "Daftar"
+    },
+    "contact": {
+      "emailLabel": "E-mel",
+      "emailNow": "E-mel Sekarang",
+      "hotline": "Hotline",
+      "sendSms": "Hantar SMS",
+      "title": "Perlu Bantuan?"
+    },
+    "features": {
+      "agency": {
+        "description": "Agensi berlesen, berprestasi tinggi dengan kebolehpercayaan dan standard kepatuhan yang terbukti.",
+        "title": "Rangkaian Agensi Terancang"
+      },
+      "platform": {
+        "description": "Temui, tempah, urus, berkomunikasi, bayar, dan pantau — semuanya dari satu dashboard berkuasa.",
+        "title": "Platform Terintegrasi Tunggal"
+      },
+      "sectionTitle": "Kenapa CareNet?",
+      "tracking": {
+        "description": "Kelihatan penuh ke atas jadual pemberi penjagaan dan penghantaran perkhidmatan — membawa transparansi dan akauntabiliti.",
+        "title": "Pemantauan Penjagaan Real-Time"
+      },
+      "verified": {
+        "description": "Profesional yang disahkan, bersertifikat, dan dipercayai — disaring melalui pengesahan polis, pemeriksaan kesihatan, dan penilaian psikologi.",
+        "title": "Pemberi Penjagaan Disahkan"
+      }
+    }
+  },
   "dailySchedule": {
     "addPhoto": "Add photo",
     "addTaskDescription": "Create a task or calendar event for the selected day.",
@@ -1356,44 +1406,6 @@
     "selectPrompt": "Pick a role to explore the app:",
     "subtitle": "Try dashboards and flows with sample data — no real account required.",
     "title": "Experience the App"
-  },
-  "home": {
-    "contact": {
-      "emailLabel": "E-mel",
-      "emailNow": "E-mel Sekarang",
-      "hotline": "Hotline",
-      "sendSms": "Hantar SMS",
-      "title": "Perlu Bantuan?"
-    },
-    "features": {
-      "agency": {
-        "description": "Agensi berlesen, berprestasi tinggi dengan kebolehpercayaan dan standard kepatuhan yang terbukti.",
-        "title": "Rangkaian Agensi Terancang"
-      },
-      "platform": {
-        "description": "Temui, tempah, urus, berkomunikasi, bayar, dan pantau — semuanya dari satu dashboard berkuasa.",
-        "title": "Platform Terintegrasi Tunggal"
-      },
-      "sectionTitle": "Kenapa CareNet?",
-      "tracking": {
-        "description": "Kelihatan penuh ke atas jadual pemberi penjagaan dan penghantaran perkhidmatan — membawa transparansi dan akauntabiliti.",
-        "title": "Pemantauan Penjagaan Real-Time"
-      },
-      "verified": {
-        "description": "Profesional yang disahkan, bersertifikat, dan dipercayai — disaring melalui pengesahan polis, pemeriksaan kesihatan, dan penilaian psikologi.",
-        "title": "Pemberi Penjagaan Disahkan"
-      }
-    },
-    "hero": {
-      "brand": "CareNet",
-      "careShop": "Kedai Penjagaan",
-      "experienceApp": "Experience the App",
-      "jobPortal": "Portal Pekerjaan",
-      "register": "Daftar",
-      "signInRegister": "Sign in / Register",
-      "subtitle": "Platform terpercaya di Bangladesh untuk menghubungkan keluarga dengan pemberi penjagaan yang disahkan dan agensi profesional",
-      "tagline": "Penjagaan berkualiti, berhubung"
-    }
   },
   "section15": {
     "agencyScorecardSubtitle": "Agency lens on placement quality (?patientId= for a specific client).",

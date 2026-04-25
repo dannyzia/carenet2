@@ -1,0 +1,154 @@
+- generic [ref=e2]:
+  - link "Skip to main content" [ref=e3] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e5]:
+    - link "Skip to main content" [ref=e6] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=e7]:
+      - generic [ref=e8]:
+        - search [ref=e9]:
+          - img [ref=e10]
+          - textbox "Search..." [ref=e13]
+        - generic [ref=e14]:
+          - link "Notifications" [ref=e15] [cursor=pointer]:
+            - /url: /notifications
+            - img [ref=e16]
+          - link "Messages" [ref=e19] [cursor=pointer]:
+            - /url: /shop/messages
+            - img [ref=e20]
+          - generic [ref=e22] [cursor=pointer]:
+            - generic [ref=e23]: M
+            - generic [ref=e24]:
+              - paragraph [ref=e25]: Mock_MediMart Store
+              - paragraph [ref=e26]: Shop Owner
+            - img [ref=e27]
+    - generic [ref=e29]:
+      - complementary "Sidebar navigation" [ref=e30]:
+        - link "CareNet" [ref=e32] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e33]: CareNet
+        - generic [ref=e34]: Shop Owner Portal
+        - generic [ref=e35]:
+          - navigation "Role navigation" [ref=e36]:
+            - generic [ref=e37]:
+              - paragraph [ref=e38]: Main
+              - generic [ref=e39]:
+                - link "Dashboard" [ref=e40] [cursor=pointer]:
+                  - /url: /shop/dashboard
+                  - img [ref=e41]
+                  - generic [ref=e46]: Dashboard
+                  - img [ref=e47]
+                - link "Products" [ref=e49] [cursor=pointer]:
+                  - /url: /shop/products
+                  - img [ref=e50]
+                  - generic [ref=e54]: Products
+                - link "Orders" [ref=e55] [cursor=pointer]:
+                  - /url: /shop/orders
+                  - img [ref=e56]
+                  - generic [ref=e59]: Orders
+                - link "Inventory" [ref=e60] [cursor=pointer]:
+                  - /url: /shop/inventory
+                  - img [ref=e61]
+                  - generic [ref=e64]: Inventory
+                - link "Analytics" [ref=e65] [cursor=pointer]:
+                  - /url: /shop/analytics
+                  - img [ref=e66]
+                  - generic [ref=e67]: Analytics
+                - link "Billing 2" [ref=e68] [cursor=pointer]:
+                  - /url: /billing
+                  - img [ref=e69]
+                  - generic [ref=e72]: Billing
+                  - generic [ref=e73]: "2"
+            - button "Management" [ref=e76]:
+              - generic [ref=e77]: Management
+              - img [ref=e78]
+          - generic [ref=e80]:
+            - button "Browse" [ref=e82]:
+              - generic [ref=e83]: Browse
+              - img [ref=e84]
+            - button "Support & Info" [ref=e87]:
+              - generic [ref=e88]: Support & Info
+              - img [ref=e89]
+          - generic [ref=e91]:
+            - generic [ref=e92]:
+              - generic "Establishing channel..." [ref=e94]: Connecting
+              - generic [ref=e96]:
+                - generic [ref=e97]:
+                  - combobox "Interface language" [ref=e98] [cursor=pointer]:
+                    - option "አማርኛ"
+                    - option "العربية"
+                    - option "বাংলা"
+                    - option "Dansk"
+                    - option "Deutsch"
+                    - option "Ελληνικά"
+                    - option "English" [selected]
+                    - option "Español"
+                    - option "فارسی"
+                    - option "Suomi"
+                    - option "Français"
+                    - option "ગુજરાતી"
+                    - option "עברית"
+                    - option "हिन्दी"
+                    - option "Indonesia"
+                    - option "Italiano"
+                    - option "日本語"
+                    - option "ಕನ್ನಡ"
+                    - option "한국어"
+                    - option "മലയാളം"
+                    - option "मराठी"
+                    - option "Melayu"
+                    - option "မြန်မာ"
+                    - option "नेपाली"
+                    - option "Nederlands"
+                    - option "Norsk"
+                    - option "ਪੰਜਾਬੀ"
+                    - option "Polski"
+                    - option "Português"
+                    - option "Русский"
+                    - option "සිංහල"
+                    - option "Svenska"
+                    - option "Kiswahili"
+                    - option "தமிழ்"
+                    - option "తెలుగు"
+                    - option "ไทย"
+                    - option "Türkçe"
+                    - option "اردو"
+                    - option "Tiếng Việt"
+                    - option "繁體中文"
+                    - option "中文"
+                    - option "isiZulu"
+                  - img
+                - button "Switch to dark mode" [ref=e99]:
+                  - img [ref=e100]
+              - link "Settings" [ref=e102] [cursor=pointer]:
+                - /url: /settings
+                - img [ref=e103]
+                - generic [ref=e106]: Settings
+            - button "Log Out" [ref=e108]:
+              - img [ref=e109]
+              - generic [ref=e112]: Log Out
+      - main "Main content" [ref=e114]:
+        - generic [ref=e115]:
+          - heading "Shop Dashboard" [level=1] [ref=e116]
+          - paragraph [ref=e117]: Something went wrong. Please try again.
+    - navigation [ref=e118]:
+      - generic [ref=e119]:
+        - link "Home" [ref=e120] [cursor=pointer]:
+          - /url: /shop/dashboard
+          - img [ref=e123]
+          - generic [ref=e126]: Home
+        - button "Back" [ref=e127]:
+          - img [ref=e128]
+          - generic [ref=e130]: Back
+        - link "Search" [ref=e131] [cursor=pointer]:
+          - /url: /global-search
+          - img [ref=e133]
+          - generic [ref=e136]: Search
+        - link "Messages" [ref=e137] [cursor=pointer]:
+          - /url: /shop/messages
+          - img [ref=e139]
+          - generic [ref=e141]: Messages
+        - button "Menu" [ref=e142]:
+          - img [ref=e143]
+          - generic [ref=e144]: Menu
+  - region "Notifications alt+T"

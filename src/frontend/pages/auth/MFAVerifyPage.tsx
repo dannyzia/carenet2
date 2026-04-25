@@ -9,6 +9,7 @@ import { USE_SUPABASE } from "@/backend/services/supabase";
 import { useTranslation } from "react-i18next";
 import { useDocumentTitle } from "@/frontend/hooks";
 import { isMfaRequired } from "@/frontend/auth/mfaConfig";
+import { roleDashboardPath } from "@/backend/navigation/roleAppPaths";
 
 export default function MFAVerifyPage() {
   const { t: tDocTitle } = useTranslation("common");
@@ -54,7 +55,7 @@ export default function MFAVerifyPage() {
 
     if (result.success) {
       const role = result.user?.activeRole || user?.activeRole || "guardian";
-      navigate(`/${role}/dashboard`);
+      navigate(roleDashboardPath(role));
     } else {
       const msg = result.error || "Invalid code";
       setError(msg);
